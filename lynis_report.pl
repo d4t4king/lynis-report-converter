@@ -38,6 +38,7 @@ if (($audit_run) and ($audit_run >= 1)) {
 # but it is not our job to draw conclusions here, just present the findings of the tool.
 open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis report: $! \n", "bold red");
 while (my $line = <RPT>) {
+	next if ($line =~ /^#/);			# skip commented lines
 	chomp($line);
 	my ($k, $v) = split(/=/, $line);
 	print "k=$k\n" if (($verbose) and ($verbose > 1));
@@ -58,6 +59,16 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
 
+my (%warnings, %suggestions);
+#foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
+#	my ($warn_id,$descr, $sev, $field4) = split(/\|/, $warn);
+#	$warnings{$warn_id}{'id'} = $warn_id;
+#	$warnings{$warn_id}{'descr'} = $descr;
+#	$warnings{$warn_id}{'severity'} = $sev;
+#	$warnings{$warn_id}{'f4'} = $field4;
+#}
+#delete($lynis_report_data{'warning[]'});
+
 # process "string array" values delimited by a pipe (|)
 foreach my $key ( sort keys %lynis_report_data ) {
 	print "$key, ".ref($lynis_report_data{$key})." \n" if (($verbose) and ($verbose >= 1));
@@ -70,4 +81,14 @@ foreach my $key ( sort keys %lynis_report_data ) {
 	}
 }
 
+my (@tests_skipped, @tests_executed);
+my ($lynis_version);
+
+@tests_skipped = @{$lynis_report_data{'tests_skipped'}};
+delete($lynis_report_data{'tests_skipped'});
+@tests_executed = @{$lynis_report_data{'tests_executed'}};
+delete($lynis_report_data{'tests_executed'});
+
 print Dumper(\%lynis_report_data);
+
+print Dumper(\%warnings);
