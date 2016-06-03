@@ -2,17 +2,23 @@
 
 use strict;
 use warnings;
-
+use feature qw( switch );
+no warnings "experimental::smartmatch";
 use Term::ANSIColor;
 use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 
-my ($help,$verbose,$excel);
+my ($help,$verbose,$excel,$output);
 GetOptions(
 	'h|help'		=>	\$help,
 	'v|verbose+'	=>	\$verbose,
 	'E|excel'		=>	\$excel,
+	'o|output=s'	=>	\$output,
 );
+
+my %to_bool = (	0	=>	'false', 1	=>	'true' );
+
+$output = "report.html" unless ((defined($output)) and ($output ne ""));
 
 my $lynis_log = '/var/log/lynis.log';
 my $lynis_report = '/var/log/lynis-report.dat';
@@ -33,6 +39,11 @@ if (($audit_run) and ($audit_run >= 1)) {
 } else {
 	print colored("Couldn't find one or more of the lynis output files.  Try running the audit again. \n", "bold red");
 }
+
+print "Outputting report to $output, in ";
+if ($excel) { print "Excel " }
+else { print "HTML "; }
+print "format. \n";
 
 # the report is easy to process, and actually doesn't contain the "audit findings"....just the data.
 # but it is not our job to draw conclusions here, just present the findings of the tool.
@@ -89,6 +100,98 @@ delete($lynis_report_data{'tests_skipped'});
 @tests_executed = @{$lynis_report_data{'tests_executed'}};
 delete($lynis_report_data{'tests_executed'});
 
-print Dumper(\%lynis_report_data);
+#print Dumper(\%warnings);
 
-print Dumper(\%warnings);
+open OUT, ">$output" or die colored("There was a problem opening the output file ($output): $! \n", "bold red");
+print OUT <<END;
+
+<html >
+	<head>
+		<meta >
+		<style>
+			html,body {color: #fff; background-color: #000;}
+			table {border-collapse: collapse; border: 1px solid white;}
+			td.good {background-color: #006400; color: #ffffff; font-weight: bold;}
+			td.fair {background-color: #ffd700; color: #000000; font-weight: bold;}
+			td.poor {background-color: #ffa500; color: #000000; font-weight: bold;}
+			td.dismal {background-color: #ff00000; color: #000000; font-weight: bold;}
+			span.title_shrink {font-size: 75%;}
+		</style>
+	</head>
+	<body>
+		<h1>lynis Asset Report</h1>
+		<h2><span class="title_shrink">created by</span> lynis_report</h2>
+		<hr>
+		<h4>lynis info:</h4>
+		<table border="1">
+			<tr>
+				<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td><td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
+			</tr>
+			<tr>
+				<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td><td>license key:</td><td>$lynis_report_data{'license_key'}</td>
+			</tr>
+			<tr>
+				<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
+			</tr>
+			<tr>
+				<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td><td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
+			</tr>
+			<tr>
+END
+
+print OUT "\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">";
+print OUT "\t\t\t\t\t<table border=\"1\">\n";
+foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
+	my ($n,$v) = split(/\|/, $plug);
+	print OUT "\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
+}
+print OUT "\t\t\t\t\t</table>\n";
+print OUT "</td>\n";
+print OUT <<END;
+			</tr>
+			<tr>
+				<td>report start time:</td><td>$lynis_report_data{'report_datetime_start'}</td><td>report end time:</td><td>$lynis_report_data{'report_datetime_end'}</td>
+			</tr>
+			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
+			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
+		</table>
+		<h4>host findings:</h4>
+		<table border="1"><tr><td>hardening index:</td>
+END
+
+given ($lynis_report_data{'hardening_index'}) {
+	when (($lynis_report_data{'hardening_index'} < 100) and ($lynis_report_data{'hardening_index'} > 90)) {
+		# green
+		print OUT "\t\t\t<td class=\"good\">$lynis_report_data{'hardening_index'}</td>\n";
+	}
+	when (($lynis_report_data{'hardening_index'} <= 90) and ($lynis_report_data{'hardening_index'} > 80)) {
+		# yellow
+		print OUT "\t\t\t<td class=\"fair\">$lynis_report_data{'hardening_index'}</td>\n";
+	}
+	when (($lynis_report_data{'hardening_index'} <= 80) and ($lynis_report_data{'hardening_index'} > 65)) {
+		# orange
+		print OUT "\t\t\t<td class=\"poor\">$lynis_report_data{'hardening_index'}</td>\n";
+	}
+	when ($lynis_report_data{'hardening_index'} <= 65) {
+		# red
+		print OUT "\t\t\t<td class=\"dismal\">$lynis_report_data{'hardening_index'}</td>\n";
+	}
+	default { 
+		# error
+	}
+}
+
+print OUT <<END;
+		</tr></table>
+	</body>
+</html>
+
+END
+
+close OUT or die colored("There was a proble closing the output file ($output): $! \n", "bold red");
+
+#my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key );
+#foreach my $idx ( sort @indexes ) {
+#	delete($lynis_report_data{$idx});
+#}
+#print Dumper(\%lynis_report_data);
