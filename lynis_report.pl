@@ -189,12 +189,20 @@ print OUT <<END;
 		<tr><td>Warning ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
 END
 if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
-	# probably just 1 warning
-	my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
-	my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
-	my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
-	my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
-	print OUT "<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+	if (${$lynis_report_data{'warning[]'}}[0] =~ /\|/) { 									# more than one
+		foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
+			my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
+			print OUT "<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+		}
+	} elsif (${$lynis_report_data{'warning[]'}}[0] =~ /[A-Z]{4}\-\d{4}/) {					# one warning
+		my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
+		my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
+		my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
+		my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
+		print OUT "<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+	} else {
+		die colored("Unexpected ARRAY format! \n", "bold red");
+	}
 } else {
 	die colored("warning[] not ARRAY ref!: ".ref($lynis_report_data{'warning[]'})."\n", "bold red");
 }
@@ -210,6 +218,9 @@ if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
 	(${$lynis_report_data{'suggestion[]'}}[0] =~ /\|/)) {
 	foreach my $sug ( sort @{$lynis_report_data{'suggestion[]'}} ) {
 		my ($sug_id,$sug_desc,$sug_sev,$sug_f4,$sug_f5) = split(/\|/, $sug);
+		if ($sug_desc eq 'Consider hardening SSH configuration') {
+			$sug_desc .= ": $sug_sev"; $sug_sev = '-';
+		}
 		print OUT "\t\t\t<tr><td>$sug_id</td><td>$sug_desc</td><td>$sug_sev</td><td>$sug_f4</td></tr>\n";
 	}
 }
