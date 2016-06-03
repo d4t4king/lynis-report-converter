@@ -16,7 +16,8 @@ GetOptions(
 	'o|output=s'	=>	\$output,
 );
 
-my %to_bool = (	0	=>	'false', 1	=>	'true' );
+my %to_bool = (	0 => 'false', 1 => 'true' );
+my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational' );
 
 $output = "report.html" unless ((defined($output)) and ($output ne ""));
 
@@ -162,27 +163,62 @@ END
 given ($lynis_report_data{'hardening_index'}) {
 	when (($lynis_report_data{'hardening_index'} < 100) and ($lynis_report_data{'hardening_index'} > 90)) {
 		# green
-		print OUT "\t\t\t<td class=\"good\">$lynis_report_data{'hardening_index'}</td>\n";
+		print OUT "\t\t\t<td class=\"good\">$lynis_report_data{'hardening_index'}</td>";
 	}
 	when (($lynis_report_data{'hardening_index'} <= 90) and ($lynis_report_data{'hardening_index'} > 80)) {
 		# yellow
-		print OUT "\t\t\t<td class=\"fair\">$lynis_report_data{'hardening_index'}</td>\n";
+		print OUT "\t\t\t<td class=\"fair\">$lynis_report_data{'hardening_index'}</td>";
 	}
 	when (($lynis_report_data{'hardening_index'} <= 80) and ($lynis_report_data{'hardening_index'} > 65)) {
 		# orange
-		print OUT "\t\t\t<td class=\"poor\">$lynis_report_data{'hardening_index'}</td>\n";
+		print OUT "\t\t\t<td class=\"poor\">$lynis_report_data{'hardening_index'}</td>";
 	}
 	when ($lynis_report_data{'hardening_index'} <= 65) {
 		# red
-		print OUT "\t\t\t<td class=\"dismal\">$lynis_report_data{'hardening_index'}</td>\n";
+		print OUT "\t\t\t<td class=\"dismal\">$lynis_report_data{'hardening_index'}</td>";
 	}
 	default { 
 		# error
 	}
 }
 
+print OUT "\t\t</tr></table>\n";
+print OUT "<h4>warnings (".scalar(@{$lynis_report_data{'warning[]'}})."):</h4>\n";
 print OUT <<END;
-		</tr></table>
+		<table border="1">
+		<tr><td>Warning ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
+END
+if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
+	# probably just 1 warning
+	my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
+	my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
+	my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
+	my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
+	print OUT "<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+} else {
+	die colored("warning[] not ARRAY ref!: ".ref($lynis_report_data{'warning[]'})."\n", "bold red");
+}
+print OUT <<END;
+		</table>
+END
+print OUT "\t\t<h4>suggestions (".scalar(@{$lynis_report_data{'suggestion[]'}})."):</h4>\n";
+print OUT <<END;
+		<table border="1">
+			<tr><td>Suggestion ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
+END
+if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
+	(${$lynis_report_data{'suggestion[]'}}[0] =~ /\|/)) {
+	foreach my $sug ( sort @{$lynis_report_data{'suggestion[]'}} ) {
+		my ($sug_id,$sug_desc,$sug_sev,$sug_f4,$sug_f5) = split(/\|/, $sug);
+		print OUT "\t\t\t<tr><td>$sug_id</td><td>$sug_desc</td><td>$sug_sev</td><td>$sug_f4</td></tr>\n";
+	}
+}
+print OUT <<END;
+		</table>
+		<h4>manual checks:</h4>
+		<table border="1">
+			<tr><td>ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
+		</table>
 	</body>
 </html>
 
@@ -190,8 +226,8 @@ END
 
 close OUT or die colored("There was a proble closing the output file ($output): $! \n", "bold red");
 
-#my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key );
-#foreach my $idx ( sort @indexes ) {
-#	delete($lynis_report_data{$idx});
-#}
-#print Dumper(\%lynis_report_data);
+my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] );
+foreach my $idx ( sort @indexes ) {
+	delete($lynis_report_data{$idx});
+}
+print Dumper(\%lynis_report_data);
