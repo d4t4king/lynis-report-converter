@@ -1,9 +1,9 @@
 # lynis_report
 Manageable report from lynix text output.
 
-=Help Statement
+_Help Statement
 * HTML out features (default)
 * Excel out features
 
-=TODO:
+_TODO:
 * Other output formats?
