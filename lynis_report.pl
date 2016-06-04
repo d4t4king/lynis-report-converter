@@ -122,40 +122,10 @@ print OUT <<END;
 	<body>
 		<h1>lynis Asset Report</h1>
 		<h2><span class="title_shrink">created by</span> lynis_report</h2>
-		<hr>
-		<h4>lynis info:</h4>
-		<table border="1">
-			<tr>
-				<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td><td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
-			</tr>
-			<tr>
-				<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td><td>license key:</td><td>$lynis_report_data{'license_key'}</td>
-			</tr>
-			<tr>
-				<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
-			</tr>
-			<tr>
-				<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td><td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
-			</tr>
-			<tr>
-END
-
-print OUT "\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">";
-print OUT "\t\t\t\t\t<table border=\"1\">\n";
-foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
-	my ($n,$v) = split(/\|/, $plug);
-	print OUT "\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
-}
-print OUT "\t\t\t\t\t</table>\n";
-print OUT "</td>\n";
-print OUT <<END;
-			</tr>
-			<tr>
-				<td>report start time:</td><td>$lynis_report_data{'report_datetime_start'}</td><td>report end time:</td><td>$lynis_report_data{'report_datetime_end'}</td>
-			</tr>
-			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
-			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
+		<table border="0">
+			<tr><td><a href="#lynis_info">lynis info</a></td><td></td></tr>
 		</table>
+		<hr />
 		<h4>host findings:</h4>
 		<table border="1"><tr><td>hardening index:</td>
 END
@@ -235,6 +205,40 @@ foreach my $man ( sort @{$lynis_report_data{'manual[]'}} ) {
 }
 print OUT <<END;
 		</ul>
+		<hr />
+		<a name="lynis_info"><h4>lynis info:</h4></a>
+		<table border="1">
+			<tr>
+				<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td><td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
+			</tr>
+			<tr>
+				<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td><td>license key:</td><td>$lynis_report_data{'license_key'}</td>
+			</tr>
+			<tr>
+				<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
+			</tr>
+			<tr>
+				<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td><td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
+			</tr>
+			<tr>
+END
+
+print OUT "\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">";
+print OUT "\t\t\t\t\t<table border=\"1\">\n";
+foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
+	my ($n,$v) = split(/\|/, $plug);
+	print OUT "\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
+}
+print OUT "\t\t\t\t\t</table>\n";
+print OUT "</td>\n";
+print OUT <<END;
+			</tr>
+			<tr>
+				<td>report start time:</td><td>$lynis_report_data{'report_datetime_start'}</td><td>report end time:</td><td>$lynis_report_data{'report_datetime_end'}</td>
+			</tr>
+			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
+			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
+		</table>
 	</body>
 </html>
 
