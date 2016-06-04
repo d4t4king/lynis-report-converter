@@ -227,9 +227,14 @@ if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
 print OUT <<END;
 		</table>
 		<h4>manual checks:</h4>
-		<table border="1">
-			<tr><td>ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
-		</table>
+		<ul>
+END
+foreach my $man ( sort @{$lynis_report_data{'manual[]'}} ) {
+	#print Dumper($man);
+	print OUT "<li>$man</li>\n";
+}
+print OUT <<END;
+		</ul>
 	</body>
 </html>
 
@@ -241,4 +246,4 @@ my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
-print Dumper(\%lynis_report_data);
+#print Dumper(\%lynis_report_data);
