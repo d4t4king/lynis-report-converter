@@ -122,8 +122,8 @@ print OUT <<END;
 	<body>
 		<h1>lynis Asset Report</h1>
 		<h2><span class="title_shrink">created by</span> lynis_report</h2>
-		<table border="0">
-			<tr><td><a href="#lynis_info">lynis info</a></td><td></td></tr>
+		<table border="1">
+			<tr><td><a href="#lynis_info">lynis info</a></td><td><a href="#host_info">host info</a></td></tr>
 		</table>
 		<hr />
 		<h4>host findings:</h4>
@@ -239,6 +239,19 @@ print OUT <<END;
 			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
 			<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
 		</table>
+		<hr />
+		<h4><a name="host_info">host info:</a></h4>
+		<table border="1">
+			<tr><td>hostname:</td><td>$lynis_report_data{'hostname'}</td><td>domainname:</td><td>$lynis_report_data{'domainname'}</td><td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td></tr>
+			<tr><td>os:</td><td>$lynis_report_data{'os'}</td><td>os fullname:</td><td>$lynis_report_data{'os_fullname'}</td><td>os_version:</td><td>$lynis_report_data{'os_version'}</td></tr>
+			<tr><td>GRSecurity:</td><td>$to_bool{$lynis_report_data{'framework_grsecurity'}}</td><td>SELinux:</td><td>$to_bool{$lynis_report_data{'framework_selinux'}}</td><td>memory:</td><td>$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}</td></tr>
+			<tr><td>linux version:</td><td>$lynis_report_data{'linux_version'}</td><td>pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td><td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td></tr>
+END
+print OUT "\t\t\t<tr><td>network interfaces:</td><td>".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td><td>ipv4 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td><td>ipv6 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+print OUT <<END;
+			<tr><td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td><td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td><td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td></tr>
+			<tr><td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td><td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td><td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td></tr>
+		</table>
 	</body>
 </html>
 
@@ -246,8 +259,8 @@ END
 
 close OUT or die colored("There was a proble closing the output file ($output): $! \n", "bold red");
 
-my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] );
+my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_ipv6_address[] network_interfaces[] );
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
-#print Dumper(\%lynis_report_data);
+print Dumper(\%lynis_report_data);
