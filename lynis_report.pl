@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use feature qw( switch );
-no warnings "experimental::smartmatch";
+#if ($] ge '5.018000') { no warnings "experimental::smartmatch"; } 
 use Term::ANSIColor;
 use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
@@ -115,7 +115,7 @@ print OUT <<END;
 			td.good {background-color: #006400; color: #ffffff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000000; font-weight: bold;}
 			td.poor {background-color: #ffa500; color: #000000; font-weight: bold;}
-			td.dismal {background-color: #ff00000; color: #000000; font-weight: bold;}
+			td.dismal {background-color: #ff0000; color: #000000; font-weight: bold;}
 			span.title_shrink {font-size: 75%;}
 		</style>
 	</head>
