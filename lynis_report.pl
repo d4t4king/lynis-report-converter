@@ -600,7 +600,7 @@ my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
-print Dumper(\%lynis_report_data);
+#print Dumper(\%lynis_report_data);
 
 ###############################################################################
 # subs
