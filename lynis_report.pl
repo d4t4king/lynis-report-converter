@@ -73,6 +73,10 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
 
+@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array(@{$lynis_report_data{'automation_tool_running[]'}});
+
+my $pass_score = &calc_password_complexity_score;
+
 my (%warnings, %suggestions);
 #foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
 #	my ($warn_id,$descr, $sev, $field4) = split(/\|/, $warn);
@@ -115,20 +119,36 @@ print OUT <<END;
 			html,body {color: #fff; background-color: #000;}
 			div#content_section {margin: 0 10% 0 10%;}
 			div.content_subsection {margin: 0 5% 0 5%;}
+			div.collapsable {display: none;}
 			table {border-collapse: collapse; border: 1px solid white;}
 			table#lynis_plugins_table {width:100%;}
 			td {padding:2px 5px 2px 5px;}
-			td.good {background-color: #006400; color: #ffffff; font-weight: bold;}
-			td.fair {background-color: #ffd700; color: #000000; font-weight: bold;}
-			td.poor {background-color: #ffa500; color: #000000; font-weight: bold;}
-			td.dismal {background-color: #ff0000; color: #000000; font-weight: bold;}
+			td.good {background-color: #006400; color: #fff; font-weight: bold;}
+			td.fair {background-color: #ffd700; color: #000; font-weight: bold;}
+			td.poor {background-color: #ffa500; color: #000; font-weight: bold;}
+			td.dismal {background-color: #ff0000; color: #000; font-weight: bold;}
+			td.tf_bad {background-color:#ff0000; colore: #000; font-weight: bold;}
+			td.tf_good {background-color: #006400; color: #fff; font_weight: bold;}
 			span.title_shrink {font-size: 75%;}
 		</style>
+		<script language="javascript">
+			function toggle(link,content) {
+				var ele = document.getElementById(content);
+				var text = document.getElementById(link);
+				if (ele.style.display == "block" ) {
+					ele.style.display = "none";
+					text.innerHTML = "&gt;&nbsp;show&nbsp;&lt;";
+				} else {
+					ele.style.display = "block";
+					text.innerHTML = "&lt;&nbsp;hide&nbsp;&gt;";
+				}
+			}
+		</script>
 	</head>
 	<body>
 		<div id="content_section">
 			<h1>lynis Asset Report</h1>
-			<h2><span class="title_shrink">created by</span> lynis_report</h2>
+			<h2><span class="title_shrink">created by</span> <a id="github_link" href="http://github.com/d4t4king/lynis_report" target="_blank">lynis_report</a></h2>
 			<table border="1">
 				<tr>
 					<td><a href="#lynis_info">lynis info</a></td><td><a href="#host_info">host info</a></td>
@@ -241,7 +261,13 @@ print OUT <<END;
 					</tr>
 					<tr>
 						<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>
-						<td>license key:</td><td>$lynis_report_data{'license_key'}</td>
+END
+if ((defined($lynis_report_data{'license_key'})) and ($lynis_report_data{'license_key'} ne "")) {
+	print OUT "\n\n\n\n\n\n<td>license key:</td><td>$lynis_report_data{'license_key'}</td>\n";
+} else {
+	print OUT "\n\n\n\n\n\n<td>license key:</td><td>&nbsp;</td>\n";
+}
+print OUT <<END;
 					</tr>
 					<tr>
 						<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
@@ -277,7 +303,13 @@ print OUT <<END;
 					<tr>
 						<td>hostname:</td><td>$lynis_report_data{'hostname'}</td>
 						<td>domainname:</td><td>$lynis_report_data{'domainname'}</td>
-						<td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td>
+END
+if ((defined($lynis_report_data{'resolv_conf_domain'})) and ($lynis_report_data{'resolv_conf_domain'} ne "")) {
+	print OUT "\t\t\t\t\t\t<td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td>\n";
+} else {
+	print OUT "\t\t\t\t\t\t<td>resolv.conf domain:</td><td>&nbsp;</td>\n";
+}
+print OUT <<END;
 					</tr>
 					<tr>
 						<td>os:</td><td>$lynis_report_data{'os'}</td>
@@ -294,9 +326,6 @@ print OUT <<END;
 						<td>pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td>
 						<td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td>
 					</tr>
-END
-print OUT "\t\t\t\t\t<tr><td>network interfaces:</td><td>".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td><td>ipv4 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td><td>ipv6 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
-print OUT <<END;
 					<tr>
 						<td></td><td></td>
 						<td></td><td></td>
@@ -319,10 +348,18 @@ print OUT <<END;
 						<td>IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
 						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
 					</tr>
+END
+print OUT "\t\t\t\t\t<tr><td colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
+print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
+print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+print OUT <<END;
 					<tr>
 END
-if (ref($lynis_report_data{'network_mac_address[]'})) {
+#print STDERR "Should be ARRAY: |".ref($lynis_report_data{'network_mac_address[]'})."|\n";
+if (ref($lynis_report_data{'network_mac_address[]'}) eq "ARRAY") {
 	print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
+} elsif ((defined($lynis_report_data{'network_mac_address[]'})) and ($lynis_report_data{'network_mac_address[]'} ne "")) {
+	print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>$lynis_report_data{'network_mac_address[]'}</td>\n";
 } else { 
 	print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>&nbsp;</td>\n";
 }
@@ -367,13 +404,13 @@ print OUT <<END;
 						<td>Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>
 						<td>Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>
 						<td>Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>
-						<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>
+						<td>Package Manager:</td><td>$lynis_report_data{'package_manager[]'}</td>
 					</tr>
 					<tr>
-						<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>
 						<td>Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>
 						<td>Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>
-						<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>
+						<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>
+						<td>LDAP Auth Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_auth_enabled'}}</td>
 					</tr>
 					<tr>
 						<td>Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>
@@ -382,36 +419,163 @@ print OUT <<END;
 						<td>Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>
 					</tr>
 					<tr>
+END
+printf OUT "\t\t\t\t\t\t<td>Password Complexity Score:</td><td>%#b</td>\n", $pass_score;
+print OUT <<END;
 						<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>
 						<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>
-						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
-						<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>
+						<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>
 					</tr>
 					<tr>
+						<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>
+						<td>File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>
+						<td>Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>
+END
+print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
+print OUT <<END;
+					</tr>
+					<tr>
+						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
+						<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>
+						<td></td><td></td>
+						<td></td><td></td>
 					</tr>
 				</table>
-				<h4>PAM Modules:</h4>
-				<table border="1">
+				<h4>PAM Modules:</h4><a id="pamModLink" href="javascript:toggle('pamModLink', 'pamModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="pamModToggle" style="display: none">
+					<table border="0">
 END
-for (my $i=0;$i<scalar(@{$lynis_report_data{'pam_module[]'}});$i+=4) {
-	print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td>";
-	print OUT "<td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td></tr>\n";
+my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
+#print "ARRLEN: $arrlen \n";
+if (($arrlen % 5) == 0) {
+	print "ARRLEN divisible by 5. \n";
+} elsif (($arrlen % 4) == 0) {
+	print "ARRLEN divisible by 4. \n";
+} elsif (($arrlen % 3) == 0) {
+	#print "ARRLEN divisible by 3. \n";
+	for (my $i=0;$i<$arrlen;$i+=3) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td></tr>\n";
+	}
+} elsif (($arrlen % 2) == 0) {
+	#print "ARRLEN divisible by 2. \n";
+	for (my $i=0;$i<$arrlen;$i+=2) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td></tr>\n";
+	}
+} else {
+	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
 }
 print OUT <<END;
-				</table>
+					</table>
+				</div>
 			</div>
 			<hr />
-			<h4><a name="kernel_info">kernel info:</a></h4>
+			<h3><a name="kernel_info">kernel info:</a></h3>
 			<div class="content_subsection">
 				<table border="1">
 					<tr>
+						<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>
 						<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>
 					</tr>
 					<tr>
-						<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>
 						<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>
+						<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>
+					</tr>
+					<tr>
+						<td>linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>
+						<td></td><td></td>
 					</tr>
 				</table>
+				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="kernelModToggle" style="display: none">
+					<table border="0">
+END
+$arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
+#print "ARRLEN: $arrlen \n";
+if (($arrlen % 5) == 0) {
+	print "ARRLEN divisible by 5. \n";
+} elsif (($arrlen % 4) == 0) {
+	print "ARRLEN divisible by 4. \n";
+} elsif (($arrlen % 3) == 0) {
+	#print "ARRLEN divisible by 3. \n";
+	for (my $i=0;$i<$arrlen;$i+=3) {
+		print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td></tr>\n";
+	}
+} elsif (($arrlen % 2) == 0) {
+	print "ARRLEN divisible by 2. \n";
+} else {
+	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
+}
+print OUT <<END;
+					</table>
+				</div>
+			</div>
+			<hr />
+			<h3><a name="service_info">service info:</a></h3>
+			<div class="content_subsection">
+				<!-- <table border="1">
+					<tr>
+						<td>ntp daemon running:</td><td>$to_bool{$lynis_report_data{'ntp_daemon_running'}}</td>
+					</td>
+					<tr>
+						<td>mysql running:</td><td>$to_bool{$lynis_report_data{'mysql_running'}}</td>
+					</td>
+					<tr>
+						<td>ssh daemon running:</td><td>$to_bool{$lynis_report_data{'ssh_daemon_running'}}</td>
+					</td>
+					<tr>
+						<td>dhcp client running:</td><td>$to_bool{$lynis_report_data{'dhcp_client_running'}}</td>
+					</td>
+					<tr>
+						<td>arpwatch running:</td><td>$to_bool{$lynis_report_data{'arpwatch_running'}}</td>
+					</td>
+					<tr>
+						<td>audit daemon running:</td><td>$to_bool{$lynis_report_data{'audit_daemon_running'}}</td>
+					</td>
+					<tr>
+						<td>cron daemon running:</td><td>$to_bool{$lynis_report_data{'crond_running'}}</td>
+					</td>
+				</table> -->
+				<h4>Running services:</h4>
+				<ul>
+END
+foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) {
+	print OUT "\t\t\t\t\t<li>$svc</li>\n";
+}
+print OUT <<END;
+				</ul>
+			</div>
+			<hr />
+			<h3><a name="installed_packages">Installed packages:</a></h3>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td>Number of packages installed:</td><td>$lynis_report_data{'installed_packages'}</td>
+						<td>Number of binaries found:</td><td>$lynis_report_data{'binaries_count'}</td>
+					</tr>
+				</table>
+				<br />
+				<a id="pkgLink" href="javascript: toggle('pkgLink', 'pkgContent');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="pkgContent" style="display: none">
+					<table border="0">
+END
+#print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
+$arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
+#print "ARRLEN: $arrlen \n";
+if (($arrlen % 4) == 0) {
+	print "ARRLEN divisible by 4. \n";
+} elsif (($arrlen % 3) == 0) {
+	#print "ARRLEN divisible by 3. \n";
+	for (my $i=0;$i<$arrlen;$i+=3) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td></tr>\n";
+	}
+} elsif (($arrlen % 2) == 0) {
+	print "ARRLEN divisible by 2. \n";
+} else {
+	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
+}
+print OUT <<END;
+					</table>
+				</div>
 			</div>
 		</div>
 	</body>
@@ -421,7 +585,7 @@ END
 
 close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_ipv6_address[] network_interfaces[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only network_mac_address[] name_cache_used ldap_pam_enabled );
+my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
@@ -446,4 +610,24 @@ Where:
 
 END
 	exit 0;
+}
+
+sub dedup_array {
+	my @ary = shift;
+	my %hash;
+
+	foreach my $ele ( @ary ) { $hash{$ele}++; }
+	return keys(%hash);
+}
+
+sub calc_password_complexity_score {
+	my ($lc,$uc,$n,$o);
+	if ($lynis_report_data{'password_max_l_credit'}) { $lc = 0b0001; } else { $lc = 0b0000; }
+	if ($lynis_report_data{'password_max_u_credit'}) { $uc = 0b0010; } else { $uc = 0b0000; }
+	if ($lynis_report_data{'password_max_digital_credit'}) { $n = 0b0100; } else { $n = 0b0000; }
+	if ($lynis_report_data{'password_max_other_credit'}) { $o = 0b1000; } else { $o = 0b0000; }
+	#printf "%#b\n%#b\n%#b\n%#b\n", $lc, $uc, $n, $o;
+	my $score = ($lc + $uc + $n + $o);
+	#printf "%#b\n", $score;
+	return $score;
 }
