@@ -52,9 +52,12 @@ print "format. \n";
 # but it is not our job to draw conclusions here, just present the findings of the tool.
 open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis report: $! \n", "bold red");
 while (my $line = <RPT>) {
-	next if ($line =~ /^#/);			# skip commented lines
+	next if ($line =~ /^#/);								# skip commented lines
+	next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
 	chomp($line);
 	my ($k, $v) = split(/=/, $line);
+	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
+	if ((!defined($v)) or ($v eq "")) { $v = "&nbsp;"; }	# fill with a blank(ish) value if nothing
 	print "k=$k\n" if (($verbose) and ($verbose > 1));
 	print "v=$v\n" if (($verbose) and ($verbose > 1));
 	# if the key already exists, assume it's supposed to be an array value.  Array values are handled a couple
@@ -238,7 +241,10 @@ if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
 		if ($sug_desc eq 'Consider hardening SSH configuration') {
 			$sug_desc .= ": $sug_sev"; $sug_sev = '-';
 		}
-		print OUT "\t\t\t\t\t<tr><td>$sug_id</td><td>$sug_desc</td><td>$sug_sev</td><td>$sug_f4</td></tr>\n";
+		print OUT "\t\t\t\t\t<tr><td>$sug_id</td>";
+		print OUT "<td>$sug_desc</td>";
+		print OUT "<td>".($sug_sev ? $sug_sev : "&nbsp;")."</td>";
+		print OUT "<td>".($sug_f4 ? $sug_f4 : "&nbsp;")."</td></tr>\n";
 	}
 }
 print OUT <<END;
@@ -353,9 +359,6 @@ print OUT <<END;
 			<div class="content_subsection">
 				<table border="1">
 					<tr>
-						<td colspan="2">Default Gateway</td><td colspan="2">$lynis_report_data{'default_gateway[]'}</td>
-					</tr>
-					<tr>
 						<td>IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
 						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
 					</tr>
@@ -363,6 +366,7 @@ END
 print OUT "\t\t\t\t\t<tr><td colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
 print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
 print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+print OUT "\t\t\t\t\t<tr><td colspan=\"2\">Default Gateway</td><td colspan=\"2\">$lynis_report_data{'default_gateway[]'}</td></tr>\n";
 print OUT <<END;
 					<tr>
 END
@@ -582,7 +586,7 @@ if (($arrlen % 4) == 0) {
 } elsif (($arrlen % 2) == 0) {
 	print "ARRLEN divisible by 2. \n";
 } else {
-	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
+	die "ARRLEN appears to be number with a divisor larger than 4 or 1 ($arrlen) \n";
 }
 print OUT <<END;
 					</table>
