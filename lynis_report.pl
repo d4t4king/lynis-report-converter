@@ -116,6 +116,8 @@ print OUT <<END;
 			div#content_section {margin: 0 10% 0 10%;}
 			div.content_subsection {margin: 0 5% 0 5%;}
 			table {border-collapse: collapse; border: 1px solid white;}
+			table#lynis_plugins_table {width:100%;}
+			td {padding:2px 5px 2px 5px;}
 			td.good {background-color: #006400; color: #ffffff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000000; font-weight: bold;}
 			td.poor {background-color: #ffa500; color: #000000; font-weight: bold;}
@@ -128,10 +130,13 @@ print OUT <<END;
 			<h1>lynis Asset Report</h1>
 			<h2><span class="title_shrink">created by</span> lynis_report</h2>
 			<table border="1">
-				<tr><td><a href="#lynis_info">lynis info</a></td><td><a href="#host_info">host info</a></td></tr>
+				<tr>
+					<td><a href="#lynis_info">lynis info</a></td><td><a href="#host_info">host info</a></td>
+					<td><a href="#network_info">network info</a></td><td><a href="#security_info">security Info</a></td>
+				</tr>
 			</table>
 			<hr />
-			<h4>host findings:</h4>
+			<h3>host findings:</h3>
 			<table border="1"><tr><td>hardening index:</td>
 END
 
@@ -220,29 +225,35 @@ if ((exists($lynis_report_data{'manual[]'})) and (scalar(@{$lynis_report_data{'m
 		print OUT "<li>$man</li>\n";
 	}
 }
+
+# It's easier to move stuff around if there is one cell (or cell group) per libe for the tables.  Maybe this
+# isn't ideal HTML writing, but it makes sense when writing the tool.
 print OUT <<END;
 			</ul>
 			<hr />
-			<a name="lynis_info"><h4>lynis info:</h4></a>
+			<h3><a name="lynis_info">lynis info:</a></h3>
 			<div class="content_subsection">
 				<table border="1">
 					<tr>
-						<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td><td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
+						<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>
+						<td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
 					</tr>
 					<tr>
-						<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td><td>license key:</td><td>$lynis_report_data{'license_key'}</td>
+						<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>
+						<td>license key:</td><td>$lynis_report_data{'license_key'}</td>
 					</tr>
 					<tr>
 						<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
 					</tr>
 					<tr>
-						<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td><td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
+						<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td>
+						<td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
 					</tr>
 					<tr>
 END
 
 print OUT "\t\t\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">\n";
-print OUT "\t\t\t\t\t\t\t<table border=\"1\">\n";
+print OUT "\t\t\t\t\t\t\t<table border=\"1\" id=\"lynis_plugins_table\">\n";
 foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
 	my ($n,$v) = split(/\|/, $plug);
 	print OUT "\t\t\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
@@ -259,18 +270,140 @@ print OUT <<END;
 				</table>
 			</div>
 			<hr />
-			<h4><a name="host_info">host info:</a></h4>
+			<h3><a name="host_info">host info:</a></h3>
 			<div class="content_subsection">
 				<table border="1">
-					<tr><td>hostname:</td><td>$lynis_report_data{'hostname'}</td><td>domainname:</td><td>$lynis_report_data{'domainname'}</td><td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td></tr>
-					<tr><td>os:</td><td>$lynis_report_data{'os'}</td><td>os fullname:</td><td>$lynis_report_data{'os_fullname'}</td><td>os_version:</td><td>$lynis_report_data{'os_version'}</td></tr>
-					<tr><td>GRSecurity:</td><td>$to_bool{$lynis_report_data{'framework_grsecurity'}}</td><td>SELinux:</td><td>$to_bool{$lynis_report_data{'framework_selinux'}}</td><td>memory:</td><td>$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}</td></tr>
-					<tr><td>linux version:</td><td>$lynis_report_data{'linux_version'}</td><td>pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td><td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td></tr>
+					<tr>
+						<td>hostname:</td><td>$lynis_report_data{'hostname'}</td>
+						<td>domainname:</td><td>$lynis_report_data{'domainname'}</td>
+						<td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td>
+					</tr>
+					<tr>
+						<td>os:</td><td>$lynis_report_data{'os'}</td>
+						<td>os fullname:</td><td>$lynis_report_data{'os_fullname'}</td>
+						<td>os_version:</td><td>$lynis_report_data{'os_version'}</td>
+					</tr>
+					<tr>
+						<td>GRSecurity:</td><td>$to_bool{$lynis_report_data{'framework_grsecurity'}}</td>
+						<td>SELinux:</td><td>$to_bool{$lynis_report_data{'framework_selinux'}}</td>
+						<td>memory:</td><td>$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}</td>
+					</tr>
+					<tr>
+						<td>linux version:</td><td>$lynis_report_data{'linux_version'}</td>
+						<td>pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td>
+						<td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td>
+					</tr>
 END
 print OUT "\t\t\t\t\t<tr><td>network interfaces:</td><td>".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td><td>ipv4 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td><td>ipv6 addresses:</td><td>".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
 print OUT <<END;
-					<tr><td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td><td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td><td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td></tr>
-					<tr><td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td><td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td><td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td></tr>
+					<tr>
+						<td></td><td></td>
+						<td></td><td></td>
+						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
+					</tr>
+					<tr>
+						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
+						<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>
+						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td></tr>
+				</table>
+			</div>
+			<hr />
+			<h3><a name="network_info">network info:</a></h3>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td colspan="2">Default Gateway</td><td colspan="2">$lynis_report_data{'default_gateway[]'}</td>
+					</tr>
+					<tr>
+						<td>IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
+						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
+					</tr>
+					<tr>
+						<td>MAC Address:</td><td>$lynis_report_data{'network_mac_address[]'}</td>
+						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
+					</td>
+				</table>
+				<h4>Open Ports:</h4>
+				<table border="1">
+					<tr><td>IP Address</td><td>Port</td><td>Protocol</td><td>Daemon/Process</td><td>???</td></tr>
+END
+
+foreach my $obj ( sort @{$lynis_report_data{'network_listen_port[]'}} ) {
+	my ($ipp,$proto,$daemon,$dunno) = split(/\|/, $obj);
+	my ($ip,$port);
+	my $colon_count = grep(/\:/, split(//, $ipp));
+	if ($colon_count > 1) {
+		# must be an IPv6 address;
+		my @parts = split(/\:/, $ipp);
+		$port = pop(@parts);
+		$ip = join(":", @parts);
+	} else {
+		# must be IPv4
+		($ip,$port) = split(/\:/, $ipp);
+	}
+	print OUT "\t\t\t\t\t<tr><td>$ip</td><td>$port</td><td>$proto</td><td>$daemon</td><td>$dunno</td></tr>\n";
+}
+print OUT <<END;
+				</table>
+			</div>
+			<hr />
+			<h3><a name="security_info">security info:</a></h3>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td>Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>
+						<td>Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>
+						<td>Firewall Empty Ruleset:</td><td>$to_bool{$lynis_report_data{'firewall_empty_ruleset'}}</td>
+						<td>Firewall Active:</td><td>$to_bool{$lynis_report_data{'firewall_active'}}</td>
+					</tr>
+					<tr>
+						<td>Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>
+						<td>Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>
+						<td>Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>
+						<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>
+					</tr>
+					<tr>
+						<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>
+						<td>Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>
+						<td>Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>
+						<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>
+					</tr>
+					<tr>
+						<td>Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>
+						<td>Maximum Password Days:</td><td>$lynis_report_data{'password_max_days'}</td>
+						<td>Minimum Password Days:</td><td>$lynis_report_data{'password_min_days'}</td>
+						<td>Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>
+					</tr>
+					<tr>
+						<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>
+						<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>
+						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
+						<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>
+					</tr>
+					<tr>
+					</tr>
+				</table>
+				<h4>PAM Modules:</h4>
+				<table border="1">
+END
+for (my $i=0;$i<scalar(@{$lynis_report_data{'pam_module[]'}});$i+=4) {
+	print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td>";
+	print OUT "<td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td></tr>\n";
+}
+print OUT <<END;
+				</table>
+			</div>
+			<hr />
+			<h4><a name="kernel_info">kernel info:</a></h4>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>
+					</tr>
+					<tr>
+						<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>
+						<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>
+					</tr>
 				</table>
 			</div>
 		</div>
@@ -279,9 +412,9 @@ print OUT <<END;
 
 END
 
-close OUT or die colored("There was a proble closing the output file ($output): $! \n", "bold red");
+close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_ipv6_address[] network_interfaces[] );
+my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_ipv6_address[] network_interfaces[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool_found vulnerable_packages_found firewall_active firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only network_mac_address[] name_cache_used );
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
