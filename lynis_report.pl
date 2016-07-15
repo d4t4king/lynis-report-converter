@@ -222,6 +222,7 @@ END
 if ((exists($lynis_report_data{'manual[]'})) and (scalar(@{$lynis_report_data{'manual[]'}}) > 0)) {
 	foreach my $man ( sort @{$lynis_report_data{'manual[]'}} ) {
 		#print Dumper($man);
+		chomp($man);
 		print OUT "<li>$man</li>\n";
 	}
 }
@@ -320,7 +321,11 @@ print OUT <<END;
 					</tr>
 					<tr>
 END
-print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
+if (ref($lynis_report_data{'network_mac_address[]'})) {
+	print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
+} else { 
+	print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>&nbsp;</td>\n";
+}
 print OUT <<END;
 						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
 					</td>
