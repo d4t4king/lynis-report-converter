@@ -130,6 +130,14 @@ print OUT <<END;
 			td.tf_bad {background-color:#ff0000; colore: #000; font-weight: bold;}
 			td.tf_good {background-color: #006400; color: #fff; font_weight: bold;}
 			span.title_shrink {font-size: 75%;}
+			a:link#github_link {color: #fff;}
+			a:visited#github_link {color: #acacac;}
+			a:hover#github_link {color: #0000ff;}
+			a:active#github_link {color:#000;}
+			a:link {color: #fff;}
+			a:visited {color: #555;}
+			a:hover {color: #0000ff;}
+			a:active {color:#000;}
 		</style>
 		<script language="javascript">
 			function toggle(link,content) {
@@ -327,14 +335,17 @@ print OUT <<END;
 						<td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td>
 					</tr>
 					<tr>
-						<td></td><td></td>
-						<td></td><td></td>
+END
+print OUT "\t\t\t\t\t\t<td>Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
+print OUT <<END;
+						<td>locate db:</td><td>$lynis_report_data{'locate_db'}</td>
 						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
 					</tr>
 					<tr>
 						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
 						<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>
-						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td></tr>
+						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
+					</tr>
 				</table>
 			</div>
 			<hr />
@@ -585,7 +596,7 @@ END
 
 close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
+my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db );
 foreach my $idx ( sort @indexes ) {
 	delete($lynis_report_data{$idx});
 }
