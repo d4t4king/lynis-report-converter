@@ -319,7 +319,9 @@ print OUT <<END;
 						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
 					</tr>
 					<tr>
-						<td>MAC Address:</td><td>$lynis_report_data{'network_mac_address[]'}</td>
+END
+print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
+print OUT <<END;
 						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
 					</td>
 				</table>
