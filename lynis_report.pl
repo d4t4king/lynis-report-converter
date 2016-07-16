@@ -552,27 +552,15 @@ print OUT <<END;
 			<h3><a name="service_info">service info:</a></h3>
 			<div class="content_subsection">
 				<!-- <table border="1">
-					<tr>
-						<td>ntp daemon running:</td><td>$to_bool{$lynis_report_data{'ntp_daemon_running'}}</td>
-					</td>
-					<tr>
-						<td>mysql running:</td><td>$to_bool{$lynis_report_data{'mysql_running'}}</td>
-					</td>
-					<tr>
-						<td>ssh daemon running:</td><td>$to_bool{$lynis_report_data{'ssh_daemon_running'}}</td>
-					</td>
-					<tr>
-						<td>dhcp client running:</td><td>$to_bool{$lynis_report_data{'dhcp_client_running'}}</td>
-					</td>
-					<tr>
-						<td>arpwatch running:</td><td>$to_bool{$lynis_report_data{'arpwatch_running'}}</td>
-					</td>
-					<tr>
-						<td>audit daemon running:</td><td>$to_bool{$lynis_report_data{'audit_daemon_running'}}</td>
-					</td>
-					<tr>
-						<td>cron daemon running:</td><td>$to_bool{$lynis_report_data{'crond_running'}}</td>
-					</td>
+END
+foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon ) ) {
+	if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
+		print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
+	} else {
+		print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
+	}
+}
+print OUT <<END;
 				</table> -->
 				<h4>Running services:</h4>
 				<ul>
