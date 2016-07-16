@@ -348,10 +348,14 @@ print OUT <<END;
 						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
 					</tr>
 					<tr>
-						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
+						<td>vm:</td><td>$lynis_report_data{'vm'}</td>
 END
+if ((defined($lynis_report_data{'vmtype'})) and ($lynis_report_data{'vmtype'} ne "")) {
+	print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>\n";
+} else{
+	print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>&nbsp;</td>\n";
+}
 print OUT <<END;
-						<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>
 						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
 					</tr>
 				</table>
@@ -459,7 +463,13 @@ print OUT <<END;
 					</tr>
 					<tr>
 						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
-						<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>
+END
+if (exists($lynis_report_data{'ids_ips_tooling[]'})) {
+	print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
+} else {
+	print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>&nbsp;</td>\n";
+}
+print OUT <<END;
 						<td></td><td></td>
 						<td></td><td></td>
 					</tr>
@@ -471,7 +481,10 @@ END
 my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
 #print "ARRLEN: $arrlen \n";
 if (($arrlen % 5) == 0) {
-	print "ARRLEN divisible by 5. \n";
+	#print "ARRLEN divisible by 5. \n";
+	for (my $i=0;$i<$arrlen;$i+=5) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 4)]</td></tr>\n";
+	}
 } elsif (($arrlen % 4) == 0) {
 	print "ARRLEN divisible by 4. \n";
 } elsif (($arrlen % 3) == 0) {
@@ -485,7 +498,7 @@ if (($arrlen % 5) == 0) {
 		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td></tr>\n";
 	}
 } else {
-	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
+	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 }
 print OUT <<END;
 					</table>
@@ -517,7 +530,10 @@ $arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
 if (($arrlen % 5) == 0) {
 	print "ARRLEN divisible by 5. \n";
 } elsif (($arrlen % 4) == 0) {
-	print "ARRLEN divisible by 4. \n";
+	#print "ARRLEN divisible by 4. \n";
+	for (my $i=0;$i<$arrlen;$i+=4) {
+		print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td></tr>\n";
+	}
 } elsif (($arrlen % 3) == 0) {
 	#print "ARRLEN divisible by 3. \n";
 	for (my $i=0;$i<$arrlen;$i+=3) {
@@ -526,7 +542,7 @@ if (($arrlen % 5) == 0) {
 } elsif (($arrlen % 2) == 0) {
 	print "ARRLEN divisible by 2. \n";
 } else {
-	die "ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n";
+	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
 }
 print OUT <<END;
 					</table>
@@ -584,17 +600,28 @@ END
 #print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
 $arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
 #print "ARRLEN: $arrlen \n";
-if (($arrlen % 4) == 0) {
-	print "ARRLEN divisible by 4. \n";
+if (($arrlen % 5) == 0) {
+	#print "ARRLEN divisible by 5. \n";
+	for (my $i=0;$i<$arrlen;$i+=5) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 3)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 4)]</td></tr>\n";
+	}
+} elsif (($arrlen % 4) == 0) {
+	#print "ARRLEN divisible by 4. \n";
+	for (my $i=0;$i<$arrlen;$i+=4) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 3)]</td></tr>\n";
+	}
 } elsif (($arrlen % 3) == 0) {
 	#print "ARRLEN divisible by 3. \n";
 	for (my $i=0;$i<$arrlen;$i+=3) {
 		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td></tr>\n";
 	}
 } elsif (($arrlen % 2) == 0) {
-	print "ARRLEN divisible by 2. \n";
+	#print "ARRLEN divisible by 2. \n";
+	for (my $i=0;$i<$arrlen;$i+=3) {
+		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td></tr>\n";
+	}
 } else {
-	die "ARRLEN appears to be number with a divisor larger than 4 or 1 ($arrlen) \n";
+	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 }
 print OUT <<END;
 					</table>
