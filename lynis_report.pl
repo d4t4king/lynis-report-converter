@@ -560,16 +560,18 @@ foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch aud
 		print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
 	}
 }
-print OUT <<END;
-				</table> -->
+print OUT "\t\t\t\t\t</table> -->\n";
+if (exists($lynis_report_data{'running_service[]'})) {
+	print OUT <<END;
 				<h4>Running services:</h4>
 				<ul>
 END
-foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) {
-	print OUT "\t\t\t\t\t<li>$svc</li>\n";
+	foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) {
+		print OUT "\t\t\t\t\t<li>$svc</li>\n";
+	}
+	print OUT "\t\t\t\t\t</ul>\n";
 }
 print OUT <<END;
-				</ul>
 			</div>
 			<hr />
 			<h3><a name="installed_packages">Installed packages:</a></h3>
