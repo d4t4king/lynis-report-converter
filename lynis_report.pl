@@ -76,7 +76,7 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
 
-@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array(@{$lynis_report_data{'automation_tool_running[]'}});
+@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array(@{$lynis_report_data{'automation_tool_running[]'}}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
 
 my $pass_score = &calc_password_complexity_score;
 
@@ -349,6 +349,8 @@ print OUT <<END;
 					</tr>
 					<tr>
 						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
+END
+print OUT <<END;
 						<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>
 						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
 					</tr>
@@ -446,7 +448,13 @@ print OUT <<END;
 						<td>File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>
 						<td>Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>
 END
-print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
+if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY') {
+	print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
+} elsif ((defined($lynis_report_data{'automation_tool_running[]'})) and ($lynis_report_data{'automation_tool_running[]'} ne "")) {
+	print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>$lynis_report_data{'automation_tool_running[]'}</td>\n";
+} else {
+	print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>&nbsp;</td>\n";
+}
 print OUT <<END;
 					</tr>
 					<tr>
