@@ -498,6 +498,7 @@ if (($arrlen % 5) == 0) {
 		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td></tr>\n";
 	}
 } else {
+	if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
 	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 }
 print OUT <<END;
@@ -542,6 +543,7 @@ if (($arrlen % 5) == 0) {
 } elsif (($arrlen % 2) == 0) {
 	print "ARRLEN divisible by 2. \n";
 } else {
+	if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
 	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
 }
 print OUT <<END;
@@ -611,6 +613,7 @@ if (($arrlen % 5) == 0) {
 		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td></tr>\n";
 	}
 } else {
+	if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
 	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 }
 print OUT <<END;
@@ -650,6 +653,21 @@ Where:
 
 END
 	exit 0;
+}
+
+sub is_prime {
+	my $num = shift(@_);
+
+	if ($num < 2 ) { return 0; }
+	if ($num == 2) { return 1; }
+	else {
+		for (my$i=2;$i<sqrt($num);$i++) {
+			if ($num % $i == 0) {
+				return 0;
+			}
+		}
+		return 1;
+	}
 }
 
 sub dedup_array {
