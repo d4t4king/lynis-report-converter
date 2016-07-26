@@ -532,7 +532,7 @@ END
 			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 4)]</td></tr>\n";
 		}
 	} elsif (($arrlen % 4) == 0) {
-		print "ARRLEN divisible by 4. \n";
+		warn colored("ARRLEN divisible by 4. \n", "yellow");
 	} elsif (($arrlen % 3) == 0) {
 		#print "ARRLEN divisible by 3. \n";
 		for (my $i=0;$i<$arrlen;$i+=3) {
