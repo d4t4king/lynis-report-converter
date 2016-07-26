@@ -486,7 +486,7 @@ if (($arrlen % 5) == 0) {
 		print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 4)]</td></tr>\n";
 	}
 } elsif (($arrlen % 4) == 0) {
-	print "ARRLEN divisible by 4. \n";
+	warn colored("ARRLEN divisible by 4. \n", "yellow");
 } elsif (($arrlen % 3) == 0) {
 	#print "ARRLEN divisible by 3. \n";
 	for (my $i=0;$i<$arrlen;$i+=3) {
@@ -528,19 +528,22 @@ END
 $arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
 #print "ARRLEN: $arrlen \n";
 if (($arrlen % 5) == 0) {
-	print "ARRLEN divisible by 5. \n";
+	#warn colored("ARRLEN divisible by 5. \n", "yellow");
+	for (my $i=0;$i<$arrlen;$i+=5) {
+		print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 4)]</td></tr>\n";
+	}
 } elsif (($arrlen % 4) == 0) {
-	#print "ARRLEN divisible by 4. \n";
+	#warn colored("ARRLEN divisible by 4. \n", "yellow");
 	for (my $i=0;$i<$arrlen;$i+=4) {
 		print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td></tr>\n";
 	}
 } elsif (($arrlen % 3) == 0) {
-	#print "ARRLEN divisible by 3. \n";
+	#warn colored("ARRLEN divisible by 3. \n", "yellow");
 	for (my $i=0;$i<$arrlen;$i+=3) {
 		print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td></tr>\n";
 	}
 } elsif (($arrlen % 2) == 0) {
-	print "ARRLEN divisible by 2. \n";
+	warn colored("ARRLEN divisible by 2. \n", "yellow");
 } else {
 	die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
 }
