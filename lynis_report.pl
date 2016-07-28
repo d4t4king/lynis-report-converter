@@ -536,6 +536,7 @@ END
 END
 	my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
 	#print "ARRLEN: $arrlen \n";
+MAKECOLUMNS1:
 	if (($arrlen % 5) == 0) {
 		#print "ARRLEN divisible by 5. \n";
 		for (my $i=0;$i<$arrlen;$i+=5) {
@@ -543,6 +544,9 @@ END
 		}
 	} elsif (($arrlen % 4) == 0) {
 		warn colored("ARRLEN divisible by 4. \n", "yellow");
+		for (my $i=0;$i<$arrlen;$i+=4) {
+			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td></tr>\n";
+		}
 	} elsif (($arrlen % 3) == 0) {
 		#print "ARRLEN divisible by 3. \n";
 		for (my $i=0;$i<$arrlen;$i+=3) {
@@ -554,7 +558,11 @@ END
 			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td></tr>\n";
 		}
 	} else {
-		if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
+		if (&is_prime($arrlen)) { 
+			print colored("Number ($arrlen) is prime. \n", "bold yellow"); 
+			$arrlen++;
+			goto MAKECOLUMNS1;
+		}
 		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 	}
 	print OUT <<END;
