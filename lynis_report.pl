@@ -9,13 +9,16 @@ use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 #use Spreadsheet::WriteExcel;
 use Excel::Writer::XLSX;
+#use File::Basename;
+use HTML::HTMLDoc;
 
-my ($help,$verbose,$excel,$output);
+my ($help,$verbose,$excel,$output,$pdf);
 GetOptions(
 	'h|help'		=>	\$help,
 	'v|verbose+'	=>	\$verbose,
 	'E|excel'		=>	\$excel,
 	'o|output=s'	=>	\$output,
+	'p|pdf'			=>	\$pdf,
 );
 
 if ($help) { &usage; }
@@ -23,10 +26,16 @@ if ($help) { &usage; }
 my %to_bool = (	0 => 'false', 1 => 'true' );
 my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational' );
 
+my ($basename, $path, $suffix, $htmldoc);
+
 if ($excel) {
 	$output = 'report.xlsx' unless ((defined($output)) and ($output ne ""));
+} elsif ($pdf) {
+	$output = 'report.pdf' unless ((defined($output)) and ($output ne ''));
+	$htmldoc = "$$.html";
 } else {
 	$output = "report.html" unless ((defined($output)) and ($output ne ""));
+	$htmldoc = $output
 }
 
 my $lynis_log = '/var/log/lynis.log';
@@ -50,7 +59,8 @@ if (($audit_run) and ($audit_run >= 1)) {
 }
 
 print "Outputting report to $output, in ";
-if ($excel) { print "Excel " }
+if ($excel) { print "Excel "; }
+elsif ($pdf) { print "PDF "; }
 else { print "HTML "; }
 print "format. \n";
 
@@ -158,7 +168,7 @@ if ($excel) {
 	$summary_ws->add_table("A8:D$last_row_number", \%params);
 
 } else {
-	open OUT, ">$output" or die colored("There was a problem opening the output file ($output): $! \n", "bold red");
+	open OUT, ">$htmldoc" or die colored("There was a problem opening the output file ($htmldoc): $! \n", "bold red");
 	print OUT <<END;
 
 <html >
@@ -678,6 +688,15 @@ END
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
+
+	if ($pdf) {
+		my $htmlobj = new HTML::HTMLDoc();
+		$htmlobj->set_input_file($htmldoc);
+		my $pdfdoc = $htmlobj->generate_pdf();
+		$pdfdoc->to_file($output);
+		my $errs = system("rm -f $htmldoc");
+		if ($verbose) { print "Clean up return code: $errs \n"; }
+	}	
 }
 
 #print Dumper(\%lynis_report_data);
