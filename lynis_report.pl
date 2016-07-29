@@ -92,7 +92,9 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
 
-@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array(@{$lynis_report_data{'automation_tool_running[]'}}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
+@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
+@{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
+@{$lynis_report_data{'cronjob[]'}} = &dedup_array($lynis_report_data{'cronjob[]'}) if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY');
 
 my $pass_score = &calc_password_complexity_score;
 
@@ -108,7 +110,7 @@ my (%warnings, %suggestions);
 
 # process "string array" values delimited by a pipe (|)
 foreach my $key ( sort keys %lynis_report_data ) {
-	print "$key, ".ref($lynis_report_data{$key})." \n" if (($verbose) and ($verbose >= 1));
+	print "$key, ".ref($lynis_report_data{$key})." \n" if (($verbose) and ($verbose > 1));
 	if (((ref($lynis_report_data{$key}) ne 'ARRAY') and
 		(ref($lynis_report_data{$key}) ne 'HASH')) and
 		($lynis_report_data{$key} =~ /\|/)) {
@@ -178,10 +180,11 @@ if ($excel) {
 			html,body {color: #fff; background-color: #000;}
 			div#content_section {margin: 0 10% 0 10%;}
 			div.content_subsection {margin: 0 5% 0 5%;}
-			div.collapsable {display: none;}
-			table {border-collapse: collapse; border: 1px solid white;}
+			div.collapsable {display:none;}
+			table {border-collapse:collapse;border:1px solid white;}
+			table.list {border:0px;}
 			table#lynis_plugins_table {width:100%;}
-			td {padding:2px 5px 2px 5px;}
+			td {padding:2px 5px 2px 5px;vertical-align:top;}
 			td.good {background-color: #006400; color: #fff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000; font-weight: bold;}
 			td.poor {background-color: #ffa500; color: #000; font-weight: bold;}
@@ -343,6 +346,10 @@ END
 						<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
 					</tr>
 					<tr>
+						<td>test category:</td><td>$lynis_report_data{'test_category'}</td>
+						<td>test group:</td><td>$lynis_report_data{'test_group'}</td>
+					</tr>
+					<tr>
 						<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td>
 						<td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
 					</tr>
@@ -404,7 +411,7 @@ END
 						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
 					</tr>
 					<tr>
-						<td>vm:</td><td>$lynis_report_data{'vm'}</td>
+						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
 END
 	if ((defined($lynis_report_data{'vmtype'})) and ($lynis_report_data{'vmtype'} ne "")) {
 		print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>\n";
@@ -414,7 +421,45 @@ END
 	print OUT <<END;
 						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
 					</tr>
+					<tr>
+						<td>binary paths:</td><td>$lynis_report_data{'binary_paths'}</td>
+END
+	print OUT "\t\t\t\t\t\t<td>certificates:</td><td>".join("<br />\n",$lynis_report_data{'valid_certificate[]'})."</td>\n";
+	print OUT <<END;
+						<td></td><td></td>
+					</tr>
 				</table>
+				<h4>cron jobs:</h4>
+END
+	if (ref($lynis_report_data{'cronjob[]'}) eq "ARRAY") {
+		print OUT "\t\t\t\t\t<ul>\n";
+		foreach my $c ( @{$lynis_report_data{'cronjob[]'}} ) { print OUT "\t\t\t\t\t\t<li>$c</li>\n"; }
+		print OUT "\t\t\t\t\t</ul>\n";
+	}
+	print OUT <<END;
+
+				<h4>logging info:</h4>
+				<table border="1">
+					<tr>
+						<td>log rotation tool:</td><td>$lynis_report_data{'log_rotation_tool'}</td>
+						<td>log rotation config found:</td><td>$to_bool{$lynis_report_data{'log_rotation_config_found'}}</td>
+					</tr>
+				</table>
+				<br />
+				<h4>log directories:</h4>
+END
+	if (ref($lynis_report_data{'log_directory[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t<ul>\n";
+		foreach my $ld ( @{$lynis_report_data{'log_directory[]'}} ) { print OUT "\t\t\t\t\t\t<li>$ld</li>\n"; }
+		print OUT "\t\t\t\t\t</ul>\n";
+	}
+	print OUT "\t\t\t\t\t<h4>open log files:</h4>\n";
+	if (ref($lynis_report_data{'open_logfile[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t<ul>\n";
+		foreach my $lf ( @{$lynis_report_data{'open_logfile[]'}} ) { print OUT "\t\t\t\t\t\t<li>$lf</li>\n"; }
+		print OUT "\t\t\t\t\t</ul>\n";
+	}
+	print OUT <<END;
 			</div>
 			<hr />
 			<h3><a name="network_info">network info:</a></h3>
@@ -452,12 +497,10 @@ END
 	foreach my $obj ( sort @{$lynis_report_data{'network_listen_port[]'}} ) {
 		my ($ipp,$proto,$daemon,$dunno) = split(/\|/, $obj);
 		my ($ip,$port);
-		my $colon_count = grep(/\:/, split(//, $ipp));
-		if ($colon_count > 1) {
+		if (grep(/\:/, split(//, $ipp)) > 1) {
 			# must be an IPv6 address;
-			my @parts = split(/\:/, $ipp);
-			$port = pop(@parts);
-			$ip = join(":", @parts);
+			$port = substr($ipp, 0, index($ipp,":"));
+			$ip = substr($ipp,(index($ipp,":")+1));
 		} else {
 			# must be IPv4
 			($ip,$port) = split(/\:/, $ipp);
@@ -526,13 +569,28 @@ END
 		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>&nbsp;</td>\n";
 	}
 	print OUT <<END;
-						<td></td><td></td>
+						<td>compiler installed:</td><td>$to_bool{$lynis_report_data{'compiler_installed'}}</td>
 						<td></td><td></td>
 					</tr>
 				</table>
+				<table border="0" class="list">
+					<tr><td><h4>real users:</h4></td><td><h4>home directories:</h4></td></tr>
+					<tr><td>
+						<table border="0" class="list">
+							<tr><td>name</td><td>uid</td></tr>
+END
+	foreach my $u ( @{$lynis_report_data{'real_user[]'}} ) { 
+		my ($name,$uid) = split(/,/, $u);
+		print OUT "\t\t\t\t\t\t\t<tr><td>$name</td><td>$uid</td></tr>\n"; 
+	}
+	print OUT "\t\t\t\t\t\t</table></td><td><ul>\n";
+	foreach my $d ( @{$lynis_report_data{'home_directory[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$d</li>\n"; }
+	print OUT <<END;	
+					</ul></td></tr>
+				</table>
 				<h4>PAM Modules:</h4><a id="pamModLink" href="javascript:toggle('pamModLink', 'pamModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pamModToggle" style="display: none">
-					<table border="0">
+					<table border="0" class="list">
 END
 	my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
 	#print "ARRLEN: $arrlen \n";
@@ -559,7 +617,7 @@ MAKECOLUMNS1:
 		}
 	} else {
 		if (&is_prime($arrlen)) { 
-			print colored("Number ($arrlen) is prime. \n", "bold yellow"); 
+			print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1)); 
 			$arrlen++;
 			goto MAKECOLUMNS1;
 		}
@@ -568,6 +626,32 @@ MAKECOLUMNS1:
 	print OUT <<END;
 					</table>
 				</div>
+			</div>
+			<hr />
+			<h3><a name="boot_info">boot info:</a></h3>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td>UEFI booted:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted'}}</td>
+						<td>UEFI booted secure:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted_secure'}}</td>
+					</tr>
+					<tr>
+						<td>default runlevel:</td><td>$lynis_report_data{'linux_default_runlevel'}</td>
+						<td>boot service tool:</td><td>$lynis_report_data{'boot_service_tool'}</td>
+					</tr>
+				</table>
+END
+	print OUT "\t\t\t\t<h4>services started at boot:</h4>\n";
+	if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY") {
+		print OUT "\t\t\t\t\t<ul>\n";
+		foreach my $svc ( @{$lynis_report_data{'boot_service[]'}} ) {
+			print OUT "\t\t\t\t\t\t<li>$svc</li>\n";
+		}
+		print OUT "\t\t\t\t\t</ul>\n";
+	} else {
+		warn colored("boot_service[] object not an array", "yellow");
+	}
+	print OUT <<END;
 			</div>
 			<hr />
 			<h3><a name="kernel_info">kernel info:</a></h3>
@@ -588,12 +672,15 @@ MAKECOLUMNS1:
 				</table>
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="kernelModToggle" style="display: none">
-					<table border="0">
+					<table border="0" class="list">
 END
 	$arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
 	#print "ARRLEN: $arrlen \n";
 	if (($arrlen % 5) == 0) {
-		print "ARRLEN divisible by 5. \n";
+		#warn colored("ARRLEN divisible by 5. \n", "yellow");
+		for (my $i=0;$i<$arrlen;$i+=5) {
+			print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 4)]</td></tr>\n";
+		}
 	} elsif (($arrlen % 4) == 0) {
 		#print "ARRLEN divisible by 4. \n";
 		for (my $i=0;$i<$arrlen;$i+=4) {
@@ -607,11 +694,75 @@ END
 	} elsif (($arrlen % 2) == 0) {
 		print "ARRLEN divisible by 2. \n";
 	} else {
-		if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
+		if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1)); }
 		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
 	}
 	print OUT <<END;
 					</table>
+				</div>
+			</div>
+			<hr />
+			<h3><a name="filesystem_info">filesystem/journalling info:</a></h3>
+			<div class="content_subsection">
+				<table border="1">
+					<tr>
+						<td>oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>
+						<td>journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\
+					</tr>
+					<tr>
+						<td>journal disk size:</td><td>$lynis_report_data{'journal_disk_size'}</td>
+						<td>last cordumps:</td><td>$lynis_report_data{'journal_coredumps_lastday'}</td>
+					</tr>
+					<tr>
+END
+	if ((exists($lynis_report_data{'file_systems_ext[]'})) and (ref($lynis_report_data{'file_systems_ext[]'}) eq "ARRAY")) {
+		print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>".join("\n", @{$lynis_report_data{'file_systems_ext[]'}})."</td>\n";
+	} else {
+		if (defined($lynis_report_data{'file_systems_ext[]'})) {
+			print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>$lynis_report_data{'file_systems_ext[]'}</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>&nbsp;</td>\n";
+		}
+	}
+	if ((exists($lynis_report_data{'swap_partition[]'})) and (ref($lynis_report_data{'swap_partition[]'}) eq "ARRAY")) {
+		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>".join("\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
+	}
+	print OUT <<END;
+					</tr>
+					<tr>
+						<td>journal boot log found:</td><td>$to_bool{$lynis_report_data{'journal_bootlogs'}}</td>
+						<td></td><td></td>
+					</tr>
+				</table>
+				<br />
+				<h4>journal metadata:</h4><a id="journalMetaDataLink" href="javascript:toggle('journalMetaDataLink', 'journalMetaDataToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="journalMetaDataToggle" style="display:none">
+END
+	if ((exists($lynis_report_data{'journal_meta_data'})) and (ref($lynis_report_data{'journal_meta_data'}) eq "ARRAY")) {
+		foreach my $md ( @{$lynis_report_data{'journal_meta_data'}} ) {
+			print OUT "\t\t\t\t\t<table border=\"1\">\n";
+			my @fields = split(/,/, $md);
+			foreach my $f ( @fields ) {
+				my ($key,$val);
+				#print grep(/\:/, split(//, $f))."\n"; 
+				if (grep(/\:/, split(//, $f)) > 1) {
+					$key = substr($f,0,index($f,":"));
+					$val = substr($f,(index($f,":")+1));
+				} else {
+					($key,$val) = split(/:/, $f);
+				}
+				#print "k: $key v: $val \n";
+				next if (!defined($key));
+				if ((!defined($val)) or ($val eq "")) { $val = "&nbsp;"; }
+				
+				print OUT "\t\t\t\t\t\t<tr><td>$key\:</td><td>$val</td></tr>\n";
+			}
+			print OUT "\t\t\t\t\t</table>\n<br />\n";
+		}
+	} else { warn colored("Didn't find journal_meta_data object! \n", "yellow"); }
+	print OUT <<END;
 				</div>
 			</div>
 			<hr />
@@ -627,6 +778,33 @@ END
 		}
 	}
 	print OUT "\t\t\t\t\t</table> -->\n";
+	print OUT "\t\t\t<h4>daemon info:</h4>\n";
+	print OUT "\t\t\t\t\t<table border=\"1\">\n";
+	if ((exists($lynis_report_data{'pop3_daemon'})) and ($lynis_report_data{'pop3_daemon'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>pop3 daemon:</td><td>$lynis_report_data{'pop3_daemon'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'imap_daemon'})) and ($lynis_report_data{'imap_daemon'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>imap daemon:</td><td>$lynis_report_data{'imap_daemon'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'smtp_daemon'})) and ($lynis_report_data{'smtp_daemon'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>smtp daemon:</td><td>$lynis_report_data{'smtp_daemon'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'printing_daemon'})) and ($lynis_report_data{'printing_daemon'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>printing daemon:</td><td>$lynis_report_data{'printing_daemon'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'ntp_daemon'})) and ($lynis_report_data{'ntp_daemon'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>ntp daemon:</td><td>$lynis_report_data{'ntp_daemon'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'scheduler[]'})) and ($lynis_report_data{'scheduler[]'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>".join("<br />\n",@{$lynis_report_data{'scheduler[]'}})."</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'service_manager'})) and ($lynis_report_data{'service_manager'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>service manager:</td><td>$lynis_report_data{'service_manager'}</td></tr>\n";
+	}
+	if ((exists($lynis_report_data{'running_service_tool'})) and ($lynis_report_data{'running_service_tool'} ne "")) {
+		print OUT "\t\t\t\t\t\t<tr><td>running service tool:</td><td>$lynis_report_data{'running_service_tool'}</td></tr>\n";
+	}
+	print OUT "\t\t\t\t\t</table>\n";
 	if (exists($lynis_report_data{'running_service[]'})) {
 		print OUT <<END;
 				<h4>Running services:</h4>
@@ -651,7 +829,7 @@ END
 				<br />
 				<a id="pkgLink" href="javascript: toggle('pkgLink', 'pkgContent');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pkgContent" style="display: none">
-					<table border="0">
+					<table border="0" class="list">
 END
 	#print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
 	$arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
@@ -692,7 +870,7 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found );
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
@@ -707,7 +885,7 @@ END
 	}	
 }
 
-#print Dumper(\%lynis_report_data);
+print Dumper(\%lynis_report_data);
 
 ###############################################################################
 # subs
@@ -746,11 +924,11 @@ sub is_prime {
 }
 
 sub dedup_array {
-	my @ary = shift;
+	my $aryref = shift;
 	my %hash;
 
-	foreach my $ele ( @ary ) { $hash{$ele}++; }
-	return keys(%hash);
+	foreach my $ele ( @{$aryref} ) { $hash{$ele}++; }
+	return sort keys(%hash);
 }
 
 sub calc_password_complexity_score {
