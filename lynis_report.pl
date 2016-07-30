@@ -191,6 +191,8 @@ if ($excel) {
 			td.dismal {background-color: #ff0000; color: #000; font-weight: bold;}
 			td.tf_bad {background-color:#ff0000; colore: #000; font-weight: bold;}
 			td.tf_good {background-color: #006400; color: #fff; font_weight: bold;}
+			td#score {vertical-alingn:top;horizontal-align:left;}
+			td#auditor {vertical-align:top;horizontal-align:right;}
 			span.title_shrink {font-size: 75%;}
 			a:link#github_link {color: #fff;}
 			a:visited#github_link {color: #acacac;}
@@ -227,7 +229,7 @@ if ($excel) {
 			</table>
 			<hr />
 			<h3>host findings:</h3>
-			<table border="1"><tr><td>hardening index:</td>
+			<table border="0" class="list" width="90%"><tr><td id="score"><table><tr><td>hardening index:</td>
 END
 
 	given ($lynis_report_data{'hardening_index'}) {
@@ -252,7 +254,7 @@ END
 		}
 	}
 
-	print OUT "\t\t\t</tr></table>\n";
+	print OUT "\t\t\t</tr></table></td><td><table><tr><td id=\"auditor\">Auditor:</td><td>$lynis_report_data{'auditor'}</td></tr></table></td></tr></table>\n";
 	if (!exists($lynis_report_data{'warning[]'})) {
 		print OUT "<h4>warnings (0):</h4>\n";
 	} else {
@@ -308,7 +310,6 @@ END
 	}
 	print OUT <<END;
 				</table>
-			</div>
 			<h4>manual checks:</h4>
 			<ul>
 END
@@ -316,15 +317,39 @@ END
 		foreach my $man ( sort @{$lynis_report_data{'manual[]'}} ) {
 			#print Dumper($man);
 			chomp($man);
-			print OUT "<li>$man</li>\n";
+			print OUT "\t\t\t\t\t<li>$man</li>\n";
 		}
 	}
-
+	print OUT <<END;
+			</ul><br />
+END
+	if ((exists($lynis_report_data{'deleted_file[]'})) and ($lynis_report_data{'deleted_file[]'} ne "")) {
+		if (ref($lynis_report_data{'deleted_file[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t<h4>deleted files (".scalar(@{$lynis_report_data{'deleted_file[]'}})."):</h4>\n";
+			print OUT "\t\t\t\t<ul>\n";
+			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<li>$f</li>\n"; }
+		} else {
+			warn colored("Deleted files object not an array! \n", "yellow");
+			print Dumper($lynis_report_data{'delete_file[]'});
+		}
+	}
+	print OUT "\t\t\t\t</ul><br />\n";
+	if ((exists($lynis_report_data{'vulnerable_package[]'})) and ($lynis_report_data{'vulnerable_package[]'} ne "")) {
+		if (ref($lynis_report_data{'vulnerable_package[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t<h4>Vulnerable packages (".scalar(@{$lynis_report_data{'vulnerable_package[]'}})."):\n";
+			print OUT "\t\t\t\t<ul>\n";
+			foreach my $p ( @{$lynis_report_data{'vulnerable_package[]'}} ) { print OUT "\t\t\t\t\t<li>$p</li>\n"; }
+		} else {
+			warn colored("Vulnerable package pbject not an array! \n", "yellow");
+			print Dumper($lynis_report_data{'vulnerable_package[]'});
+		}
+	}
+	print OUT "\t\t\t\t</ul><br />\n";
 	# It's easier to move stuff around if there is one cell (or cell group) per libe for the tables.  Maybe this
 	# isn't ideal HTML writing, but it makes sense when writing the tool.
 	$lynis_report_data{'lynis_update_available'} = 0 if ((!defined($lynis_report_data{'lynis_update_available'})) or ($lynis_report_data{'lynis_update_available'} eq ""));
 	print OUT <<END;
-			</ul>
+			</div>
 			<hr />
 			<h3><a name="lynis_info">lynis info:</a></h3>
 			<div class="content_subsection">
@@ -564,6 +589,12 @@ END
 					<tr>
 						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
 END
+	if (exists($lynis_report_data{'malware_scanner[]'})) {
+		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>".join("<br />\n", @{$lynis_report_data{'malware_scanner[]'}})."</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>&nbsp;</td>\n";
+	}
+		
 	if (exists($lynis_report_data{'ids_ips_tooling[]'})) {
 		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
 	} else {
@@ -571,7 +602,6 @@ END
 	}
 	print OUT <<END;
 						<td>compiler installed:</td><td>$to_bool{$lynis_report_data{'compiler_installed'}}</td>
-						<td></td><td></td>
 					</tr>
 				</table>
 				<table border="0" class="list">
@@ -657,6 +687,7 @@ END
 		print Dumper($lynis_report_data{'boot_service[]'});
 	}
 	$lynis_report_data{'linux_kernel_io_scheduler'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_kernel_io_scheduler'})) or ($lynis_report_data{'linux_kernel_io_scheduler'} eq ""));
+	$lynis_report_data{'linux_amount_of_kernels'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_amount_of_kernels'})) or ($lynis_report_data{'linux_amount_of_kernels'} eq ""));
 	#print Dumper($lynis_report_data{'linux_kernel_io_scheduler'});
 	print OUT <<END;
 			</div>
@@ -674,7 +705,7 @@ END
 					</tr>
 					<tr>
 						<td>linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>
-						<td></td><td></td>
+						<td>number of kernels available:</td><td>$lynis_report_data{'linux_amount_of_kernels'}</td>
 					</tr>
 				</table>
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
@@ -783,16 +814,16 @@ END
 			<hr />
 			<h3><a name="service_info">service info:</a></h3>
 			<div class="content_subsection">
-				<!-- <table border="1">
+				<table border="1">
 END
-	foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon ) ) {
+	foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd ) ) {
 		if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
 			print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
 		} else {
 			print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
 		}
 	}
-	print OUT "\t\t\t\t\t</table> -->\n";
+	print OUT "\t\t\t\t\t</table>\n";
 	print OUT "\t\t\t<h4>daemon info:</h4>\n";
 	print OUT "\t\t\t\t\t<table border=\"1\">\n";
 	if ((exists($lynis_report_data{'pop3_daemon'})) and ($lynis_report_data{'pop3_daemon'} ne "")) {
@@ -890,7 +921,7 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] );
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
