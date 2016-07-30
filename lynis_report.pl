@@ -322,6 +322,7 @@ END
 
 	# It's easier to move stuff around if there is one cell (or cell group) per libe for the tables.  Maybe this
 	# isn't ideal HTML writing, but it makes sense when writing the tool.
+	$lynis_report_data{'lynis_update_available'} = 0 if ((!defined($lynis_report_data{'lynis_update_available'})) or ($lynis_report_data{'lynis_update_available'} eq ""));
 	print OUT <<END;
 			</ul>
 			<hr />
@@ -623,6 +624,7 @@ MAKECOLUMNS1:
 		}
 		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 	}
+if ((!defined($lynis_report_data{'boot_service_tool'})) or ($lynis_report_data{'boot_service_tool'} eq "")) { $lynis_report_data{'boot_service_tool'} = "&nbsp;"; }
 	print OUT <<END;
 					</table>
 				</div>
@@ -642,7 +644,9 @@ MAKECOLUMNS1:
 				</table>
 END
 	print OUT "\t\t\t\t<h4>services started at boot:</h4>\n";
-	if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY") {
+	if (!defined($lynis_report_data{'boot_service[]'})) {
+		print OUT "\t\t\t\t\t<ul><li>N/A - Unable to detect boot services.</li></ul>\n";
+	} elsif (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY") {
 		print OUT "\t\t\t\t\t<ul>\n";
 		foreach my $svc ( @{$lynis_report_data{'boot_service[]'}} ) {
 			print OUT "\t\t\t\t\t\t<li>$svc</li>\n";
@@ -650,7 +654,10 @@ END
 		print OUT "\t\t\t\t\t</ul>\n";
 	} else {
 		warn colored("boot_service[] object not an array", "yellow");
+		print Dumper($lynis_report_data{'boot_service[]'});
 	}
+	$lynis_report_data{'linux_kernel_io_scheduler'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_kernel_io_scheduler'})) or ($lynis_report_data{'linux_kernel_io_scheduler'} eq ""));
+	#print Dumper($lynis_report_data{'linux_kernel_io_scheduler'});
 	print OUT <<END;
 			</div>
 			<hr />
@@ -676,6 +683,7 @@ END
 END
 	$arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
 	#print "ARRLEN: $arrlen \n";
+MAKECOLUMNS2:
 	if (($arrlen % 5) == 0) {
 		#warn colored("ARRLEN divisible by 5. \n", "yellow");
 		for (my $i=0;$i<$arrlen;$i+=5) {
@@ -694,9 +702,15 @@ END
 	} elsif (($arrlen % 2) == 0) {
 		print "ARRLEN divisible by 2. \n";
 	} else {
-		if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1)); }
+		if (&is_prime($arrlen)) { 
+			print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1));
+			$arrlen++;
+			goto MAKECOLUMNS2;
+		}
 		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
 	}
+	$lynis_report_data{'journal_oldest_bootdate'} = "&nbsp;" if ((!defined($lynis_report_data{'journal_oldest_bootdate'})) or ($lynis_report_data{'journal_oldest_bootdate'} eq ""));
+	$lynis_report_data{'journal_contains_errors'} = 0 if ((!defined($lynis_report_data{'journal_contains_errors'})) or ($lynis_report_data{'journal_contains_errors'} eq ""));
 	print OUT <<END;
 					</table>
 				</div>
@@ -729,6 +743,7 @@ END
 	} else {
 		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
 	}
+	$lynis_report_data{'journal_bootlogs'} = 0 if ((!defined($lynis_report_data{'journal_bootlogs'})) or ($lynis_report_data{'journal_bootlogs'} eq ""));
 	print OUT <<END;
 					</tr>
 					<tr>
@@ -834,6 +849,7 @@ END
 	#print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
 	$arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
 	#print "ARRLEN: $arrlen \n";
+MAKECOLUMNS3:
 	if (($arrlen % 5) == 0) {
 		#print "ARRLEN divisible by 5. \n";
 		for (my $i=0;$i<$arrlen;$i+=5) {
@@ -855,7 +871,11 @@ END
 			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td></tr>\n";
 		}
 	} else {
-		if (&is_prime($arrlen)) { print colored("Number ($arrlen) is prime. \n", "bold yellow"); }
+		if (&is_prime($arrlen)) { 
+			print colored("Number ($arrlen) is prime. \n", "bold yellow"); 
+			$arrlen++;
+			goto MAKECOLUMNS3;
+		}
 		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 	}
 	print OUT <<END;
