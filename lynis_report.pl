@@ -24,6 +24,7 @@ GetOptions(
 if ($help) { &usage; }
 
 my %to_bool = (	0 => 'false', 1 => 'true' );
+my %vm_mode = ( 0 => 'false', 1 => 'guest', 2 => 'host' );
 my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational' );
 my %systemd_uf_status_color = (
 	'enabled'	=>	'#00ff00',
@@ -453,12 +454,15 @@ END
 END
 	print OUT "\t\t\t\t\t\t<td>Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
 	$lynis_report_data{'locate_db'} = "&nbsp;" if ((!defined($lynis_report_data{'locate_db'})) or ($lynis_report_data{'locate_db'} eq ""));
+	#print STDERR colored($lynis_report_data{'vm'}."\n", "bold magenta");
+	$lynis_report_data{'vm'} = 0 if ((!defined($lynis_report_data{'vm'})) or ($lynis_report_data{'vm'} eq ""));
+	#print STDERR colored($lynis_report_data{'vm'}."\n", "bold magenta");
+	print OUT "\t\t\t\t\t<td>locate db:</td><td>$lynis_report_data{'locate_db'}</td>\n";
+	print OUT "\t\t\t\t\t<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>\n";
 	print OUT <<END;
-						<td>locate db:</td><td>$lynis_report_data{'locate_db'}</td>
-						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
 					</tr>
 					<tr>
-						<td>vm:</td><td>$to_bool{$lynis_report_data{'vm'}}</td>
+						<td>vm:</td><td>$vm_mode{$lynis_report_data{'vm'}}</td>
 END
 	if ((defined($lynis_report_data{'vmtype'})) and ($lynis_report_data{'vmtype'} ne "")) {
 		print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>\n";
@@ -544,10 +548,13 @@ END
 						<td colspan="2">resolv.conf search domain:</td>
 END
 	if (exists($lynis_report_data{'resolv_conf_search_domain[]'})) {
+		#print STDERR colored($lynis_report_data{'resolv_conf_search_domain[]'}."\n", "bold magenta");
 		if (ref($lynis_report_data{'resolv_conf_search_domain[]'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t\t\t<td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'resolv_conf_search_domain[]'}})."</td>\n";
+		#} elsif (ref($lynis_report_data{'resolv_conf_search_domain[]'}) eq 'HASH') {
+		#	print OUT "\t\t\t\t\t\t<td colspan=\"2\">".join("<br />\n",keys(%{$lynis_report_data{'resolv_conf_search_domain[]'}}))."</td>\n";
 		} else {
-			print OUT "\t\t\t\t\t\t<td colspan=\"2\"$lynis_report_data{'resolv_conf_search_domain[]'}</td>\n";
+			print OUT "\t\t\t\t\t\t<td colspan=\"2\">$lynis_report_data{'resolv_conf_search_domain[]'}</td>\n";
 		}
 	}
 	print OUT <<END;
@@ -1111,7 +1118,7 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list resolv_conf_search_domain[] linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] );
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
