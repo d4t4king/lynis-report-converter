@@ -25,6 +25,12 @@ if ($help) { &usage; }
 
 my %to_bool = (	0 => 'false', 1 => 'true' );
 my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational' );
+my %systemd_uf_status_color = (
+	'enabled'	=>	'#00ff00',
+	'disabled'	=>	'#ff0000',
+	'static'	=>	'inherit',
+	'masked'	=>	'goldenrod'
+);
 
 my ($basename, $path, $suffix, $htmldoc);
 
@@ -446,6 +452,7 @@ END
 					<tr>
 END
 	print OUT "\t\t\t\t\t\t<td>Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
+	$lynis_report_data{'locate_db'} = "&nbsp;" if ((!defined($lynis_report_data{'locate_db'})) or ($lynis_report_data{'locate_db'} eq ""));
 	print OUT <<END;
 						<td>locate db:</td><td>$lynis_report_data{'locate_db'}</td>
 						<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>
@@ -462,18 +469,25 @@ END
 						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
 					</tr>
 					<tr>
-						<td>binary paths:</td><td>$lynis_report_data{'binary_paths'}</td>
+						<td>binary paths:</td><td colspan="2">$lynis_report_data{'binary_paths'}</td>
 END
-	print OUT "\t\t\t\t\t\t<td>certificates:</td><td>".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
+	print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
 	print OUT <<END;
-						<td></td><td></td>
+					</tr>
+					<tr>
+END
+	print OUT "\t\t\t\t\t\t<td>authorised default USB devices:</td><td colspan=\"5\">".join("<br \>\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})."</td>\n";
+	print OUT <<END;
 					</tr>
 				</table>
 				<h4>cron jobs:</h4>
 END
 	if (ref($lynis_report_data{'cronjob[]'}) eq "ARRAY") {
 		print OUT "\t\t\t\t\t<ul>\n";
-		foreach my $c ( @{$lynis_report_data{'cronjob[]'}} ) { print OUT "\t\t\t\t\t\t<li>$c</li>\n"; }
+		foreach my $c ( @{$lynis_report_data{'cronjob[]'}} ) { 
+			$c =~ s/,/\t&nbsp;/g;
+			print OUT "\t\t\t\t\t\t<li>$c</li>\n"; 
+		}
 		print OUT "\t\t\t\t\t</ul>\n";
 	}
 	print OUT <<END;
@@ -886,6 +900,158 @@ END
 		print OUT "\t\t\t\t\t</ul>\n";
 	}
 	print OUT <<END;
+				<h4>ntp detail:</h4><a id="ntpDetailLink" href="javascript: toggle('ntpDetailLink','ntpDetailToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="ntpDetailToggle" style="display: none">
+					<table border="1">
+						<tr>
+							<td>ntp config found:</td><td>$to_bool{$lynis_report_data{'ntp_config_found'}}</td>
+END
+	if (exists($lynis_report_data{'ntp_config_file[]'})) {
+		if (ref($lynis_report_data{'ntp_config_file[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t\t<td>ntp config file:</td><td>".join("<br />\n", @{$lynis_report_data{'ntp_config_file[]'}})."</td>\n";
+		} else {
+			#warn colored("ntp config file object not an array! \n", "yellow");
+			print OUT "\t\t\t\t\t\t\t<td>ntp config file:</td><td>$lynis_report_data{'ntp_config_file[]'}</td>\n";
+		}
+	}
+	print OUT <<END;
+						</tr>
+						<tr>
+							<td>ntp version:</td><td>$lynis_report_data{'ntp_version'}</td>
+END
+	if (exists($lynis_report_data{'ntp_unreliable_peer[]'})) {
+		if (ref($lynis_report_data{'ntp_unreliable_peer[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>".join("<br />\n", @{$lynis_report_data{'ntp_unreliable_peer[]'}})."</td>";
+		} else {
+			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>$lynis_report_data{'ntp_unreliable_peer[]'}</td>";
+		}
+	}
+	print OUT <<END;
+						</tr>
+						<tr><th colspan="4">NTP Config Type</th><tr>
+						<tr>
+							<td>startup:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_startup'}}</td>
+							<td>daemon:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_daemon'}}</td>
+						</tr>
+						<tr>
+							<td>scheduled:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_scheduled'}}</td>
+							<td>event based:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_eventbased'}}</td>
+						</tr>
+					</table>
+				</div>
+				<br />
+				<h4>nginx detail</h4>
+				<table border="1">
+					<tr>
+						<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>
+END
+	print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
+	print OUT <<END;
+					</tr>
+					<tr>
+						<td>log file:</td><td>$lynis_report_data{'log_file'}</td>
+						<td></td><td></td>
+					</tr>
+				</table>
+END
+	if (exists($lynis_report_data{'nginx_config_option'})) {
+		print OUT "\t\t\t\t<h4>nginx config options:</h4><a id=\"nginxConfigLink\" href=\"javascript: toggle('nginxConfigLink', 'nginxConfigToggle');\">&gt;&nbsp;show&nbsp;&lt;</a>\n";
+		print OUT "\t\t\t\t\t<div id=\"nginxConfigToggle\" style=\"display:none;\">\n";
+		print OUT "\t\t\t\t\t<ul>\n";
+		if (ref($lynis_report_data{'nginx_config_option'}) eq 'ARRAY') {
+			foreach my $o ( @{$lynis_report_data{'nginx_config_option'}} ) { print OUT "\t\t\t\t\t\t<li>$o</li>\n"; }
+		} else {
+			warn colored("nginx config options opbject not an array! \n", "yellow");
+			print Dumper($lynis_report_data{'nginx_config_option'});
+		}
+		print OUT "\t\t\t\t\t</ul>\n";
+	}
+	print OUT <<END;
+				</div><br />
+END
+	if (exists($lynis_report_data{'ssl_tls_protocol_enabled[]'})) {
+		print OUT <<END;
+					<h4>SSL/TLS protocols enabled:</h4>
+					<a id="ssltlsProtoLink" href="javascript: toggle('ssltlsProtoLink', 'ssltlsProtoToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+					<div id="ssltlsProtoToggle" style="display:none;">
+						<ul>
+END
+		if (ref($lynis_report_data{'ssl_tls_protocol_enabled[]'}) eq 'ARRAY') {
+			foreach my $p ( @{$lynis_report_data{'ssl_tls_protocol_enabled[]'}} ) { print OUT "\t\t\t\t\t\t<li>$p</li>\n"; }
+		} else {
+			warn colored("ssltls protocols object not an array! \n", "yellow");
+			print Dumper($lynis_report_data{'ssl_tls_protocol_enabled[]'});
+		}
+		print OUT "\t\t\t\t\t</ul>\n";
+		print OUT "\t\t\t\t</div><br />\n";
+	}
+	print OUT <<END;
+				<h4>systemd detail:</h4><a id="systemdLink" href="javascript:toggle('systemdLink', 'systemdToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
+				<div id="systemdToggle" style="display:none;">
+					<table border="1">
+						<tr>
+							<td>systemd version:</td><td>$lynis_report_data{'systemd_version'}</td>
+							<td>systemd status:</td><td>$lynis_report_data{'systemd_status'}</td>
+						</tr>
+						<tr>
+							<td>systemd builtin components:</td><td colspan="3">$lynis_report_data{'systemd_builtin_components'}</td>
+						</tr>
+					</table>
+END
+	if (exists($lynis_report_data{'systemd_unit_file[]'})) {
+		print OUT <<END;
+					<h5>systemd unit files:</h5><a id="systemdUnitFileLink" href="javascript:toggle('systemdUnitFileLink','systemdUnitFileToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
+					<div id="systemdUnitFileToggle" style="display:none;">
+						<table border="1">
+							<tr><th>unit file</th><th>status</th><th></th><tr>
+END
+		if (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') {
+			foreach my $f ( sort @{$lynis_report_data{'systemd_unit_file[]'}} ) { 
+				my ($f,$s,$t) = split(/\|/, $f);
+				print OUT "\t\t\t\t\t\t\t<tr><td>$f</td><td>$s</td><td>$t</td></tr>\n"; 
+			}
+		} else {
+			warn colored("systemd unit file object not an array! \n", "yellow");
+		}
+		print OUT <<END;
+						</table>>
+					</div>
+END
+	}
+	if (exists($lynis_report_data{'systemd_unit_not_found[]'})) {
+		print OUT <<END;
+					<h5>systemd unit not found:</h5><a id="systemdUnitNotFoundLink" href="javascript:toggle('systemdUnitNotFoundLink','systemdUnitNotFoundToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
+					<div id="systemdUnitNotFoundToggle" style="display:none;">
+						<ul>
+END
+		if (ref($lynis_report_data{'systemd_unit_not_found[]'})) {
+			foreach my $unf ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$unf</li>\n"; }
+		} else {
+			warn colored("systemd unitnot found object not an array! \n", "yellow");
+		}
+		print OUT <<END; 
+						</ul>
+					</div>
+END
+	}
+	if (exists($lynis_report_data{'systemd_service_not_found[]'})) {
+	print OUT <<END;
+					<h5>systemd service not found:</h5><a id="systemdServiceNotFoundLink" href="javascript:toggle('systemdServiceNotFoundLink','systemdServiceNotFoundToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
+					<div id="systemdServiceNotFoundToggle" style="display:none;">
+						<ul>
+END
+		if (ref($lynis_report_data{'systemd_service_not_found[]'}) eq 'ARRAY') {
+			foreach my $snf ( sort @{$lynis_report_data{'systemd_service_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$snf</li>\n"; }
+		} else {
+			warn colored("systemd service not found object not an array! \n", "yellow");
+		}
+		print OUT <<END;
+						</ul>
+					</div>
+END
+	}
+	print OUT <<END;						
+				</div>						
 			</div>
 			<hr />
 			<h3><a name="installed_packages">Installed packages:</a></h3>
@@ -945,7 +1111,7 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list plugin_processes_allprocesses resolv_conf_search_domain[] linux_amount_of_kernels );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days resolv_conf_domain os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list resolv_conf_search_domain[] linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] );
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
