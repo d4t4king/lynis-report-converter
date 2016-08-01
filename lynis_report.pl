@@ -429,7 +429,11 @@ END
 					<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
 					<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
 END
-	print OUT "\t\t\t\t\t<tr><td>Plugin-firewall iptables list:</td><td colspan=\"3\">".join("<br />\n", @{$lynis_report_data{'plugin_firewall_iptables_list'}})."</td></tr>\n";
+	if (exists($lynis_report_data{'plugin_firewall_iptables_list'})) {
+		if (ref($lynis_report_data{'plugin_firewall_iptables_list'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t<tr><td>Plugin-firewall iptables list:</td><td colspan=\"3\">".join("<br />\n", @{$lynis_report_data{'plugin_firewall_iptables_list'}})."</td></tr>\n";
+		}
+	}
 	print OUT "\t\t\t\t</table>\n";
 	if ((exists($lynis_report_data{'plugin_processes_allprocesses'})) and ($lynis_report_data{'plugin_processes_allprocesses'} ne "")) {
 		print OUT "\t\t\t\t<h5>Plugin-processes: discovered processes:</h5>\n";
