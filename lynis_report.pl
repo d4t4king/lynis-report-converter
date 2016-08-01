@@ -1056,7 +1056,11 @@ END
 				<table>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
+	if (exists($lynis_report_data{'nginx_main_conf_file'})) {
+		print OUT "\t\t\t\t\t\t<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>main config file</td><td>&nbsp;</td>\n";
+	}
 	if (exists($lynis_report_data{'nginx_sub_conf_file'})) {
 		if (ref($lynis_report_data{'nginx_sub_conf_file'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
@@ -1069,7 +1073,13 @@ END
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>log file:</td><td>$lynis_report_data{'log_file'}</td>
+END
+	if (exists($lynis_report_data{'log_file'})) {
+		print OUT "\t\t\t\t\t\t<td>log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>log file:</td><td>&nbsp;\n";
+	}
+	print OUT <<END;
 						<td></td><td></td>
 					</tr>
 				</table>
