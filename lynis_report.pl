@@ -1038,12 +1038,16 @@ END
 						</tr>
 						<tr><th colspan="4">NTP Config Type</th></tr>
 						<tr>
-							<td>startup:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_startup'}}</td>
-							<td>daemon:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_daemon'}}</td>
+END
+	print OUT "\t\t\t\t\t\t\t<td>startup:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_startup'}}</td>\n";
+	print OUT "\t\t\t\t\t\t\t<td>daemon:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_daemon'}}</td>\n";
+	print OUT <<END;
 						</tr>
 						<tr>
-							<td>scheduled:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_scheduled'}}</td>
-							<td>event based:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_eventbased'}}</td>
+END
+	print OUT "\t\t\t\t\t\t\t<td>scheduled:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_scheduled'}}</td>\n";
+	print OUT "\t\t\t\t\t\t\t<td>event based:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_eventbased'}}</td>\n";
+	print OUT <<END;
 						</tr>
 					</table>
 				</div>
@@ -1051,8 +1055,8 @@ END
 				<h5>nginx detail</h5>
 				<table>
 					<tr>
-						<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>
 END
+	print OUT "\t\t\t\t\t\t<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
 	if (exists($lynis_report_data{'nginx_sub_conf_file'})) {
 		if (ref($lynis_report_data{'nginx_sub_conf_file'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
