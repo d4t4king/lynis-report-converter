@@ -792,11 +792,15 @@ END
 	if (!defined($lynis_report_data{'boot_service[]'})) {
 		print OUT "\t\t\t\t\t<ul><li>N/A - Unable to detect boot services.</li></ul>\n";
 	} elsif (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY") {
-		print OUT "\t\t\t\t\t<ul>\n";
-		foreach my $svc ( @{$lynis_report_data{'boot_service[]'}} ) {
-			print OUT "\t\t\t\t\t\t<li>$svc</li>\n";
+		if (scalar(@{$lynis_report_data{'boot_service[]'}}) < 10) {
+			print OUT "\t\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'boot_service[]'}})."\">\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<select size=\"10\">\n";
 		}
-		print OUT "\t\t\t\t\t</ul>\n";
+		foreach my $svc ( @{$lynis_report_data{'boot_service[]'}} ) {
+			print OUT "\t\t\t\t\t\t<option>$svc\n";
+		}
+		print OUT "\t\t\t\t\t</select>\n";
 	} else {
 		warn colored("boot_service[] object not an array", "yellow");
 		print Dumper($lynis_report_data{'boot_service[]'});
@@ -825,40 +829,19 @@ END
 				</table>
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="kernelModToggle" style="display: none">
-					<table class="list">
 END
-	$arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
-	#print "ARRLEN: $arrlen \n";
-MAKECOLUMNS2:
-	if (($arrlen % 5) == 0) {
-		#warn colored("ARRLEN divisible by 5. \n", "yellow");
-		for (my $i=0;$i<$arrlen;$i+=5) {
-			print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 4)]</td></tr>\n";
+	if (exists($lynis_report_data{'loaded_kernel_module[]'})) {
+		if (scalar(@{$lynis_report_data{'loaded_kernel_module[]'}}) < 25) {
+			print OUT "\t\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'loaded_kernel_module[]'}})."\">\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<select size=\"25\">\n";
 		}
-	} elsif (($arrlen % 4) == 0) {
-		#print "ARRLEN divisible by 4. \n";
-		for (my $i=0;$i<$arrlen;$i+=4) {
-			print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 3)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 3) == 0) {
-		#print "ARRLEN divisible by 3. \n";
-		for (my $i=0;$i<$arrlen;$i+=3) {
-			print OUT "\t\t\t\t\t\t<tr><td>${$lynis_report_data{'loaded_kernel_module[]'}}[$i]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'loaded_kernel_module[]'}}[($i + 2)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 2) == 0) {
-		print "ARRLEN divisible by 2. \n";
-	} else {
-		if (&is_prime($arrlen)) { 
-			print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1));
-			$arrlen++;
-			goto MAKECOLUMNS2;
-		}
-		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n","bold red");
+		foreach my $m ( sort @{$lynis_report_data{'loaded_kernel_module[]'}} ) { print OUT "\t\t\t\t\t\t\t<option>$m\n"; }
+		print OUT "\t\t\t\t\t\t</select>\n";
 	}
 	$lynis_report_data{'journal_oldest_bootdate'} = "&nbsp;" if ((!defined($lynis_report_data{'journal_oldest_bootdate'})) or ($lynis_report_data{'journal_oldest_bootdate'} eq ""));
 	$lynis_report_data{'journal_contains_errors'} = 0 if ((!defined($lynis_report_data{'journal_contains_errors'})) or ($lynis_report_data{'journal_contains_errors'} eq ""));
 	print OUT <<END;
-					</table>
 				</div>
 			</div>
 			<hr />
@@ -969,12 +952,14 @@ END
 	if (exists($lynis_report_data{'running_service[]'})) {
 		print OUT <<END;
 				<h4>Running services:</h4>
-				<ul>
 END
-		foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) {
-			print OUT "\t\t\t\t\t<li>$svc</li>\n";
+		if (scalar(@{$lynis_report_data{'running_service[]'}}) < 25) {
+			print OUT "\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'running_service[]'}})."\">\n";
+		} else {
+			print OUT "\t\t\t\t<select size=\"25\">\n";
 		}
-		print OUT "\t\t\t\t\t</ul>\n";
+		foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) { print OUT "\t\t\t\t\t<option>$svc\n"; }
+		print OUT "\t\t\t\t\t</select>\n";
 	}
 	print OUT <<END;
 				<h5>ntp detail:</h5><a id="ntpDetailLink" href="javascript: toggle('ntpDetailLink','ntpDetailToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
