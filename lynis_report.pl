@@ -377,12 +377,21 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>
-						<td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
+END
+	print OUT "\t\t\t\t\t<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>\n";
+	print OUT "\t\t\t\t\t<td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>
 END
+	if (($lynis_report_data{'lynis_update_available'} == 0) or ($lynis_report_data{'lynis_update_available'} == 1)) {
+		print OUT "\t\t\t\t\t<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>\n";
+	} elsif ($lynis_report_data{'lynis_update_available'} == -1) {
+		print OUT "\t\t\t\t\t<td>lynis update available:</td><td>N/A - There was an unexpected error trying to retrieve update status.</td>\n";
+	} else {
+		warn colored("Unexpected result from lynis update available check!\n", "yellow");
+		print Dumper($lynis_report_data{'lynis_update_available'});
+	}
 	if ((defined($lynis_report_data{'license_key'})) and ($lynis_report_data{'license_key'} ne "")) {
 		print OUT "\n\n\n\n\n\n<td>license key:</td><td>$lynis_report_data{'license_key'}</td>\n";
 	} else {
@@ -815,16 +824,26 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>
-						<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>
+END
+	print OUT "\t\t\t\t\t<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>\n";
+	print OUT "\t\t\t\t\t<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>
-						<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>
+END
+	print OUT "\t\t\t\t\t<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>\n";
+	if (exists($lynis_report_data{'linux_kernel_io_scheduler[]'})) {
+		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>&nbsp;</td>\n";
+	}
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>
-						<td>number of kernels available:</td><td>$lynis_report_data{'linux_amount_of_kernels'}</td>
+END
+	print OUT "\t\t\t\t\t<td>linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>\n";
+	print OUT "\t\t\t\t\t<td>number of kernels available:</td><td>$lynis_report_data{'linux_amount_of_kernels'}</td>\n";
+	print OUT <<END;
 					</tr>
 				</table>
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
@@ -849,12 +868,24 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>
-						<td>journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\
+END
+	print OUT "\t\t\t\t\t<td>oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>\n";
+	print OUT "\t\t\t\t\t<td>journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>journal disk size:</td><td>$lynis_report_data{'journal_disk_size'}</td>
-						<td>last cordumps:</td><td>$lynis_report_data{'journal_coredumps_lastday'}</td>
+END
+	if (exists($lynis_report_data{'journal_disk_size'})) {
+		print OUT "\t\t\t\t\t<td>journal disk size:</td><td>$lynis_report_data{'journal_disk_size'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t<td>journal disk size:</td><td>&nbsp;</td>\n";
+	}
+	if (exists($lynis_report_data{'journal_coredumps_lastday'})) {
+		print OUT "\t\t\t\t\t<td>last cordumps:</td><td>$lynis_report_data{'journal_coredumps_lastday'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t<td>last cordumps:</td><td>&nbsp;</td>\n";
+	}
+	print OUT <<END;
 					</tr>
 					<tr>
 END
@@ -1097,11 +1128,27 @@ END
 				<div id="systemdToggle" style="display:none;">
 					<table>
 						<tr>
-							<td>systemd version:</td><td>$lynis_report_data{'systemd_version'}</td>
-							<td>systemd status:</td><td>$lynis_report_data{'systemd_status'}</td>
+END
+	if (exists($lynis_report_data{'systemd_version'})) {
+		print OUT "\t\t\t\t\t\t<td>systemd version:</td><td>$lynis_report_data{'systemd_version'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>systemd version:</td><td>&nbsp;</td>\n";
+	}
+	if (exists($lynis_report_data{'systemd_status'})) {
+		print OUT "\t\t\t\t\t\t<td>systemd status:</td><td>$lynis_report_data{'systemd_status'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>systemd status:</td><td>&nbsp;</td>\n";
+	}
+	print OUT <<END;
 						</tr>
 						<tr>
-							<td>systemd builtin components:</td><td colspan="3">$lynis_report_data{'systemd_builtin_components'}</td>
+END
+	if (exists($lynis_report_data{'systemd_builtin_components'})) {
+		print OUT "\t\t\t\t\t\t<td>systemd builtin components:</td><td colspan=\"3\">$lynis_report_data{'systemd_builtin_components'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>systemd builtin components:</td><td colspan=\"3\">&nbsp;</td>\n";
+	}
+	print OUT <<END;
 						</tr>
 					</table>
 END
@@ -1172,44 +1219,21 @@ END
 				<br />
 				<a id="pkgLink" href="javascript: toggle('pkgLink', 'pkgContent');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pkgContent" style="display: none">
-					<table class="list">
 END
-	#print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
-	$arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
-	#print "ARRLEN: $arrlen \n";
-MAKECOLUMNS3:
-	if (($arrlen % 5) == 0) {
-		#print "ARRLEN divisible by 5. \n";
-		for (my $i=0;$i<$arrlen;$i+=5) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 3)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 4)]</td></tr>\n";
+	if (exists($lynis_report_data{'installed_packages_array'})) {
+		if (ref($lynis_report_data{'installed_packages_array'}) eq 'ARRAY') {
+			if (scalar(@{$lynis_report_data{'installed_packages_array'}}) < 25) {
+				print OUT "\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'installed_packages_array'}})."\">\n";
+			} else {
+				print OUT "\t\t\t\t\t<select size=\"25\">\n";
+			}
+			foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) { print OUT "\n\n\n\n\n\n<option>$p\n"; }
+			print OUT "\t\t\t\t\t</select>\n";
 		}
-	} elsif (($arrlen % 4) == 0) {
-		#print "ARRLEN divisible by 4. \n";
-		for (my $i=0;$i<$arrlen;$i+=4) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 3)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 3) == 0) {
-		#print "ARRLEN divisible by 3. \n";
-		for (my $i=0;$i<$arrlen;$i+=3) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 2)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 2) == 0) {
-		#print "ARRLEN divisible by 2. \n";
-		for (my $i=0;$i<$arrlen;$i+=3) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'installed_packages_array'}}[$i]</td><td>${$lynis_report_data{'installed_packages_array'}}[($i + 1)]</td></tr>\n";
-		}
-	} else {
-		if (&is_prime($arrlen)) { 
-			print colored("Number ($arrlen) is prime. \n", "bold yellow"); 
-			$arrlen++;
-			goto MAKECOLUMNS3;
-		}
-		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 	}
 	print OUT <<END;
-					</table>
-				</div>
-			</div>
+				</div>	<!-- #jsToggle -->
+			</div>	<!-- #subcontainer -->
 			<div id="footer">
 				<hr />
 				<p><a href="http://jigsaw.w3.org/css-validator/check/referer">
@@ -1217,7 +1241,8 @@ MAKECOLUMNS3:
 						src="http://jigsaw.w3.org/css-validator/images/vcss"
 						alt="Valid CSS!" />
 				</a></p>
-		</div>
+			</div>	<!-- #footer -->
+		</div>	<!-- #container -->
 	</body>
 </html>
 
