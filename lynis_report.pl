@@ -344,7 +344,11 @@ END
 	if ((exists($lynis_report_data{'deleted_file[]'})) and ($lynis_report_data{'deleted_file[]'} ne "")) {
 		if (ref($lynis_report_data{'deleted_file[]'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t<h5>deleted files (".scalar(@{$lynis_report_data{'deleted_file[]'}})."):</h5>\n";
-			print OUT "\t\t\t\t<select size=\"10\" name=\"lbDeletedFiles\">\n";
+			if (scalar(@{$lynis_report_data{'deleted_file[]'}}) < 10) {
+				print OUT "\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'deleted_file[]'}})."\" name=\"lbDeletedFiles\">\n";
+			} else {
+				print OUT "\t\t\t\t<select size=\"10\" name=\"lbDeletedFiles\">\n";
+			}
 			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<option>$f\n"; }
 		} else {
 			warn colored("Deleted files object not an array! \n", "yellow");
@@ -421,7 +425,11 @@ END
 	if ((exists($lynis_report_data{'plugin_processes_allprocesses'})) and ($lynis_report_data{'plugin_processes_allprocesses'} ne "")) {
 		print OUT "\t\t\t\t<h5>Plugin-processes: discovered processes:</h5>\n";
 		if (ref($lynis_report_data{'plugin_processes_allprocesses'}) eq 'ARRAY') {
-			print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbPluginProcessesAllProcesses\" >\n";
+			if (scalar(@{$lynis_report_data{'plugin_processes_allprocesses'}}) < 10) {
+				print OUT "\t\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'plugin_processes_allprocesses'}})."\" name=\"lbPluginProcessesAllProcesses\" >\n";
+			} else {
+				print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbPluginProcessesAllProcesses\" >\n";
+			}
 			foreach my $p ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) { print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		} else {
@@ -527,13 +535,21 @@ END
 				<h4>log directories:</h4>
 END
 	if (ref($lynis_report_data{'log_directory[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbLogDirectories\">\n";
+		if (scalar(@{$lynis_report_data{'log_directory[]'}}) < 10) {
+			print OUT "\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'log_directory[]'}})."\" name=\"lbLogDirectories\">\n";
+		} else {
+			print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbLogDirectories\">\n";
+		}
 		foreach my $ld ( @{$lynis_report_data{'log_directory[]'}} ) { print OUT "\t\t\t\t\t\t<option>$ld\n"; }
 		print OUT "\t\t\t\t\t</select>\n";
 	}
 	print OUT "\t\t\t\t\t<h4>open log files:</h4>\n";
 	if (ref($lynis_report_data{'open_logfile[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<select size=\"10\" name=\"blOpenLogFiles\">\n";
+		if (scalar(@{$lynis_report_data{'open_logfile[]'}}) < 10) {
+			print OUT "\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'open_logfile[]'}})."\" name=\"blOpenLogFiles\">\n";
+		} else {
+			print OUT "\t\t\t\t\t<select size=\"10\" name=\"blOpenLogFiles\">\n";
+		}
 		foreach my $lf ( @{$lynis_report_data{'open_logfile[]'}} ) { print OUT "\t\t\t\t\t\t<option>$lf\n"; }
 		print OUT "\t\t\t\t\t</select>\n";
 	}
