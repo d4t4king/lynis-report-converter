@@ -193,8 +193,9 @@ if ($excel) {
 			select {background:transparent;color:#fff;}
 			table {border-collapse:collapse;border:1px solid gray;}
 			table.list {border-collapse:collapse;border:none;}
+			table.list td,th {border-collapse:collapse;border:none;}
 			table#lynis_plugins_table {width:100%;}
-			table#scoreauditor {width:90%;}
+			table#scoreauditor {border-collapse:collapse;border:none;width:90%;}
 			td {padding:2px 5px 2px 5px;vertical-align:top;border:1px solid gray;}
 			td.good {background-color: #006400; color: #fff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000; font-weight: bold;}
