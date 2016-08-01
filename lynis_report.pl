@@ -655,7 +655,11 @@ END
 						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
 END
 	if (exists($lynis_report_data{'malware_scanner[]'})) {
-		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>".join("<br />\n", @{$lynis_report_data{'malware_scanner[]'}})."</td>\n";
+		if (ref($lynis_report_data{'malware_scanner[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>".join("<br />\n", @{$lynis_report_data{'malware_scanner[]'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>$lynis_report_data{'malware_scanner[]'}</td>\n";
+		}
 	} else {
 		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>&nbsp;</td>\n";
 	}
@@ -663,7 +667,15 @@ END
 	print OUT <<END;
 						<td>compiler installed:</td><td>$to_bool{$lynis_report_data{'compiler_installed'}}</td>
 END
-	print OUT "\t\t\t\t\t\t<td>compilers:</td><td>".join("<br />\n", @{$lynis_report_data{'compiler[]'}})."</td>\n";
+	if (exists($lynis_report_data{'compiler[]'})) {
+		if (ref($lynis_report_data{'compiler[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td>compilers:</td><td>".join("<br />\n", @{$lynis_report_data{'compiler[]'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td>compilers:</td><td>$lynis_report_data{'compiler[]'}</td>\n";
+		}
+	} else {
+		print OUT "\t\t\t\t\t\t<td>compilers:</td><td>&nbsp;</td>\n";
+	}
 	print OUT <<END; 
 					</tr>
 					<tr>
@@ -966,8 +978,12 @@ END
 	print OUT <<END;
 						</tr>
 						<tr>
-							<td>ntp version:</td><td>$lynis_report_data{'ntp_version'}</td>
 END
+	if (exists($lynis_report_data{'ntp_version'})) {
+		print OUT "\t\t\t\t\t\t\t<td>ntp version:</td><td>$lynis_report_data{'ntp_version'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t\t<td>ntp version:</td><td>&nbsp;</td>\n";
+	}
 	if (exists($lynis_report_data{'ntp_unreliable_peer[]'})) {
 		if (ref($lynis_report_data{'ntp_unreliable_peer[]'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>".join("<br />\n", @{$lynis_report_data{'ntp_unreliable_peer[]'}})."</td>";
@@ -996,7 +1012,15 @@ END
 					<tr>
 						<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>
 END
-	print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
+	if (exists($lynis_report_data{'nginx_sub_conf_file'})) {
+		if (ref($lynis_report_data{'nginx_sub_conf_file'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t<td>other config file(s):</td><td>$lynis_report_data{'nginx_sub_conf_file'}</td>\n";
+		}
+	} else {
+			print OUT "\t\t\t\t\t<td>other config file(s):</td><td>&nbsp;</td>\n";
+	}
 	print OUT <<END;
 					</tr>
 					<tr>
