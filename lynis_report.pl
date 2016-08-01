@@ -179,28 +179,31 @@ if ($excel) {
 } else {
 	open OUT, ">$htmldoc" or die colored("There was a problem opening the output file ($htmldoc): $! \n", "bold red");
 	print OUT <<END;
-
-<html >
+<!DOCTYPE HTML>
+<html lang="en">
 	<head>
-		<meta >
-		<style>
+		<title>lynis report</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
 			html,body {color: #fff; background-color: #000;}
 			div#content_section {margin: 0 10% 0 10%;}
 			div.content_subsection {margin: 0 5% 0 5%;}
 			div.collapsable {display:none;}
+			div#footer {width:60%;margin:0 auto 0 20%;}
 			select {background:transparent;color:#fff;}
-			table {border-collapse:collapse;border:1px solid white;}
-			table.list {border:0px;}
+			table {border-collapse:collapse;border:1px solid gray;}
+			table.list {border-collapse:collapse;border:none;}
 			table#lynis_plugins_table {width:100%;}
-			td {padding:2px 5px 2px 5px;vertical-align:top;}
+			table#scoreauditor {width:90%;}
+			td {padding:2px 5px 2px 5px;vertical-align:top;border:1px solid gray;}
 			td.good {background-color: #006400; color: #fff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000; font-weight: bold;}
 			td.poor {background-color: #ffa500; color: #000; font-weight: bold;}
 			td.dismal {background-color: #ff0000; color: #000; font-weight: bold;}
-			td.tf_bad {background-color:#ff0000; colore: #000; font-weight: bold;}
-			td.tf_good {background-color: #006400; color: #fff; font_weight: bold;}
-			td#score {vertical-alingn:top;horizontal-align:left;}
-			td#auditor {vertical-align:top;horizontal-align:right;}
+			td.tf_bad {background-color:#ff0000; color: #000; font-weight: bold;}
+			td.tf_good {background-color: #006400; color: #fff; font-weight: bold;}
+			td#score {vertical-align:top;text-align:left;}
+			td#auditor {vertical-align:top;text-align:right;}
 			span.title_shrink {font-size: 75%;}
 			a:link#github_link {color: #fff;}
 			a:visited#github_link {color: #acacac;}
@@ -211,7 +214,7 @@ if ($excel) {
 			a:hover {color: #0000ff;}
 			a:active {color:#000;}
 		</style>
-		<script language="javascript">
+		<script type="text/javascript">
 			function toggle(link,content) {
 				var ele = document.getElementById(content);
 				var text = document.getElementById(link);
@@ -229,7 +232,7 @@ if ($excel) {
 		<div id="content_section">
 			<h1>lynis Asset Report</h1>
 			<h2><span class="title_shrink">created by</span> <a id="github_link" href="http://github.com/d4t4king/lynis_report" target="_blank">lynis_report</a></h2>
-			<table border="1">
+			<table>
 				<tr>
 					<td><a href="#lynis_info">lynis info</a></td><td><a href="#host_info">host info</a></td>
 					<td><a href="#network_info">network info</a></td><td><a href="#security_info">security Info</a></td>
@@ -243,7 +246,7 @@ if ($excel) {
 			</table>
 			<hr />
 			<h3>host findings:</h3>
-			<table border="0" class="list" width="90%"><tr><td id="score"><table><tr><td>hardening index:</td>
+			<table class="list" id="scoreauditor"><tr><td id="score"><table><tr><td>hardening index:</td>
 END
 
 	given ($lynis_report_data{'hardening_index'}) {
@@ -276,7 +279,7 @@ END
 	}
 	print OUT <<END;
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr><td>Warning ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
 END
 	if (exists($lynis_report_data{'warning[]'})) {
@@ -306,7 +309,7 @@ END
 	print OUT "\t\t\t<h4>suggestions (".scalar(@{$lynis_report_data{'suggestion[]'}})."):</h4>\n";
 	print OUT <<END;
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr><td>Suggestion ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
 END
 	if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
@@ -340,8 +343,8 @@ END
 	if ((exists($lynis_report_data{'deleted_file[]'})) and ($lynis_report_data{'deleted_file[]'} ne "")) {
 		if (ref($lynis_report_data{'deleted_file[]'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t<h5>deleted files (".scalar(@{$lynis_report_data{'deleted_file[]'}})."):</h5>\n";
-			print OUT "\t\t\t\t<select size=\"10\" name=\"lbDeletedFiles\" readonly=\"readonly\">\n";
-			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\ti<option>$f\n"; }
+			print OUT "\t\t\t\t<select size=\"10\" name=\"lbDeletedFiles\">\n";
+			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<option>$f\n"; }
 		} else {
 			warn colored("Deleted files object not an array! \n", "yellow");
 			print Dumper($lynis_report_data{'delete_file[]'});
@@ -353,21 +356,21 @@ END
 			print OUT "\t\t\t\t<h4>Vulnerable packages (".scalar(@{$lynis_report_data{'vulnerable_package[]'}})."):\n";
 			print OUT "\t\t\t\t<ul>\n";
 			foreach my $p ( @{$lynis_report_data{'vulnerable_package[]'}} ) { print OUT "\t\t\t\t\t<li>$p</li>\n"; }
+			print OUT "\t\t\t\t</ul><br />\n";
 		} else {
 			warn colored("Vulnerable package pbject not an array! \n", "yellow");
 			print Dumper($lynis_report_data{'vulnerable_package[]'});
 		}
 	}
-	print OUT "\t\t\t\t</ul><br />\n";
 	# It's easier to move stuff around if there is one cell (or cell group) per libe for the tables.  Maybe this
 	# isn't ideal HTML writing, but it makes sense when writing the tool.
 	$lynis_report_data{'lynis_update_available'} = 0 if ((!defined($lynis_report_data{'lynis_update_available'})) or ($lynis_report_data{'lynis_update_available'} eq ""));
 	print OUT <<END;
 			</div>
 			<hr />
-			<h3><a name="lynis_info">lynis info:</a></h3>
+			<h3><a id="lynis_info">lynis info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>
 						<td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>
@@ -397,7 +400,7 @@ END
 END
 
 	print OUT "\t\t\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">\n";
-	print OUT "\t\t\t\t\t\t\t<table border=\"1\" id=\"lynis_plugins_table\">\n";
+	print OUT "\t\t\t\t\t\t\t<table id=\"lynis_plugins_table\">\n";
 	foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
 		my ($n,$v) = split(/\|/, $plug);
 		print OUT "\t\t\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
@@ -417,7 +420,7 @@ END
 	if ((exists($lynis_report_data{'plugin_processes_allprocesses'})) and ($lynis_report_data{'plugin_processes_allprocesses'} ne "")) {
 		print OUT "\t\t\t\t<h5>Plugin-processes: discovered processes:</h5>\n";
 		if (ref($lynis_report_data{'plugin_processes_allprocesses'}) eq 'ARRAY') {
-			print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbPluginProcessesAllProcesses\" readonly=\"readonly\">\n";
+			print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbPluginProcessesAllProcesses\" >\n";
 			foreach my $p ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) { print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		} else {
@@ -428,9 +431,9 @@ END
 	print OUT <<END;
 			</div>
 			<hr />
-			<h3><a name="host_info">host info:</a></h3>
+			<h3><a id="host_info">host info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>hostname:</td><td>$lynis_report_data{'hostname'}</td>
 						<td>domainname:</td><td>$lynis_report_data{'domainname'}</td>
@@ -503,7 +506,7 @@ END
 				<h4>cron jobs:</h4>
 END
 	if (ref($lynis_report_data{'cronjob[]'}) eq "ARRAY") {
-		print OUT "\t\t\t\t\t<select size=\"10\" readonly=\"readonly\" name=\"lbCronJobs\">\n";
+		print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbCronJobs\">\n";
 		foreach my $c ( @{$lynis_report_data{'cronjob[]'}} ) { 
 			$c =~ s/,/\t&nbsp;/g;
 			print OUT "\t\t\t\t\t\t<option>$c\n"; 
@@ -513,7 +516,7 @@ END
 	print OUT <<END;
 
 				<h4>logging info:</h4>
-				<table border="1">
+				<table>
 					<tr>
 						<td>log rotation tool:</td><td>$lynis_report_data{'log_rotation_tool'}</td>
 						<td>log rotation config found:</td><td>$to_bool{$lynis_report_data{'log_rotation_config_found'}}</td>
@@ -523,22 +526,22 @@ END
 				<h4>log directories:</h4>
 END
 	if (ref($lynis_report_data{'log_directory[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<select size=\"10\" readonly=\"readonly\" name=\"lbLogDirectories\">\n";
+		print OUT "\t\t\t\t\t<select size=\"10\" name=\"lbLogDirectories\">\n";
 		foreach my $ld ( @{$lynis_report_data{'log_directory[]'}} ) { print OUT "\t\t\t\t\t\t<option>$ld\n"; }
 		print OUT "\t\t\t\t\t</select>\n";
 	}
 	print OUT "\t\t\t\t\t<h4>open log files:</h4>\n";
 	if (ref($lynis_report_data{'open_logfile[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<select size=\"10\" readonly=\"readonly\" name=\"blOpenLogFiles\">\n";
+		print OUT "\t\t\t\t\t<select size=\"10\" name=\"blOpenLogFiles\">\n";
 		foreach my $lf ( @{$lynis_report_data{'open_logfile[]'}} ) { print OUT "\t\t\t\t\t\t<option>$lf\n"; }
 		print OUT "\t\t\t\t\t</select>\n";
 	}
 	print OUT <<END;
 			</div>
 			<hr />
-			<h3><a name="network_info">network info:</a></h3>
+			<h3><a id="network_info">network info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
 						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
@@ -574,10 +577,10 @@ END
 		}
 	}
 	print OUT <<END;
-					</td>
+					</tr>
 				</table>
 				<h4>Open Ports:</h4>
-				<table border="1">
+				<table>
 					<tr><td>IP Address</td><td>Port</td><td>Protocol</td><td>Daemon/Process</td><td>???</td></tr>
 END
 
@@ -598,9 +601,9 @@ END
 				</table>
 			</div>
 			<hr />
-			<h3><a name="security_info">security info:</a></h3>
+			<h3><a id="security_info">security info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>
 						<td>Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>
@@ -684,26 +687,27 @@ END
 		}
 	}
 	print OUT <<END;
+						<td></td><td></td>
 					</tr>
 				</table>
-				<table border="0" class="list">
+				<table class="list">
 					<tr><td><h4>real users:</h4></td><td><h4>home directories:</h4></td></tr>
 					<tr><td>
-						<table border="0" class="list">
+						<table class="list">
 							<tr><td>name</td><td>uid</td></tr>
 END
 	foreach my $u ( @{$lynis_report_data{'real_user[]'}} ) { 
 		my ($name,$uid) = split(/,/, $u);
 		print OUT "\t\t\t\t\t\t\t<tr><td>$name</td><td>$uid</td></tr>\n"; 
 	}
-	print OUT "\t\t\t\t\t\t</table></td><td><select size=\"10\" readonly=\"readonly\" name=\"lbHomeDirectories\">\n";
+	print OUT "\t\t\t\t\t\t</table></td><td><select size=\"10\" name=\"lbHomeDirectories\">\n";
 	foreach my $d ( @{$lynis_report_data{'home_directory[]'}} ) { print OUT "\t\t\t\t\t\t\t<option>$d\n"; }
 	print OUT <<END;	
 					</select></td></tr>
 				</table>
 				<h4>PAM Modules:</h4><a id="pamModLink" href="javascript:toggle('pamModLink', 'pamModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pamModToggle" style="display: none">
-					<table border="0" class="list">
+					<table class="list">
 END
 	my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
 	#print "ARRLEN: $arrlen \n";
@@ -742,9 +746,9 @@ if ((!defined($lynis_report_data{'boot_service_tool'})) or ($lynis_report_data{'
 				</div>
 			</div>
 			<hr />
-			<h3><a name="boot_info">boot info:</a></h3>
+			<h3><a id="boot_info">boot info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>UEFI booted:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted'}}</td>
 						<td>UEFI booted secure:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted_secure'}}</td>
@@ -774,9 +778,9 @@ END
 	print OUT <<END;
 			</div>
 			<hr />
-			<h3><a name="kernel_info">kernel info:</a></h3>
+			<h3><a id="kernel_info">kernel info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>
 						<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>
@@ -792,7 +796,7 @@ END
 				</table>
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="kernelModToggle" style="display: none">
-					<table border="0" class="list">
+					<table class="list">
 END
 	$arrlen = scalar(@{$lynis_report_data{'loaded_kernel_module[]'}});
 	#print "ARRLEN: $arrlen \n";
@@ -829,9 +833,9 @@ MAKECOLUMNS2:
 				</div>
 			</div>
 			<hr />
-			<h3><a name="filesystem_info">filesystem/journalling info:</a></h3>
+			<h3><a id="filesystem_info">filesystem/journalling info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>
 						<td>journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\
@@ -870,7 +874,7 @@ END
 END
 	if ((exists($lynis_report_data{'journal_meta_data'})) and (ref($lynis_report_data{'journal_meta_data'}) eq "ARRAY")) {
 		foreach my $md ( @{$lynis_report_data{'journal_meta_data'}} ) {
-			print OUT "\t\t\t\t\t<table border=\"1\">\n";
+			print OUT "\t\t\t\t\t<table>\n";
 			my @fields = split(/,/, $md);
 			foreach my $f ( @fields ) {
 				my ($key,$val);
@@ -894,9 +898,9 @@ END
 				</div>
 			</div>
 			<hr />
-			<h3><a name="service_info">service info:</a></h3>
+			<h3><a id="service_info">service info:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 END
 	foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd ) ) {
 		if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
@@ -907,7 +911,7 @@ END
 	}
 	print OUT "\t\t\t\t\t</table>\n";
 	print OUT "\t\t\t<h4>daemon info:</h4>\n";
-	print OUT "\t\t\t\t\t<table border=\"1\">\n";
+	print OUT "\t\t\t\t\t<table>\n";
 	if ((exists($lynis_report_data{'pop3_daemon'})) and ($lynis_report_data{'pop3_daemon'} ne "")) {
 		print OUT "\t\t\t\t\t\t<tr><td>pop3 daemon:</td><td>$lynis_report_data{'pop3_daemon'}</td></tr>\n";
 	}
@@ -946,7 +950,7 @@ END
 	print OUT <<END;
 				<h5>ntp detail:</h5><a id="ntpDetailLink" href="javascript: toggle('ntpDetailLink','ntpDetailToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="ntpDetailToggle" style="display: none">
-					<table border="1">
+					<table>
 						<tr>
 							<td>ntp config found:</td><td>$to_bool{$lynis_report_data{'ntp_config_found'}}</td>
 END
@@ -969,10 +973,12 @@ END
 		} else {
 			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>$lynis_report_data{'ntp_unreliable_peer[]'}</td>";
 		}
+	} else {
+		print OUT "\t\t\t\t\t\t\t<td></td><td></td>\n";
 	}
 	print OUT <<END;
 						</tr>
-						<tr><th colspan="4">NTP Config Type</th><tr>
+						<tr><th colspan="4">NTP Config Type</th></tr>
 						<tr>
 							<td>startup:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_startup'}}</td>
 							<td>daemon:</td><td>$to_bool{$lynis_report_data{'ntp_config_type_daemon'}}</td>
@@ -985,7 +991,7 @@ END
 				</div>
 				<br />
 				<h5>nginx detail</h5>
-				<table border="1">
+				<table>
 					<tr>
 						<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>
 END
@@ -1005,8 +1011,13 @@ END
 		if (ref($lynis_report_data{'nginx_config_option'}) eq 'ARRAY') {
 			foreach my $o ( @{$lynis_report_data{'nginx_config_option'}} ) { print OUT "\t\t\t\t\t\t<li>$o</li>\n"; }
 		} else {
-			warn colored("nginx config options opbject not an array! \n", "yellow");
-			print Dumper($lynis_report_data{'nginx_config_option'});
+			if ((defined($lynis_report_data{'nginx_config_option'})) and ($lynis_report_data{'nginx_config_option'} ne "")) {
+				print OUT "\t\t\t\t\t\t<li>$lynis_report_data{'nginx_config_option'}</li>\n";
+			} else {
+				print OUT "\t\t\t\t\t\t<li>N/A - Unable to detect nginx config </li>\n";
+				warn colored("nginx config options opbject not an array! \n", "yellow");
+				print Dumper($lynis_report_data{'nginx_config_option'});
+			}
 		}
 		print OUT "\t\t\t\t\t</ul>\n";
 	}
@@ -1035,7 +1046,7 @@ END
 					<h5>apache details:</h5>
 					<a id="apacheDetailsLink" href="javascript:toggle('apacheDetailsLink','apacheDetailsToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
 					<div id="apacheDetailsToggle" style="display:none;">
-						<table border="1"><tr><td>apache version:</td><td>$lynis_report_data{'apache_version'}</td></tr></table>
+						<table><tr><td>apache version:</td><td>$lynis_report_data{'apache_version'}</td></tr></table>
 END
 		if (exists($lynis_report_data{'apache_module[]'})) {
 			print OUT <<END;
@@ -1058,7 +1069,7 @@ END
 	print OUT <<END;
 				<h5>systemd detail:</h5><a id="systemdLink" href="javascript:toggle('systemdLink', 'systemdToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="systemdToggle" style="display:none;">
-					<table border="1">
+					<table>
 						<tr>
 							<td>systemd version:</td><td>$lynis_report_data{'systemd_version'}</td>
 							<td>systemd status:</td><td>$lynis_report_data{'systemd_status'}</td>
@@ -1072,7 +1083,7 @@ END
 		print OUT <<END;
 					<h5>systemd unit files:</h5><a id="systemdUnitFileLink" href="javascript:toggle('systemdUnitFileLink','systemdUnitFileToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
 					<div id="systemdUnitFileToggle" style="display:none;">
-						<table border="1">
+						<table>
 							<tr><th>unit file</th><th>status</th><th></th><tr>
 END
 		if (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') {
@@ -1124,9 +1135,9 @@ END
 				</div>						
 			</div>
 			<hr />
-			<h3><a name="installed_packages">Installed packages:</a></h3>
+			<h3><a id="installed_packages">Installed packages:</a></h3>
 			<div class="content_subsection">
-				<table border="1">
+				<table>
 					<tr>
 						<td>Number of packages installed:</td><td>$lynis_report_data{'installed_packages'}</td>
 						<td>Number of binaries found:</td><td>$lynis_report_data{'binaries_count'}</td>
@@ -1135,7 +1146,7 @@ END
 				<br />
 				<a id="pkgLink" href="javascript: toggle('pkgLink', 'pkgContent');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pkgContent" style="display: none">
-					<table border="0" class="list">
+					<table class="list">
 END
 	#print OUT "\t\t\t\t\t\t".join(" | ", @{$lynis_report_data{'installed_packages_array'}})."\n";
 	$arrlen = scalar(@{$lynis_report_data{'installed_packages_array'}});
@@ -1173,6 +1184,13 @@ MAKECOLUMNS3:
 					</table>
 				</div>
 			</div>
+			<div id="footer">
+				<hr />
+				<p><a href="http://jigsaw.w3.org/css-validator/check/referer">
+					<img style="border:0;width:88px;height:31px;"
+						src="http://jigsaw.w3.org/css-validator/images/vcss"
+						alt="Valid CSS!" />
+				</a></p>
 		</div>
 	</body>
 </html>
