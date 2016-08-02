@@ -424,6 +424,7 @@ END
 	print OUT "\t\t\t\t\t\t\t<table id=\"lynis_plugins_table\">\n";
 	foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
 		my ($n,$v) = split(/\|/, $plug);
+		if ((!defined($v)) or ($v eq "")) { $v = "AAAAAAAA"; }
 		print OUT "\t\t\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
 	}
 	print OUT "\t\t\t\t\t\t\t</table>\n";
@@ -514,7 +515,15 @@ END
 					<tr>
 						<td>binary paths:</td><td colspan="2">$lynis_report_data{'binary_paths'}</td>
 END
-	print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
+	if (exists($lynis_report_data{'valid_certificate[]'})) {
+		if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">$lynis_report_data{'valid_certificate[]'}</td>\n";
+		}
+	} else {
+		print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">&nbsp;</td>\n";
+	}
 	print OUT <<END;
 					</tr>
 					<tr>
@@ -641,36 +650,55 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>
-						<td>Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>
-						<td>Firewall Empty Ruleset:</td><td>$to_bool{$lynis_report_data{'firewall_empty_ruleset'}}</td>
-						<td>Firewall Active:</td><td>$to_bool{$lynis_report_data{'firewall_active'}}</td>
+END
+	$lynis_report_data{'firewall_installed'} = 0 if ((!defined($lynis_report_data{'firewall_installed'})) or ($lynis_report_data{'firewall_installed'} eq ''));
+	print OUT "\t\t\t\t\t<td>Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>\n";
+	$lynis_report_data{'firewall_software'} = "&nbsp;" if ((!defined($lynis_report_data{'firewall_software'})) or ($lynis_report_data{'firewall_software'} eq ''));
+	print OUT "\t\t\t\t\t<td>Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>\n";
+	$lynis_report_data{'firewall_empty_ruleset'} = 0 if ((!defined($lynis_report_data{'firewall_empty_ruleset'})) or ($lynis_report_data{'firewall_empty_ruleset'} eq ''));
+	print OUT "\t\t\t\t\t<td>Firewall Empty Ruleset:</td><td>$to_bool{$lynis_report_data{'firewall_empty_ruleset'}}</td>\n";
+	$lynis_report_data{'firewall_active'} = 0 if ((!defined($lynis_report_data{'firewall_active'})) or ($lynis_report_data{'firewall_active'} eq ''));
+	print OUT "\t\t\t\t\t<td>Firewall Active:</td><td>$to_bool{$lynis_report_data{'firewall_active'}}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>
-						<td>Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>
-						<td>Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>
-						<td>Package Manager:</td><td>$lynis_report_data{'package_manager[]'}</td>
+END
+	print OUT "\t\t\t\t\t\t<td>Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>Package Manager:</td><td>$lynis_report_data{'package_manager[]'}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>
-						<td>Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>
-						<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>
-						<td>LDAP Auth Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_auth_enabled'}}</td>
+END
+	$lynis_report_data{'authentication_two_factor_enabled'} = 0 if ((!defined($lynis_report_data{'authentication_two_factor_enabled'})) or ($lynis_report_data{'authentication_two_factor_enabled'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>\n";
+	$lynis_report_data{'authentication_two_factor_required'} = 0 if ((!defined($lynis_report_data{'authentication_two_factor_required'})) or ($lynis_report_data{'authentication_two_factor_required'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>LDAP Auth Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_auth_enabled'}}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
-						<td>Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>
-						<td>Maximum Password Days:</td><td>$lynis_report_data{'password_max_days'}</td>
-						<td>Minimum Password Days:</td><td>$lynis_report_data{'password_min_days'}</td>
-						<td>Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>
+END
+	$lynis_report_data{'minimum_password_length'} = 0 if ((!defined($lynis_report_data{'minimum_password_length'})) or ($lynis_report_data{'minimum_password_length'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>\n";
+	$lynis_report_data{'password_max_days'} = 0 if ((!defined($lynis_report_data{'password_max_days'})) or ($lynis_report_data{'password_max_days'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Maximum Password Days:</td><td>$lynis_report_data{'password_max_days'}</td>\n";
+	$lynis_report_data{'password_min_days'} = 0 if ((!defined($lynis_report_data{'password_min_days'})) or ($lynis_report_data{'password_min_days'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Minimum Password Days:</td><td>$lynis_report_data{'password_min_days'}</td>\n";
+	$lynis_report_data{'max_password_retry'} = 0 if ((!defined($lynis_report_data{'max_password_retry'})) or ($lynis_report_data{'max_password_retry'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>\n";
+	print OUT <<END;
 					</tr>
 					<tr>
 END
 	printf OUT "\t\t\t\t\t\t<td>Password Complexity Score:</td><td>%#b</td>\n", $pass_score;
+	print OUT "\t\t\t\t\t\t<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>\n";
+	$lynis_report_data{'password_strength_tested'} = 0 if ((!defined($lynis_report_data{'password_strength_tested'})) or ($lynis_report_data{'password_strength_tested'} eq ''));
+	print OUT "\t\t\t\t\t\t<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>\n";
 	print OUT <<END;
-						<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>
-						<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>
-						<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>
 					</tr>
 					<tr>
 						<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>
@@ -759,40 +787,21 @@ END
 				</table>
 				<h4>PAM Modules:</h4><a id="pamModLink" href="javascript:toggle('pamModLink', 'pamModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="pamModToggle" style="display: none">
-					<table class="list">
 END
-	my $arrlen = scalar(@{$lynis_report_data{'pam_module[]'}});
-	#print "ARRLEN: $arrlen \n";
-MAKECOLUMNS1:
-	if (($arrlen % 5) == 0) {
-		#print "ARRLEN divisible by 5. \n";
-		for (my $i=0;$i<$arrlen;$i+=5) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 4)]</td></tr>\n";
+	if (exists($lynis_report_data{'pam_module[]'})) {
+		if (ref($lynis_report_data{'pam_module[]'}) eq 'ARRAY') {
+			if (scalar(@{$lynis_report_data{'pam_module[]'}}) < 25) {
+				print OUT "<select id=\"pam_module[]\" size=\"".scalar(@{$lynis_report_data{'pam_module[]'}})."\">\n";
+			} else {
+				print OUT "<select id=\"pam_module[]\" size=\"25\">\n";
+			}
+			foreach my $pm ( sort @{$lynis_report_data{'pam_module[]'}} ) {
+				print OUT "\t\t\t\t\t\t<option>$pm\n";
+			}
+			print OUT "</select>\n";
 		}
-	} elsif (($arrlen % 4) == 0) {
-		warn colored("ARRLEN divisible by 4. \n", "yellow");
-		for (my $i=0;$i<$arrlen;$i+=4) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 3)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 3) == 0) {
-		#print "ARRLEN divisible by 3. \n";
-		for (my $i=0;$i<$arrlen;$i+=3) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 2)]</td></tr>\n";
-		}
-	} elsif (($arrlen % 2) == 0) {
-		#print "ARRLEN divisible by 2. \n";
-		for (my $i=0;$i<$arrlen;$i+=2) {
-			print OUT "\t\t\t\t\t<tr><td>${$lynis_report_data{'pam_module[]'}}[$i]</td><td>${$lynis_report_data{'pam_module[]'}}[($i + 1)]</td></tr>\n";
-		}
-	} else {
-		if (&is_prime($arrlen)) { 
-			print colored("Number ($arrlen) is prime. \n", "bold yellow") if (($verbose) and ($verbose > 1)); 
-			$arrlen++;
-			goto MAKECOLUMNS1;
-		}
-		die colored("ARRLEN appears to be number with a divisor larger than 5 or 1 ($arrlen) \n", "bold red");
 	}
-if ((!defined($lynis_report_data{'boot_service_tool'})) or ($lynis_report_data{'boot_service_tool'} eq "")) { $lynis_report_data{'boot_service_tool'} = "&nbsp;"; }
+	if ((!defined($lynis_report_data{'boot_service_tool'})) or ($lynis_report_data{'boot_service_tool'} eq "")) { $lynis_report_data{'boot_service_tool'} = "&nbsp;"; }
 	print OUT <<END;
 					</table>
 				</div>
@@ -961,7 +970,7 @@ END
 			<div class="content_subsection">
 				<table>
 END
-	foreach my $prog ( sort qw( ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd ) ) {
+	foreach my $prog ( sort qw( redis ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd ) ) {
 		if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
 			print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
 		} else {
@@ -1284,7 +1293,7 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running );
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
