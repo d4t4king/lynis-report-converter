@@ -103,6 +103,13 @@ close RPT or die colored("There was a problem closing the lynis report: $! \n", 
 @{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
 @{$lynis_report_data{'cronjob[]'}} = &dedup_array($lynis_report_data{'cronjob[]'}) if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY');
 
+if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
+	if (ref($lynis_report_data{'pam_auth_brute_force_protection_module[]'}) eq 'ARRAY') {
+		@{$lynis_report_data{'pam_auth_brute_force_protection_module[]'}} = &dedup_array($lynis_report_data{'pam_auth_brute_force_protection_module[]'});
+	}
+}
+
+
 my $pass_score = &calc_password_complexity_score;
 
 my (%warnings, %suggestions);
