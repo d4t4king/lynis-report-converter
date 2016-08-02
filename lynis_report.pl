@@ -1082,7 +1082,11 @@ END
 					<tr>
 END
 	if (exists($lynis_report_data{'log_file'})) {
-		print OUT "\t\t\t\t\t\t<td>log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
+		if (ref($lynis_report_data{'log_file'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td>log file:</td><td>".join("<br />\n",@{$lynis_report_data{'log_file'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td>log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
+		}
 	} else {
 		print OUT "\t\t\t\t\t\t<td>log file:</td><td>&nbsp;\n";
 	}
