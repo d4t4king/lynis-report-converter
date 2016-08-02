@@ -996,7 +996,11 @@ END
 		print OUT "\t\t\t\t\t\t<tr><td>ntp daemon:</td><td>$lynis_report_data{'ntp_daemon'}</td></tr>\n";
 	}
 	if ((exists($lynis_report_data{'scheduler[]'})) and ($lynis_report_data{'scheduler[]'} ne "")) {
-		print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>".join("<br />\n",@{$lynis_report_data{'scheduler[]'}})."</td></tr>\n";
+		if (ref($lynis_report_data{'scheduler[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>".join("<br />\n",@{$lynis_report_data{'scheduler[]'}})."</td></tr>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>$lynis_report_data{'scheduler[]'}</td></tr>\n";
+		}
 	}
 	if ((exists($lynis_report_data{'service_manager'})) and ($lynis_report_data{'service_manager'} ne "")) {
 		print OUT "\t\t\t\t\t\t<tr><td>service manager:</td><td>$lynis_report_data{'service_manager'}</td></tr>\n";
