@@ -1338,16 +1338,12 @@ END
 
 sub is_prime {
 	my $num = shift(@_);
-
-	if ($num < 2 ) { return 0; }
-	if ($num == 2) { return 1; }
-	else {
-		for (my$i=2;$i<sqrt($num);$i++) {
-			if ($num % $i == 0) {
-				return 0;
-			}
-		}
-		return 1;
+	my $sqrt = sqrt($num);
+	my $d = 2;
+	while (1) {
+		return 0 if ( $num % $d == 0 );
+		return 1 if ( $d >= $sqrt );
+		$d++;
 	}
 }
 
