@@ -163,26 +163,49 @@ if ($excel) {
 	$summary_ws->write('A4', "Host Findings:", $subtitle_format);
 	$summary_ws->write('A5', "hardening index:");
 	$summary_ws->write('B5', $lynis_report_data{'hardening_index'});
-	$summary_ws->write('A7', "warnings \(".scalar(@{$lynis_report_data{'warning[]'}})."\):", $subsub_format);
-	my @table_data;
-	my $header_row = [ 'Warning ID', 'Description', 'Severity', 'F4' ];
-	if (exists($lynis_report_data{'warning[]'})) {
-		if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
-			if ($lynis_report_data{'warning[]'}[0] =~ /\|/) {
-				foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
-					my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
-					push @table_data, [$warn_id,$warn_desc,$warn_sev,$warn_f4];
-				}
+	my %params; my @table_data; my $last_row_number = 0; my $header_row;
+	if ((exists($lynis_report_data{'warning[]'})) and (ref($lynis_report_data{'warning[]'}) eq 'ARRAY')) {
+		$summary_ws->write('A7', "warnings \(".scalar(@{$lynis_report_data{'warning[]'}})."\):", $subsub_format);
+		$header_row = [ 'Warning ID', 'Description', 'Severity', 'F4' ];
+		if ($lynis_report_data{'warning[]'}[0] =~ /\|/) {
+			foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
+				my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
+				push @table_data, [$warn_id,$warn_desc,$warn_sev,$warn_f4];
 			}
 		}
+		%params = (
+			'data'			=>	\@table_data,
+			'header_row'	=>	$header_row,
+			'autofilter'	=>	0,
+		);
+		$last_row_number = 8 + scalar(@table_data);
+		$summary_ws->add_table("A8:D$last_row_number", \%params);
+	} else { 
+		$summary_ws->write('A7', "warnings (0):", $subsub_format);
 	}
-	my %params = (
-		'data'			=>	\@table_data,
-		'header_row'	=>	$header_row,
-	);
-	my $last_row_number = 8 + scalar(@table_data);
-	$summary_ws->add_table("A8:D$last_row_number", \%params);
-
+	@table_data = undef; my $next_row = 0;
+	if ((exists($lynis_report_data{'suggestion[]'})) and (ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY')) {
+		$last_row_number++;
+		$next_row = $last_row_number;
+		$summary_ws->write("A${next_row}", "suggestions \(".scalar(@{$lynis_report_data{'suggestion[]'}})."\):", $subsub_format);
+		$next_row++;
+		$header_row = [ 'Suggestion ID', 'Description', 'Severity', 'F4' ];
+		if ($lynis_report_data{'warning[]'}[0] =~ /\|/) {
+			foreach my $sugg (sort @{$lynis_report_data{'suggestion[]'}}) {
+				my ($sugg_id,$sugg_desc,$sugg_sev,$sugg_f4) = split(/\|/, $sugg);
+				push @table_data, [$sugg_id,$sugg_desc,$sugg_sev,$sugg_f4];
+			}
+		}
+		%params = (
+			'data'			=>	\@table_data,
+			'header_row'	=>	$header_row,
+			'autofilter'	=>	0,
+		);
+		$last_row_number = $next_row + scalar(@table_data);
+		$summary_ws->add_table("A${next_row}:D${last_row_number}", \%params);
+	} else {
+		$summary_ws->write("A$next_row", "suggestions (0):", $subsub_format);
+	}
 } else {
 	open OUT, ">$htmldoc" or die colored("There was a problem opening the output file ($htmldoc): $! \n", "bold red");
 	print OUT <<END;
