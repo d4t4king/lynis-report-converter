@@ -228,11 +228,19 @@ if ($excel) {
 	my $host_ws = $wb->add_worksheet('host info');
 	$host_ws->write('A1', "host info:", $title_format);
 	$host_ws->write('A2', 'hostname:'); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:'); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain'); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
-	$host_ws->write('A3', 'os:'); $host_ws->write('B2', $lynis_report_data{'os'}); $host_ws->write('C2', 'os fullname:'); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:'); $host_ws->write('F3', $lynis_report_data{'os_version'});
+	$host_ws->write('A3', 'os:'); $host_ws->write('Br32', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:'); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:'); $host_ws->write('F3', $lynis_report_data{'os_version'});
 	$host_ws->write('A4', 'GRsecurity:'); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:'); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:'); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
 	$host_ws->write('A5', 'linux version:'); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:'); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:'); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
 	$host_ws->write('A6', 'available shells:'); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:'); $host_ws->write('D6', $lynis_report_data{'locate_db'}); $host_ws->write('E6', 'uptime (days):'); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'});
-	$host_ws->write('A7', 'vm:'); $host_ws->write('B7', $lynis_report_data{'vm'}); $host_ws->write('C7', 'vm_type:'); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):'); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
+	$host_ws->write('A7', 'vm:'); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:'); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):'); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
+	$host_ws->write('A8', 'is notebook/laptop:'); $host_ws->write('B8', $to_bool{$lynis_report_data{'notebook'}});
+	$host_ws->write('A9', 'binary paths:'); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
+	$host_ws->write('C9', 'certificates:'); 
+	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D9', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
+	} else {
+		$host_ws->write('D9', $lynis_report_data{'valid_certificate[]'});
+	}
 
 	### network infdo
 	my $net_ws = $wb->add_worksheet('network info');
