@@ -159,7 +159,7 @@ if ($excel) {
 	my $subsub_format = $wb->add_format();
 	$subsub_format->set_size('16');
 
-	my $label_format = $wb->add_format();
+	my $label_format = $wb->add_format('valign'=>'top','align'=>'left');
 	$label_format->set_bold();
 
 	my $version_format = $wb->add_format();
@@ -238,7 +238,7 @@ if ($excel) {
 	### host infor
 	my $host_ws = $wb->add_worksheet('host info');
 	$host_ws->write('A1', "host info:", $title_format);
-	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
+	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain:', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
 	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
 	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
 	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
@@ -303,10 +303,100 @@ if ($excel) {
 	### network infdo
 	my $net_ws = $wb->add_worksheet('network info');
 	$net_ws->write('A1', "network info:", $title_format);
+	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); $net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', $to_bool{$lynis_report_data{'ipv6_only'}});
+	$net_ws->write('A3', 'network interfaces:', $label_format); $net_ws->write('B3', join("\n", @{$lynis_report_data{'network_interface[]'}}));
+	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
+	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
+	$net_ws->write('A6', 'default gateway', $label_format); $net_ws->write('B6', $lynis_report_data{'default_gateway[]'});
+	$net_ws->write('A7', 'mac addresses', $label_format); $net_ws->write('B7', join("\n", @{$lynis_report_data{'network_mac_address[]'}})); $net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}});
+	$net_ws->write('A8', 'name servers:', $label_format); $net_ws->write('B8', join("\n", @{$lynis_report_data{'nameserver[]'}}));
+	$net_ws->write('A9', 'resolv.conf search domain', $label_format); $net_ws->write('B9', $lynis_report_data{'resolv_conf_search_domain[]'});
+	$net_ws->write('A11', 'open ports:', $subsub_format); 
+	if ((exists($lynis_report_data{'network_listen_port[]'})) and (ref($lynis_report_data{'network_listen_port[]'}) eq 'ARRAY')) {
+		$net_ws->write('A12', "ip address", $label_format); $net_ws->write('B12', 'port', $label_format); $net_ws->write('C12', 'protocol', $label_format); $net_ws->write('D12', 'daemon/process', $label_format); $net_ws->write('E12', '???', $label_format);
+		$i = 13;
+		foreach my $rec ( sort @{$lynis_report_data{'network_listen_port[]'}} ) {
+			#print STDERR colored("$rec \n", "bold magenta");
+			my ($ipp,$pr,$d,$u) = split(/\|/, $rec);
+			my ($ip, $port);
+			if (grep(/\:/, split(//, $ipp)) > 1) {
+				my @parts = split(/\:/, $ipp);
+				$port = pop(@parts);					# gets the last element of the array.  like	$parts[-1];
+				$ip = join(":", @parts);				# should only be the remaining parts, which should be the ipv6 addr
+			} else {
+				# must be IPv4
+				($ip,$port) = split(/\:/, $ipp);
+			}
+			$net_ws->write("A$i", $ip); $net_ws->write("B$i", $port); $net_ws->write("C$i", $pr); $net_ws->write("D$i", $d); $net_ws->write("E$i", $u);
+			$i++;
+		}
+	} else {
+		warn colored("network_listen_port[] not an array!", "yellow");
+	}
 
 	### security info
 	my $sec_ws = $wb->add_worksheet('security info');
 	$sec_ws->write('A1', "security info:", $title_format);
+	$sec_ws->write('A2', 'host firewall installed:', $label_format); $sec_ws->write('B2', $to_bool{$lynis_report_data{'firewall_installed'}});
+	$sec_ws->write('C2', 'firewall software:', $label_format); $sec_ws->write('D2', $lynis_report_data{'firewall_software[]'});
+	$sec_ws->write('E2', 'firewall empty ruleset:', $label_format); $sec_ws->write('F2', $to_bool{$lynis_report_data{'firewall_empty_ruleset'}});
+	$sec_ws->write('G2', 'firewall active:', $label_format); $sec_ws->write('H2', $to_bool{$lynis_report_data{'firewall_active'}});
+	$sec_ws->write('A3', 'package audit tool found', $label_format); $sec_ws->write('B3', $to_bool{$lynis_report_data{'package_audit_tool_found'}});
+	$sec_ws->write('C3', 'package audit tool;', $label_format); $sec_ws->write('D3', $lynis_report_data{'package_audit_tool'});
+	$sec_ws->write('E3', 'vulnerable packages found:', $label_format); $sec_ws->write('F3', $to_bool{$lynis_report_data{'vulnerable_packages_found'}});
+	$sec_ws->write('G3', 'package manager:', $label_format); $sec_ws->write('H3', $lynis_report_data{'package_manager[]'});
+	$sec_ws->write('A4', 'two-factor authentication enabled:', $label_format); $sec_ws->write('B4', $to_bool{$lynis_report_data{'authentication_two_factor_enabled'}});
+	$sec_ws->write('C4', 'two-factor authentication required:', $label_format); $sec_ws->write('D4', $to_bool{$lynis_report_data{'authentication_two_factor_required'}});
+	$sec_ws->write('E4', 'LDAP PAM module enabled:', $label_format); $sec_ws->write('F4', $to_bool{$lynis_report_data{'ldap_pam_enabled'}});
+	$sec_ws->write('G4', 'LDAP authentication enabled:', $label_format); $sec_ws->write('H4', $to_bool{$lynis_report_data{'ldap_auth_enabled'}});
+	$sec_ws->write('A5', 'minimum password length:', $label_format); $sec_ws->write('B5', $lynis_report_data{'minimum_password_length'});
+	$sec_ws->write('C5', 'maximum password days:', $label_format); $sec_ws->write('D5', $lynis_report_data{'password_max_days'});
+	$sec_ws->write('E5', 'minimum password days:', $label_format); $sec_ws->write('F5', $lynis_report_data{'password_min_days'});
+	$sec_ws->write('G5', 'maximum password retries:', $label_format); $sec_ws->write('H5', $lynis_report_data{'max_password_retry'});
+	$sec_ws->write('A6', 'password complexity score:', $label_format); $sec_ws->write_formula('B6', "=DEC2BIN($pass_score)");
+	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', $to_bool{$lynis_report_data{'pam_cracklib'}});
+	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', $to_bool{$lynis_report_data{'password_strength_tested'}});
+	$sec_ws->write('G6', 'failed logins logged:', $label_format); $sec_ws->write('H6', $to_bool{$lynis_report_data{'auth_failed_logins_logged'}});
+	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
+	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
+	$i = 13;
+	if ((exists($lynis_report_data{'real_user[]'})) and (ref($lynis_report_data{'real_user[]'}) eq 'ARRAY')) {
+		foreach my $usr ( sort @{$lynis_report_data{'real_user[]'}} ) {
+			my ($n, $uid) = split(/\,/, $usr);
+			$sec_ws->write("A$i", $n); $sec_ws->write("B$i", $uid); $i++; 
+		}
+	} else {
+		warn colored("real_user[] not found or not an array!", "yellow");
+		print STDERR color('yellow');
+		print STDERR ref($lynis_report_data{'real_user[]'})."\n";
+		print STDERR Dumper($lynis_report_data{'real_user[]'});
+		print STDERR color('reset');
+	}
+	$i = 13;
+	if ((exists($lynis_report_data{'home_directory[]'})) and (ref($lynis_report_data{'home_directory[]'}) eq 'ARRAY')) {
+		foreach my $dir ( sort @{$lynis_report_data{'home_directory[]'}} ) {
+			$sec_ws->write("C$i", $dir); $i++;
+		}
+	} else {
+		warn colored("home_directory[] not found or not an array!", "yellow");
+		print STDERR color("yellow");
+		print STDERR ref($lynis_report_data{'home_directory[]'})."\n";
+		print STDERR Dumper($lynis_report_data{'home_directory[]'});
+		print STDERR color('reset');
+	}
+	$i++;
+	$sec_ws->write("A$i", "PAM modules:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'pam_module[]'})) and (ref($lynis_report_data{'pam_module[]'}) eq 'ARRAY')) {
+		foreach my $mod ( sort @{$lynis_report_data{'pam_module[]'}} ) {
+			$sec_ws->write("A$i", $mod); $i++;
+		}
+	} else {
+		warn colored("pam_module[] not found or not an array!", "yellow");
+		print STDERR color("yellow");
+		print STDERR ref($lynis_report_data{'pam_module[]'})."\n";
+		print STDERR Dumper($lynis_report_data{'pam_module[]'});
+		print STDERR color('reset');
+	}
 
 	### boot info
 	my $boot_ws = $wb->add_worksheet('boot info');
@@ -323,21 +413,37 @@ if ($excel) {
 	### service info
 	my $svc_ws = $wb->add_worksheet('service info');
 	$svc_ws->write('A1', "service info:", $title_format);
+	$i = 5;
+	$svc_ws->write("A$i", "running services:", $subsub_format);
+	if ((exists($lynis_report_data{'running_service[]'})) and (ref($lynis_report_data{'running_service[]'}) eq 'ARRAY')) {
+		foreach my $svc ( sort @{$lynis_report_data{'running_service[]'}} ) {
+			$svc_ws->write("A$i", $svc); $i++;
+		}
+	} else {
+		warn colored("running_service[] array not found or not an array!", "yellow");
+		print STDERR color("yellow");
+		print STDERR Dumper($lynis_report_data{'running_service[]'});
+		print STDERR color('reset');
+	}
 
 	### package info
 	my $pkg_ws = $wb->add_worksheet('package info');
 	$pkg_ws->write('A1', "package info:", $title_format);
 	$pkg_ws->write('A2', "number of packages installed:"); $pkg_ws->write('B2', $lynis_report_data{'installed_packages'}); $pkg_ws->write('C2', 'number of binaries found:'); $pkg_ws->write('D2', $lynis_report_data{'binaries_count'});
-	$i = 3;
+	$pkg_ws->merge_range('A4:D4', 'installed packages:', $subsub_format);
+	$pkg_ws->merge_range('A5:B5', 'name', $label_format); $pkg_ws->merge_range('C5:D5', 'version', $label_format);
+	$i = 6;
 	foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) {
 		chomp($p);
-		$pkg_ws->write("A$i", $p);
+		my ($name, $ver) = split(/\,/, $p);
+		$pkg_ws->merge_range("A$i:B$i", $name, $merge_format); $pkg_ws->merge_range("C$i:D$i", $ver, $merge_format);
 		$i++;
 	}
 
-	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] );
-	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found );
-	push @indexes, @idx2;
+	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class );
+	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] );
+	push @indexes, @idx2, @idx3;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
@@ -783,6 +889,9 @@ END
 	print OUT <<END;
 						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
 					</tr>
+END
+	print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'nameserver[]'}})."</td></tr>\n";
+	print OUT <<END;
 					<tr>
 						<td colspan="2">resolv.conf search domain:</td>
 END
@@ -808,8 +917,9 @@ END
 		my ($ip,$port);
 		if (grep(/\:/, split(//, $ipp)) > 1) {
 			# must be an IPv6 address;
-			$port = substr($ipp, 0, index($ipp,":"));
-			$ip = substr($ipp,(index($ipp,":")+1));
+			my @parts = split(/\:/, $ipp);
+			$port = pop(@parts);					# gets the last element of the array.  like	$parts[-1];
+			$ip = join(":", @parts);				# should only be the remaining parts, which should be the ipv6 addr
 		} else {
 			# must be IPv4
 			($ip,$port) = split(/\:/, $ipp);
