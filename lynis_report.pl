@@ -147,6 +147,7 @@ delete($lynis_report_data{'tests_executed'});
 #print Dumper(\%warnings);
 
 if ($excel) {
+	my $i = 0;
 	# do the Excel thing....
 	my $wb = Excel::Writer::XLSX->new($output);
 	my $title_format = $wb->add_format();
@@ -157,6 +158,16 @@ if ($excel) {
 
 	my $subsub_format = $wb->add_format();
 	$subsub_format->set_size('16');
+
+	my $label_format = $wb->add_format();
+	$label_format->set_bold();
+
+	my $version_format = $wb->add_format();
+	$version_format->set_num_format( '0.00' );
+
+	my $list_format = $wb->add_format('valign'=>'top', 'align'=>'left');
+
+	my $merge_format = $wb->add_format('valign'=>'top', 'align'=>'left');
 
 	### Summary Sheet Data
 	my $summary_ws = $wb->add_worksheet('Summary');
@@ -193,7 +204,7 @@ if ($excel) {
 		$summary_ws->write("A${next_row}", "suggestions \(".scalar(@{$lynis_report_data{'suggestion[]'}})."\):", $subsub_format);
 		$next_row++;
 		@header_row = [ 'Suggestion ID', 'Description', 'Severity', 'F4' ];
-		if ($lynis_report_data{'warning[]'}[0] =~ /\|/) {
+		if ($lynis_report_data{'suggestion[]'}[0] =~ /\|/) {
 			foreach my $sugg (sort @{$lynis_report_data{'suggestion[]'}}) {
 				my ($sugg_id,$sugg_desc,$sugg_sev,$sugg_f4) = split(/\|/, $sugg);
 				push @table_data, [$sugg_id,$sugg_desc,$sugg_sev,$sugg_f4];
@@ -213,33 +224,80 @@ if ($excel) {
 	### lynis report data
 	my $lynis_ws = $wb->add_worksheet('lynis info');
 	$lynis_ws->write('A1', 'lynis info:', $title_format);
-	$lynis_ws->write('A2', 'lynis version:'); $lynis_ws->write('B2', $lynis_report_data{'lynis_version'}); $lynis_ws->write('C2', 'lynis tests done:');	$lynis_ws->write('D2', $lynis_report_data{'lynis_tests_done'});
+	$lynis_ws->write('A2', 'lynis version:', $label_format); $lynis_ws->write('B2', $lynis_report_data{'lynis_version'}); $lynis_ws->write('C2', 'lynis tests done:', $label_format);	$lynis_ws->write('D2', $lynis_report_data{'lynis_tests_done'});
 	$lynis_report_data{'lynis_update_available'} = 0 if ((defined($lynis_report_data{'lynis_update_available'})) and ($lynis_report_data{'lynis_update_available'} eq ""));
-	$lynis_ws->write('A3', 'lynis update available:'); $lynis_ws->write('B3', $to_bool{$lynis_report_data{'lynis_update_available'}}); $lynis_ws->write('C3', 'license key:'); $lynis_ws->write('D3', $lynis_report_data{'license_key'});
-	$lynis_ws->write('A4', 'report version:'); $lynis_ws->write('B4', "$lynis_report_data{'report_version_major'}\.$lynis_report_data{'report_version_minor'}");
-	$lynis_ws->write('A5', "test category:"); $lynis_ws->write('B5', $lynis_report_data{'test_category'}); $lynis_ws->write('C5', 'test group:'); $lynis_ws->write('D5', $lynis_report_data{'test_group'});
-	$lynis_ws->write('A6', 'number of plugins enabled:'); $lynis_ws->write('B6', $lynis_report_data{'plugin_enabled[]'}); $lynis_ws->write('C6', 'plugin directory:'); $lynis_ws->write('D6', $lynis_report_data{'plugin_directory'});
+	$lynis_ws->write('A3', 'lynis update available:', $label_format); $lynis_ws->write('B3', $to_bool{$lynis_report_data{'lynis_update_available'}}); $lynis_ws->write('C3', 'license key:', $label_format); $lynis_ws->write('D3', $lynis_report_data{'license_key'});
+	$lynis_ws->write('A4', 'report version:', $label_format); $lynis_ws->merge_range('B4:C4', "$lynis_report_data{'report_version_major'}\.$lynis_report_data{'report_version_minor'}", $version_format);
+	$lynis_ws->write('A5', "test category:", $label_format); $lynis_ws->write('B5', $lynis_report_data{'test_category'}); $lynis_ws->write('C5', 'test group:', $label_format); $lynis_ws->write('D5', $lynis_report_data{'test_group'});
+	$lynis_ws->write('A6', 'number of plugins enabled:', $label_format); $lynis_ws->write('B6', $lynis_report_data{'plugin_enabled[]'}); $lynis_ws->write('C6', 'plugin directory:', $label_format); $lynis_ws->write('D6', $lynis_report_data{'plugin_directory'});
 
-	$lynis_ws->write('A8', 'report start time:'); $lynis_ws->write('B8', $lynis_report_data{'report_datetime_start'}); $lynis_ws->write('C8', 'report end time:'); $lynis_ws->write('D8', $lynis_report_data{'report_datetime_end'});
-	$lynis_ws->write('A9', 'hostid1:'); $lynis_ws->write('B9', $lynis_report_data{'hostid'});
-	$lynis_ws->write('A10', 'hostid2:'); $lynis_ws->write('B10', $lynis_report_data{'hostid2'});
+	$lynis_ws->write('A8', 'report start time:', $label_format); $lynis_ws->write('B8', $lynis_report_data{'report_datetime_start'}); $lynis_ws->write('C8', 'report end time:', $label_format); $lynis_ws->write('D8', $lynis_report_data{'report_datetime_end'});
+	$lynis_ws->write('A9', 'hostid1:', $label_format); $lynis_ws->merge_range('B9:D9', $lynis_report_data{'hostid'}, $merge_format);
+	$lynis_ws->write('A10', 'hostid2:', $label_format); $lynis_ws->merge_range('B10:D10', $lynis_report_data{'hostid2'}, $merge_format);
 
 	### host infor
 	my $host_ws = $wb->add_worksheet('host info');
 	$host_ws->write('A1', "host info:", $title_format);
-	$host_ws->write('A2', 'hostname:'); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:'); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain'); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
-	$host_ws->write('A3', 'os:'); $host_ws->write('Br32', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:'); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:'); $host_ws->write('F3', $lynis_report_data{'os_version'});
-	$host_ws->write('A4', 'GRsecurity:'); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:'); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:'); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
-	$host_ws->write('A5', 'linux version:'); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:'); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:'); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
-	$host_ws->write('A6', 'available shells:'); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:'); $host_ws->write('D6', $lynis_report_data{'locate_db'}); $host_ws->write('E6', 'uptime (days):'); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'});
-	$host_ws->write('A7', 'vm:'); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:'); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):'); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
-	$host_ws->write('A8', 'is notebook/laptop:'); $host_ws->write('B8', $to_bool{$lynis_report_data{'notebook'}});
-	$host_ws->write('A9', 'binary paths:'); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
-	$host_ws->write('C9', 'certificates:'); 
+	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
+	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
+	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
+	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
+	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'});
+	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
+	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
+	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', $to_bool{$lynis_report_data{'notebook'}}, $merge_format);
+	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
+	$host_ws->write('C9', 'certificates:', $label_format); 
 	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
 		$host_ws->write('D9', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
 	} else {
 		$host_ws->write('D9', $lynis_report_data{'valid_certificate[]'});
+	}
+	$host_ws->write('A10', 'authorized default USB devices:', $label_format); $host_ws->write('B10', join("\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})); 
+	if ((exists($lynis_report_data{'expired_certificate[]'})) and (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY')) {
+		$host_ws->write('C10', 'expired certificates:', $label_format); $host_ws->write('D10', join("\n", @{$lynis_report_data{'expired_certificate[]'}}));
+	} else {
+		$host_ws->write('C10', 'expired certificates:', $label_format); $host_ws->write('D10', $lynis_report_data{'expired_certificate[]'});
+	}
+
+	$host_ws->write('A12', 'cron jobs:', $label_format); 
+	$i = 13;
+	if ((exists($lynis_report_data{'cronjob[]'})) and (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY')) {
+		foreach my $job ( sort @{$lynis_report_data{'cronjob[]'}} ) {
+			$job =~ s/\,/ /g;
+			#$host_ws->write("A$i", $job);
+			$host_ws->merge_range("A$i:B$i", $job, $merge_format);
+			$i++;
+		}
+	} else {
+		$host_ws->write('A13', $lynis_report_data{'cronjob[]'});
+	}
+	$i++;
+	$host_ws->write("A$i", "logging info:", $subsub_format); $i++;
+	$host_ws->write("A$i", "log rotation tool:", $label_format); $host_ws->write("B$i", $lynis_report_data{'log_rotation_tool'}); $host_ws->write("C$i", "log rotation config found:", $label_format); $host_ws->write("D$i", $to_bool{$lynis_report_data{'log_rotation_config_found'}});
+	$i += 2; $host_ws->write("A$i", "log directories:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'log_directory[]'})) and (ref($lynis_report_data{'log_directory[]'}) eq 'ARRAY')) {
+		foreach my $dir ( sort @{$lynis_report_data{'log_directory[]'}} ) {
+			$host_ws->merge_range("A$i:C$i", $dir, $merge_format); $i++;
+		}
+	} else {
+		$host_ws->merge_range("A$i:C$i", $lynis_report_data{'log_directory[]'}, $merge_format);
+	}
+	$i++; $host_ws->write("A$i", "open log files:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'open_logfile[]'})) and (ref($lynis_report_data{'open_logfile[]'}) eq 'ARRAY')) {
+		foreach my $f ( sort @{$lynis_report_data{'open_logfile[]'}} ) {
+			$host_ws->merge_range("A$i:C$i", $f, $merge_format); $i++;
+		}
+	} else {
+		$host_ws->merge_range("A$i:C$i", $lynis_report_data{'open_logfile[]'}, $merge_format);
+	}
+	$i++; $host_ws->write("A$i", "open empty log files:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'open_empty_log_file[]'})) and (ref($lynis_report_data{'open_empty_log_file[]'}) eq 'ARRAY')) {
+		foreach my $f ( sort @{$lynis_report_data{'open_empty_log_file[]'}} ) {
+			$host_ws->merge_range("A$i:C$i", $f, $merge_format); $i++;
+		}
+	} else {
+		$host_ws->merge_range("A$i:C$i", $lynis_report_data{'open_empty_log_file[]'}, $merge_format);
 	}
 
 	### network infdo
@@ -270,7 +328,7 @@ if ($excel) {
 	my $pkg_ws = $wb->add_worksheet('package info');
 	$pkg_ws->write('A1', "package info:", $title_format);
 	$pkg_ws->write('A2', "number of packages installed:"); $pkg_ws->write('B2', $lynis_report_data{'installed_packages'}); $pkg_ws->write('C2', 'number of binaries found:'); $pkg_ws->write('D2', $lynis_report_data{'binaries_count'});
-	my $i = 3;
+	$i = 3;
 	foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) {
 		chomp($p);
 		$pkg_ws->write("A$i", $p);
@@ -278,7 +336,8 @@ if ($excel) {
 	}
 
 	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] );
-	my @idx2 = qw( );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found );
+	push @indexes, @idx2;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
