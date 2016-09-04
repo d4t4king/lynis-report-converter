@@ -308,8 +308,27 @@ if ($excel) {
 	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
 	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
 	$net_ws->write('A6', 'default gateway', $label_format); $net_ws->write('B6', $lynis_report_data{'default_gateway[]'});
-	$net_ws->write('A7', 'mac addresses', $label_format); $net_ws->write('B7', join("\n", @{$lynis_report_data{'network_mac_address[]'}})); $net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}});
-	$net_ws->write('A8', 'name servers:', $label_format); $net_ws->write('B8', join("\n", @{$lynis_report_data{'nameserver[]'}}));
+	$net_ws->write('A7', 'mac addresses', $label_format); 
+	if (exists($lynis_report_data{'network_mac_address[]'})) {
+		if (ref($lynis_report_data{'network_mac_address[]'}) eq 'ARRAY') {
+			$net_ws->write('B7', join("\n", @{$lynis_report_data{'network_mac_address[]'}}));
+		} else {
+			$net_ws->write('B7', $lynis_report_data{'network_mac_address[]'});
+		}
+	} else {
+		$net_ws->write('B7', "N/A");
+	}
+	$net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}});
+	$net_ws->write('A8', 'name servers:', $label_format); 
+	if (exists($lynis_report_data{'nameserver[]'})) {
+		if (ref($lynis_report_data{'name_server[]'}) eq 'ARRAY') {
+			$net_ws->write('B8', join("\n", @{$lynis_report_data{'nameserver[]'}}));
+		} else {
+			$net_ws->write('B8', $lynis_report_data{'nameserver[]'});
+		}
+	} else {
+		$net_ws->write('B8', "N/A");
+	}
 	$net_ws->write('A9', 'resolv.conf search domain', $label_format); $net_ws->write('B9', $lynis_report_data{'resolv_conf_search_domain[]'});
 	$net_ws->write('A11', 'open ports:', $subsub_format); 
 	if ((exists($lynis_report_data{'network_listen_port[]'})) and (ref($lynis_report_data{'network_listen_port[]'}) eq 'ARRAY')) {
@@ -357,6 +376,24 @@ if ($excel) {
 	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', $to_bool{$lynis_report_data{'pam_cracklib'}});
 	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', $to_bool{$lynis_report_data{'password_strength_tested'}});
 	$sec_ws->write('G6', 'failed logins logged:', $label_format); $sec_ws->write('H6', $to_bool{$lynis_report_data{'auth_failed_logins_logged'}});
+	$sec_ws->write('A7', 'file integrity tool installed:', $label_format); $sec_ws->write('B7', $to_bool{$lynis_report_data{'file_integrity_tool_installed'}});
+	$sec_ws->write('C7', 'file integreity tool(s):', $label_format); $sec_ws->write('D7', $lynis_report_data{'file_integrity_tool[]'});
+	$sec_ws->write('E7', 'automation tool present:', $label_format); $sec_ws->write('F7', $to_bool{$lynis_report_data{'automation_tool_present'}});
+	$sec_ws->write('G7', 'automation tool(s):', $label_format); $sec_ws->write('H7', $lynis_report_data{'automation_tool_running[]'});
+	$sec_ws->write('A8', 'malware scanner installed', $label_format); $sec_ws->write('B8', $to_bool{$lynis_report_data{'malware_scanner_installed'}});
+	$sec_ws->write('C8', 'malware scanner(s):', $label_format); $sec_ws->write('D8', $lynis_report_data{'malware_scanner[]'});
+	$sec_ws->write('E8', 'compiler installed:', $label_format); $sec_ws->write('F8', $to_bool{$lynis_report_data{'compiler_installed'}});
+	$sec_ws->write('G8', 'compiler(s):', $label_format); $sec_ws->write('H8', $lynis_report_data{'compiler[]'});
+	$sec_ws->write('A9', 'IDS/IPS tooling', $label_format); 
+	if (exists($lynis_report_data{'ids_ips_tooling'})) {
+		if (ref($lynis_report_data{'ids_ips_tooling'}) eq 'ARRAY') {
+			$sec_ws->write('B9', join("\n", @{$lynis_report_data{'ids_ips_tooling'}}));
+		} else {
+			$sec_ws->write('B9', $lynis_report_data{'ids_ips_tooling'});
+		}
+	} else {
+		$sec_ws->write('B9', 'N/A');
+	}
 	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
 	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
 	$i = 13;
@@ -435,13 +472,13 @@ if ($excel) {
 	$i = 6;
 	foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) {
 		chomp($p);
-		my ($name, $ver) = split(/\,/, $p);
+		my ($name, $ver) = split(/(?:\,|\-)/, $p);
 		$pkg_ws->merge_range("A$i:B$i", $name, $merge_format); $pkg_ws->merge_range("C$i:D$i", $ver, $merge_format);
 		$i++;
 	}
 
 	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version );
-	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] );
 	push @indexes, @idx2, @idx3;
 	foreach my $idx ( sort @indexes ) {
