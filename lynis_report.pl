@@ -171,11 +171,11 @@ if ($excel) {
 
 	### Summary Sheet Data
 	my $summary_ws = $wb->add_worksheet('Summary');
-	$summary_ws->merge_range('A2:C2', "lynis Asset Report", $title_format);
+	$summary_ws->merge_range('A1:C2', "lynis Asset Report", $title_format);
 	$summary_ws->write('B3', "created by "); 
 	$summary_ws->write_url('C3', "http://github.com/d4t4king/lynis_report.git", '', 'lynis_report');
 	$summary_ws->write('A4', "Host Findings:", $subtitle_format);
-	$summary_ws->write('A5', "hardening index:");
+	$summary_ws->write('A5', "hardening index:", $label_format);
 	$summary_ws->write('B5', $lynis_report_data{'hardening_index'});
 	my %params; my @table_data; my $last_row_number = 0; my @header_row;
 	if ((exists($lynis_report_data{'warning[]'})) and (ref($lynis_report_data{'warning[]'}) eq 'ARRAY')) {
@@ -471,7 +471,27 @@ if ($excel) {
 	### kernel inso
 	my $kernel_ws = $wb->add_worksheet('kernel info');
 	$kernel_ws->write('A1', "kernel info:", $title_format);
-	$i = 5;
+	$kernel_ws->write('A2', "kernel version:", $label_format);
+	$kernel_ws->write('B2', $lynis_report_data{'linux_kernel_version'});
+	$kernel_ws->write('C2', 'full kernel version:', $label_format);
+	$kernel_ws->write('D2', $lynis_report_data{'os_kernel_version_full'});
+	$kernel_ws->write('A3', 'kernel release version:', $label_format);
+	$kernel_ws->write('B3', $lynis_report_data{'linux_kernel_release'});
+	$kernel_ws->write('C3', 'kernel IO scheduler:', $label_format);
+	if (exists($lynis_report_data{'linux_kernel_io_scheduler[]'})) {
+		if (ref($lynis_report_data{'linux_kernel_io_scheduler'}) eq 'ARRAY') {
+			$kernel_ws->write('D3', join("\n", @{$lynis_report_data{'linux_kernel_io_scheduler[]'}}));
+		} else {
+			$kernel_ws->write('D3', $lynis_report_data{'linux_kernel_io_scheduler[]'});
+		}
+	} else {
+		$kernel_ws->write('D3', 'N/A');
+	}
+	$kernel_ws->write('A4', 'linux kernel type:', $label_format);
+	$kernel_ws->write('B4', $lynis_report_data{'linux_kernel_type'});
+	$kernel_ws->write('C4', 'number of kernels available:', $label_format);
+	$kernel_ws->write('D4', $lynis_report_data{'linux_amount_of_kernels'});
+	$i = 6;
 	if (exists($lynis_report_data{'loaded_kernel_module[]'})) {
 		$kernel_ws->write("A$i", "loaded kernel modules:", $subsub_format);  $i++;
 		if (ref($lynis_report_data{'loaded_kernel_module[]'}) eq 'ARRAY') {
@@ -501,6 +521,7 @@ if ($excel) {
 		print STDERR Dumper($lynis_report_data{'running_service[]'});
 		print STDERR color('reset');
 	}
+	#$svc_
 
 	### package info
 	my $pkg_ws = $wb->add_worksheet('package info');
@@ -519,7 +540,7 @@ if ($excel) {
 	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full );
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit );
-	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] );
+	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full );
 	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
