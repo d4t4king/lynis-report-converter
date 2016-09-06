@@ -150,7 +150,7 @@ if ($excel) {
 	my $i = 0;
 	# do the Excel thing....
 	my $wb = Excel::Writer::XLSX->new($output);
-	my $title_format = $wb->add_format();
+	my $title_format = $wb->add_format( 'valign'=>'top', 'align'=>'left');
 	$title_format->set_size('32');
 
 	my $subtitle_format = $wb->add_format();
@@ -171,7 +171,7 @@ if ($excel) {
 
 	### Summary Sheet Data
 	my $summary_ws = $wb->add_worksheet('Summary');
-	$summary_ws->write('B2', "lynis Asset Report", $title_format);
+	$summary_ws->merge_range('A2:C2', "lynis Asset Report", $title_format);
 	$summary_ws->write('B3', "created by "); 
 	$summary_ws->write_url('C3', "http://github.com/d4t4king/lynis_report.git", '', 'lynis_report');
 	$summary_ws->write('A4', "Host Findings:", $subtitle_format);
@@ -387,12 +387,26 @@ if ($excel) {
 	$sec_ws->write('A9', 'IDS/IPS tooling', $label_format); 
 	if (exists($lynis_report_data{'ids_ips_tooling'})) {
 		if (ref($lynis_report_data{'ids_ips_tooling'}) eq 'ARRAY') {
-			$sec_ws->write('B9', join("\n", @{$lynis_report_data{'ids_ips_tooling'}}));
+			$sec_ws->write('B9', join("\n", @{$lynis_report_data{'ids_ips_tooling'}}), $merge_format);
 		} else {
-			$sec_ws->write('B9', $lynis_report_data{'ids_ips_tooling'});
+			$sec_ws->write('B9', $lynis_report_data{'ids_ips_tooling'}, $merge_format);
 		}
 	} else {
-		$sec_ws->write('B9', 'N/A');
+		$sec_ws->write('B9', 'N/A', $merge_format);
+	}
+	if (exists($lynis_report_data{'fail2ban_config'})) {
+		$sec_ws->write('C9', 'fail2ban config file(s):', $label_format);
+		$sec_ws->write('D9', $lynis_report_data{'fail2ban_config'}, $merge_format);
+	} else {
+		$sec_ws->write('D9', 'N/A', $merge_format);
+	}
+	if (exists($lynis_report_data{'fail2ban_enabled_service[]'})) {
+		$sec_ws->write('E9', 'fail2ban enabled service(s):', $label_format);
+		if (ref($lynis_report_data{'fail2ban_enabled_service[]'}) eq 'ARRAY') {
+			$sec_ws->write('F9', join("\n", @{$lynis_report_data{'fail2ban_enabled_service[]'}}), $merge_format);
+		} else {
+			$sec_ws->write('F9', $lynis_report_data{'fail2ban_enabled_service[]'}, $merge_format);
+		}
 	}
 	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
 	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
@@ -438,11 +452,36 @@ if ($excel) {
 	### boot info
 	my $boot_ws = $wb->add_worksheet('boot info');
 	$boot_ws->write('A1', "boot info:", $title_format);
+	$boot_ws->write('A2', 'UEFI booted:', $label_format); $boot_ws->write('B2', $to_bool{$lynis_report_data{'boot_uefi_booted'}});
+	$boot_ws->write('C2', 'UEFI booted secure:', $label_format); $boot_ws->write('D2', $to_bool{$lynis_report_data{'boot_uefi_booted_secure'}});
+	$boot_ws->write('A3', 'default runlevel:', $label_format); $boot_ws->write('B3', $lynis_report_data{'linux_default_runlevel'});
+	$boot_ws->write('C3', 'boot service tool:', $label_format); $boot_ws->write('D3', $lynis_report_data{'boot_service_tool'});
+	$i = 5;
+	if (exists($lynis_report_data{'boot_service[]'})) {
+		$boot_ws->write("A$i", "services started at boot:", $subsub_format); $i++;
+		if (ref($lynis_report_data{'boot_service[]'}) eq 'ARRAY') {
+			foreach my $bs ( sort @{$lynis_report_data{'boot_service[]'}} ) {
+				$boot_ws->write("A$i", $bs); $i++;
+			}
+		} else {
+			$boot_ws->write("A$i", $lynis_report_data{'boot_service[]'});
+		}
+	}
 
 	### kernel inso
 	my $kernel_ws = $wb->add_worksheet('kernel info');
 	$kernel_ws->write('A1', "kernel info:", $title_format);
-
+	$i = 5;
+	if (exists($lynis_report_data{'loaded_kernel_module[]'})) {
+		$kernel_ws->write("A$i", "loaded kernel modules:", $subsub_format);  $i++;
+		if (ref($lynis_report_data{'loaded_kernel_module[]'}) eq 'ARRAY') {
+			foreach my $mod ( sort @{$lynis_report_data{'loaded_kernel_module[]'}} ) {
+				$kernel_ws->write("A$i", $mod);  $i++;
+			}
+		} else {
+			$kernel_ws->write("A$i", $lynis_report_data{'loaded_kernel_module[]'});
+		}
+	}
 	### filesystem/journalling info
 	my $fs_ws = $wb->add_worksheet('filesystem info');
 	$fs_ws->write('A1', "filesystem info:", $title_format);
@@ -477,10 +516,11 @@ if ($excel) {
 		$i++;
 	}
 
-	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version );
-	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class );
-	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] );
-	push @indexes, @idx2, @idx3;
+	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] );
+	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit );
+	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] );
+	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
@@ -1310,13 +1350,13 @@ END
 END
 	foreach my $prog ( sort qw( redis ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd nginx ) ) {
 		if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
-			print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
+			print OUT "\t\t\t\t\t<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
 		} else {
-			print OUT "\n\n\n\n\n\n<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
+			print OUT "\t\t\t\t\t<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
 		}
 	}
-	print OUT "\t\t\t\t\t</table>\n";
-	print OUT "\t\t\t<h4>daemon info:</h4>\n";
+	print OUT "\t\t\t\t</table>\n";
+	print OUT "\t\t\t\t<h4>daemon info:</h4>\n";
 	print OUT "\t\t\t\t\t<table>\n";
 	if ((exists($lynis_report_data{'pop3_daemon'})) and ($lynis_report_data{'pop3_daemon'} ne "")) {
 		print OUT "\t\t\t\t\t\t<tr><td>pop3 daemon:</td><td>$lynis_report_data{'pop3_daemon'}</td></tr>\n";
@@ -1349,7 +1389,7 @@ END
 	print OUT "\t\t\t\t\t</table>\n";
 	if (exists($lynis_report_data{'running_service[]'})) {
 		print OUT <<END;
-				<h4>Running services:</h4>
+				<h4>running services:</h4>
 END
 		if (scalar(@{$lynis_report_data{'running_service[]'}}) < 25) {
 			print OUT "\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'running_service[]'}})."\">\n";
@@ -1357,7 +1397,7 @@ END
 			print OUT "\t\t\t\t<select size=\"25\">\n";
 		}
 		foreach my $svc ( @{$lynis_report_data{'running_service[]'}} ) { print OUT "\t\t\t\t\t<option>$svc\n"; }
-		print OUT "\t\t\t\t\t</select>\n";
+		print OUT "\t\t\t\t</select>\n";
 	}
 	print OUT <<END;
 				<h5>ntp detail:</h5><a id="ntpDetailLink" href="javascript: toggle('ntpDetailLink','ntpDetailToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
@@ -1387,7 +1427,7 @@ END
 		if (ref($lynis_report_data{'ntp_unreliable_peer[]'}) eq 'ARRAY') {
 			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>".join("<br />\n", @{$lynis_report_data{'ntp_unreliable_peer[]'}})."</td>";
 		} else {
-			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>$lynis_report_data{'ntp_unreliable_peer[]'}</td>";
+			print OUT "\t\t\t\t\t\t\t<td>unreliable peers:</td><td>$lynis_report_data{'ntp_unreliable_peer[]'}</td>\n";
 		}
 	} else {
 		print OUT "\t\t\t\t\t\t\t<td></td><td></td>\n";
@@ -1408,7 +1448,7 @@ END
 	print OUT <<END;
 						</tr>
 					</table>
-				</div>
+				</div><!-- END ntpDetailToggle div -->
 				<br />
 				<h5>nginx detail</h5>
 				<table>
@@ -1439,7 +1479,7 @@ END
 			print OUT "\t\t\t\t\t\t<td>log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
 		}
 	} else {
-		print OUT "\t\t\t\t\t\t<td>log file:</td><td>&nbsp;\n";
+		print OUT "\t\t\t\t\t\t<td>log file:</td><td>N/A</td>\n";
 	}
 	print OUT <<END;
 						<td></td><td></td>
@@ -1462,10 +1502,10 @@ END
 			}
 		}
 		print OUT "\t\t\t\t\t</ul>\n";
-	}
-	print OUT <<END;
-				</div><br />
+		print OUT <<END;
+					</div><!-- END nginxConfigToggle div --><br />
 END
+	}
 	if (exists($lynis_report_data{'ssl_tls_protocol_enabled[]'})) {
 		print OUT <<END;
 					<h5>SSL/TLS protocols enabled:</h5>
@@ -1481,7 +1521,7 @@ END
 			#print Dumper($lynis_report_data{'ssl_tls_protocol_enabled[]'});
 		}
 		print OUT "\t\t\t\t\t</ul>\n";
-		print OUT "\t\t\t\t</div><br />\n";
+		print OUT "\t\t\t\t</div><!-- END ssltlsProtoToggle div --><br />\n";
 	}
 	if (exists($lynis_report_data{'apache_version'})) {
 		print OUT <<END;
@@ -1504,9 +1544,9 @@ END
 				print Dumper($lynis_report_data{'apache_module[]'});
 			}
 			print OUT "\t\t\t\t\t\t\t</ul>\n";
-			print OUT "\t\t\t\t\t\t</div>\n";
+			print OUT "\t\t\t\t\t\t</div><!-- END apacheModulesToggle div -->\n";
 		}
-		print OUT "\t\t\t\t\t</div>\n";
+		print OUT "\t\t\t\t\t</div><!-- END apacheDetailsToggle div -->\n";
 	}	
 	print OUT <<END;
 				<h5>systemd detail:</h5><a id="systemdLink" href="javascript:toggle('systemdLink', 'systemdToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
@@ -1553,8 +1593,8 @@ END
 			warn colored("systemd unit file object not an array! \n", "yellow");
 		}
 		print OUT <<END;
-						</table>>
-					</div>
+						</table>
+					</div><!-- END systemdUnitFileToggle div -->
 END
 	}
 	if (exists($lynis_report_data{'systemd_unit_not_found[]'})) {
@@ -1570,7 +1610,7 @@ END
 		}
 		print OUT <<END; 
 						</ul>
-					</div>
+					</div><!-- END systemdUnitNotFoundToggle div -->
 END
 	}
 	if (exists($lynis_report_data{'systemd_service_not_found[]'})) {
@@ -1586,12 +1626,12 @@ END
 		}
 		print OUT <<END;
 						</ul>
-					</div>
+					</div><!-- END systemdServiceNotFoundToggle div -->
 END
 	}
 	print OUT <<END;						
-				</div>						
-			</div>
+				</div><!-- END systemdToggle -->	
+			</div><!-- END subcontent div -->
 			<hr />
 			<h3><a id="installed_packages">Installed packages:</a></h3>
 			<div class="content_subsection">
@@ -1612,7 +1652,7 @@ END
 			} else {
 				print OUT "\t\t\t\t\t<select size=\"25\">\n";
 			}
-			foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) { chomp($p); print OUT "\n\n\n\n\n\n<option>$p\n"; }
+			foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) { chomp($p); print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		}
 	}
@@ -1635,7 +1675,11 @@ END
 
 	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
 
-	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] );
+	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found );
+	my @idx2 = qw( vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
+	my @idx3 = qw( details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled );
+	my @idx4 = qw( ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] );
+	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
