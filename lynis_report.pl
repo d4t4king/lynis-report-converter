@@ -245,6 +245,15 @@ if ($excel) {
 	} else {
 		$summary_ws->write("A$next_row", "suggestions (0):", $subsub_format);
 	}
+	@table_data = undef; 
+	if ((exists($lynis_report_data{'manual[]'})) and (ref($lynis_report_data{'manual[]'}) eq 'ARRAY')) {
+		foreach my $mc ( sort @{$lynis_report_data{'manual[]'}} ) {
+			$summary_ws->write("A${next_row}", $mc, $merge_format);
+			$next_row++;
+		}
+	} else {
+		$summary_ws->write("A${next_row}", "manual checks (0):", $subsub_format);
+	}
 
 	### lynis report data
 	my $lynis_ws = $wb->add_worksheet('lynis info');
