@@ -513,7 +513,7 @@ if ($excel) {
 	$kernel_ws->write('B3', $lynis_report_data{'linux_kernel_release'});
 	$kernel_ws->write('C3', 'kernel IO scheduler:', $label_format);
 	if (exists($lynis_report_data{'linux_kernel_io_scheduler[]'})) {
-		if (ref($lynis_report_data{'linux_kernel_io_scheduler'}) eq 'ARRAY') {
+		if (ref($lynis_report_data{'linux_kernel_io_scheduler[]'}) eq 'ARRAY') {
 			$kernel_ws->write('D3', join("\n", @{$lynis_report_data{'linux_kernel_io_scheduler[]'}}));
 		} else {
 			$kernel_ws->write('D3', $lynis_report_data{'linux_kernel_io_scheduler[]'});
@@ -525,7 +525,9 @@ if ($excel) {
 	$kernel_ws->write('B4', $lynis_report_data{'linux_kernel_type'});
 	$kernel_ws->write('C4', 'number of kernels available:', $label_format);
 	$kernel_ws->write('D4', $lynis_report_data{'linux_amount_of_kernels'});
-	$i = 6;
+	$kernel_ws->write('A5', 'linux (kernel) config file:', $label_format);
+	$kernel_ws->write('B5', $lynis_report_data{'linux_config_file'});
+	$i = 7;
 	if (exists($lynis_report_data{'loaded_kernel_module[]'})) {
 		$kernel_ws->write("A$i", "loaded kernel modules:", $subsub_format);  $i++;
 		if (ref($lynis_report_data{'loaded_kernel_module[]'}) eq 'ARRAY') {
@@ -536,9 +538,38 @@ if ($excel) {
 			$kernel_ws->write("A$i", $lynis_report_data{'loaded_kernel_module[]'});
 		}
 	}
+
 	### filesystem/journalling info
 	my $fs_ws = $wb->add_worksheet('filesystem info');
 	$fs_ws->write('A1', "filesystem info:", $title_format);
+	$fs_ws->write('A2', "journal disk size:", $label_format); $fs_ws->write('B2', $lynis_report_data{'journal_disk_size'});
+	$fs_ws->write('A3', "most recent journal coredump:", $label_format); $fs_ws->write('B3', $lynis_report_data{'journal_coredump_lastday'});
+	$fs_ws->write('A4', 'oldest boot date on journal:', $label_format); $fs_ws->write('B4', $lynis_report_data{'journal_oldest_bootdate'});
+	$fs_ws->write('A5', 'journal contains errors:', $label_format); $fs_ws->write('B5', $to_bool{$lynis_report_data{'journal_contains_errors'}});
+	$fs_ws->write('A6', 'journal boot logging enabled:', $label_format); $fs_ws->write('B6', $to_bool{$lynis_report_data{'journal_bootlogs'}});
+	if (exists($lynis_report_data{'journal_meta_data'})) {
+		$fs_ws->merge_range('A7:B7', 'journal metadata:', $subsub_format);
+		$i = 8;
+		if (ref($lynis_report_data{'journal_meta_data'}) eq 'ARRAY') {
+			foreach my $r ( @{$lynis_report_data{'journal_meta_data'}} ) {
+				$fs_ws->merge_range("A$i:B$i", $r, $merge_format); $i++;
+			}
+		} else {
+			$fs_ws->merge_range("A$i:B$i", $lynis_report_data{'journal_meta_data'}, $merge_format); $i++;
+		}
+	}
+	$fs_ws->write("A$i", 'swap partitions:', $label_format);
+	if (exists($lynis_report_data{'swap_partition[]'})) {
+		if (ref($lynis_report_data{'swap_partition[]'}) eq 'ARRAY') {
+			$fs_ws->write("B$i", join("\n", $lynis_report_data{'swap_partition[]'}));
+		} else {
+			$lynis_report_data{'swap_partition[]'} =~ s/,/\n/g;
+			$fs_ws->write("B$i", $lynis_report_data{'swap_partition[]'});
+		}
+	} else {
+		$fs_ws->write("B$i", 'N/A');
+	}
+	$i++;
 
 	### service info
 	my $svc_ws = $wb->add_worksheet('service info');
@@ -660,9 +691,9 @@ if ($excel) {
 		$i++;
 	}
 
-	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full file_integrity_tool boot_uefi_booted password_max_other_credit scheduler[] ids_ips_tooling[] malware_scanner_installed redis_running auditor );
-	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler finish );
-	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit );
+	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full file_integrity_tool boot_uefi_booted password_max_other_credit scheduler[] ids_ips_tooling[] malware_scanner_installed redis_running auditor journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contais_errors jounal_bootlogs );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
+	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
 	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
