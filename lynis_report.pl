@@ -246,13 +246,28 @@ if ($excel) {
 		$summary_ws->write("A$next_row", "suggestions (0):", $subsub_format);
 	}
 	@table_data = undef; 
+	$next_row = $last_row_number;
+	$next_row += 2;
+	
 	if ((exists($lynis_report_data{'manual[]'})) and (ref($lynis_report_data{'manual[]'}) eq 'ARRAY')) {
+		$summary_ws->write("A${next_row}", "manual checks:", $subsub_format); $next_row++;
 		foreach my $mc ( sort @{$lynis_report_data{'manual[]'}} ) {
 			$summary_ws->write("A${next_row}", $mc, $merge_format);
 			$next_row++;
 		}
 	} else {
-		$summary_ws->write("A${next_row}", "manual checks (0):", $subsub_format);
+		$summary_ws->write("A${next_row}", "manual checks (0):", $subsub_format); $next_row++;
+	}
+	$next_row += 2;
+	if (exists($lynis_report_data{'vulnerable_package[]'})) {
+		$summary_ws->write("A${next_row}", "vulnerable packages:", $subsub_format); $next_row++;
+		if (ref($lynis_report_data{'vulnerable_package[]'}) eq 'ARRAY') {
+			foreach my $vp ( sort @{$lynis_report_data{'vulnerable_package[]'}} ) {
+				$summary_ws->write("A${next_row}", $vp); $next_row++;
+			}
+		} else {
+			$summary_ws->write("A${next_row}", $lynis_report_data{'vulnerable_package[]'});
+		}
 	}
 
 	### lynis report data
@@ -442,6 +457,8 @@ if ($excel) {
 			$sec_ws->write('F9', $lynis_report_data{'fail2ban_enabled_service[]'}, $merge_format);
 		}
 	}
+	$sec_ws->write("G9", "session timeout enabled:", $label_format);
+	$sec_ws->write("H9", $to_bool{$lynis_report_data{'session_timeout_enabled'}});
 	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
 	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
 	$i = 13;
@@ -488,6 +505,7 @@ if ($excel) {
 	$boot_ws->write('A1', "boot info:", $title_format);
 	$boot_ws->write('A2', 'UEFI booted:', $label_format); $boot_ws->write('B2', $to_bool{$lynis_report_data{'boot_uefi_booted'}});
 	$boot_ws->write('C2', 'UEFI booted secure:', $label_format); $boot_ws->write('D2', $to_bool{$lynis_report_data{'boot_uefi_booted_secure'}});
+	$boot_ws->write('E2', 'boot loader:', $label_format); $boot_ws->write('F2', $lynis_report_data{'boot_loader'});
 	$boot_ws->write('A3', 'default runlevel:', $label_format); $boot_ws->write('B3', $lynis_report_data{'linux_default_runlevel'});
 	$boot_ws->write('C3', 'boot service tool:', $label_format); $boot_ws->write('D3', $lynis_report_data{'boot_service_tool'});
 	$i = 5;
@@ -547,9 +565,53 @@ if ($excel) {
 	$fs_ws->write('A4', 'oldest boot date on journal:', $label_format); $fs_ws->write('B4', $lynis_report_data{'journal_oldest_bootdate'});
 	$fs_ws->write('A5', 'journal contains errors:', $label_format); $fs_ws->write('B5', $to_bool{$lynis_report_data{'journal_contains_errors'}});
 	$fs_ws->write('A6', 'journal boot logging enabled:', $label_format); $fs_ws->write('B6', $to_bool{$lynis_report_data{'journal_bootlogs'}});
+	$fs_ws->write("C2", 'swap partitions:', $label_format);
+	if (exists($lynis_report_data{'swap_partition[]'})) {
+		if (ref($lynis_report_data{'swap_partition[]'}) eq 'ARRAY') {
+			$fs_ws->write("D2", join("\n", $lynis_report_data{'swap_partition[]'}));
+		} else {
+			$lynis_report_data{'swap_partition[]'} =~ s/,/\n/g;
+			$fs_ws->write("D2", $lynis_report_data{'swap_partition[]'});
+		}
+	} else {
+		$fs_ws->write("D2", 'N/A');
+	}
+	$fs_ws->write('C3', "LVM volume group(s):", $label_format);
+	if (exists($lynis_report_data{'lvm_volume_group[]'})) {
+		if (ref($lynis_report_data{'lvm_volume_group[]'}) eq 'ARRAY') {
+			$fs_ws->write("D3", join("\n", @{$lynis_report_data{'lvm_volume_group[]'}}));
+		} else {
+			$lynis_report_data{'lvm_volume_group[]'} =~ s/,/\n/g;
+			$fs_ws->write("D3", $lynis_report_data{'lvm_volume_group[]'});
+		}
+	} else {
+		$fs_ws->write('D3', 'N/A');
+	}
+	$fs_ws->write('C4', 'LVM volume(s):', $label_format);
+	if (exists($lynis_report_data{'lvm_volume[]'})) {
+		if (ref($lynis_report_data{'lvm_volume[]'}) eq 'ARRAY') {
+			$fs_ws->write("D4", join("\n", @{$lynis_report_data{'lvm_volume[]'}}));
+		} else {
+			$lynis_report_data{'lvm_volume[]'} =~ s/,/\n/g;
+			$fs_ws->write('D4', $lynis_report_data{'lvm_volume[]'});
+		}
+	} else {
+		$fs_ws->write("D4", "N/A");
+	}
+	$fs_ws->write("C5", "ext filesystems:", $label_format);
+	if (exists($lynis_report_data{'file_systems_ext[]'})) {
+		if (ref($lynis_report_data{'file_systems_ext[]'}) eq 'ARRAY') {
+			$fs_ws->write("D5", join("\n", @{$lynis_report_data{'file_systems_ext[]'}}));
+		} else {
+			$lynis_report_data{'file_systems_ext[]'} =~ s/,/\n/g;
+			$fs_ws->write("D5", $lynis_report_data{'file_systems_ext[]'});
+		}
+	} else {
+		$fs_ws->write("D5", "N/A");
+	}
+	$i = 8;
 	if (exists($lynis_report_data{'journal_meta_data'})) {
-		$fs_ws->merge_range('A7:B7', 'journal metadata:', $subsub_format);
-		$i = 8;
+		$fs_ws->merge_range("A$i:B$i", 'journal metadata:', $subsub_format); $i++;
 		if (ref($lynis_report_data{'journal_meta_data'}) eq 'ARRAY') {
 			foreach my $r ( @{$lynis_report_data{'journal_meta_data'}} ) {
 				$fs_ws->merge_range("A$i:B$i", $r, $merge_format); $i++;
@@ -558,18 +620,16 @@ if ($excel) {
 			$fs_ws->merge_range("A$i:B$i", $lynis_report_data{'journal_meta_data'}, $merge_format); $i++;
 		}
 	}
-	$fs_ws->write("A$i", 'swap partitions:', $label_format);
-	if (exists($lynis_report_data{'swap_partition[]'})) {
-		if (ref($lynis_report_data{'swap_partition[]'}) eq 'ARRAY') {
-			$fs_ws->write("B$i", join("\n", $lynis_report_data{'swap_partition[]'}));
+	if (exists($lynis_report_data{'deleted_file[]'})) {
+		$fs_ws->write("A$i", 'deleted files still on the filesystem:', $subsub_format); $i++;
+		if (ref($lynis_report_data{'deleted_file[]'}) eq 'ARRAY') {
+			foreach my $df ( sort @{$lynis_report_data{'deleted_file[]'}} ) {
+				$fs_ws->write("A$i", $df); $i++;
+			}
 		} else {
-			$lynis_report_data{'swap_partition[]'} =~ s/,/\n/g;
-			$fs_ws->write("B$i", $lynis_report_data{'swap_partition[]'});
+			$fs_ws->write("A$i", $lynis_report_data{'deleted_file[]'});
 		}
-	} else {
-		$fs_ws->write("B$i", 'N/A');
 	}
-	$i++;
 
 	### service info
 	my $svc_ws = $wb->add_worksheet('service info');
@@ -598,6 +658,11 @@ if ($excel) {
 	$svc_ws->write("C$i", "smtp daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"smtp_daemon"});
 	if ($i > $i_hold) { $i_hold = $i; } # $i should be 11, so this should never actually be true
 	$i = $i_hold; $i++; # reset to 13 and add 1 (14)
+	$svc_ws->merge_range("A$i:D$i", "systemd detail", $spanhead_format); $i++;
+	$svc_ws->write("A$i", "systemd enabled:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{'systemd'}});
+	$svc_ws->write("C$i", "systemd status:", $label_format); $svc_ws->write("D$i", $lynis_report_data{'systemd_status'}); $i++;
+	$svc_ws->write("A$i", "systemd built-in components:", $label_format); $svc_ws->merge_range("B$i:D$i", $lynis_report_data{'systemd_builtin_components'}, $merge_format); $i++;
+	$i += 2;
 	$svc_ws->merge_range("A$i:D$i", "ntp detail", $spanhead_format); $i++;
 	$svc_ws->write("A$i", "ntp config found:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{'ntp_config_found'}});
 	$svc_ws->write("C$i", 'ntp config file:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ntp_config_file'}); $i++;
@@ -693,9 +758,10 @@ if ($excel) {
 
 	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full file_integrity_tool boot_uefi_booted password_max_other_credit scheduler[] ids_ips_tooling[] malware_scanner_installed redis_running auditor journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contais_errors jounal_bootlogs );
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
-	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running );
+	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	push @indexes, @idx2, @idx3, @idx4;
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager );
+	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
