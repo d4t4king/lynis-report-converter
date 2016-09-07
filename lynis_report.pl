@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use feature qw( switch );
+require 5.010;
 no if $] ge '5.018', warnings => "experimental::smartmatch";
 use Term::ANSIColor;
 use Getopt::Long qw( :config no_ignore_case bundling );
@@ -169,29 +170,45 @@ if ($excel) {
 
 	my $merge_format = $wb->add_format('valign'=>'top', 'align'=>'left');
 
+	my $spanhead_format = $wb->add_format('valign'=>'top','align'=>'center');
+	$spanhead_format->set_bold();
+	$spanhead_format->set_size('16');
+
 	### Summary Sheet Data
 	my $summary_ws = $wb->add_worksheet('Summary');
-	$summary_ws->merge_range('A1:C2', "lynis Asset Report", $title_format);
-	$summary_ws->write('B3', "created by "); 
-	$summary_ws->write_url('C3', "http://github.com/d4t4king/lynis_report.git", '', 'lynis_report');
+	$summary_ws->merge_range('A1:C1', "lynis Asset Report", $title_format);
+	$summary_ws->write('A2', "created by "); 
+	$summary_ws->write_url('B2', "http://github.com/d4t4king/lynis_report.git", '', 'lynis_report');
 	$summary_ws->write('A4', "Host Findings:", $subtitle_format);
 	$summary_ws->write('A5', "hardening index:", $label_format);
 	$summary_ws->write('B5', $lynis_report_data{'hardening_index'});
-	my %params; my @table_data; my $last_row_number = 0; my @header_row;
+	$summary_ws->write('C5', 'auditor:', $label_format);
+	$summary_ws->write('D5', $lynis_report_data{'auditor'});
+	my %params; my $last_row_number = 1; my @table_data;
 	if ((exists($lynis_report_data{'warning[]'})) and (ref($lynis_report_data{'warning[]'}) eq 'ARRAY')) {
 		$summary_ws->write('A7', "warnings \(".scalar(@{$lynis_report_data{'warning[]'}})."\):", $subsub_format);
-		@header_row = [ 'Warning ID', 'Description', 'Severity', 'F4' ];
+		#@header_row = [ 'Warning ID', 'Description', 'Severity', 'F4' ];
 		if ($lynis_report_data{'warning[]'}[0] =~ /\|/) {
 			foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
 				my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
 				push @table_data, [$warn_id,$warn_desc,$warn_sev,$warn_f4];
 			}
 		}
+		#print STDERR Dumper(\@table_data);
 		%params = (
-			'data'			=>	\@table_data,
-			'header_row'	=>	\@header_row,
-			'autofilter'	=>	0,
+			'data'				=>	\@table_data,
+			'header_row'		=>	1,
+			'autofilter'		=>	0,
+			'banded_columns'	=>	0,
+			'banded_rows'		=>	1,
+			'columns'			=>	[
+				{ 'header'		=>	'Warning ID' },
+				{ 'header'		=>	'Description' },
+				{ 'header'		=>	'Severity' },
+				{ 'header'		=>	'F4' },
+			]	
 		);
+		#print STDERR Dumper(\%params);
 		$last_row_number = 8 + scalar(@table_data);
 		$summary_ws->add_table("A8:D$last_row_number", \%params);
 	} else { 
@@ -203,7 +220,7 @@ if ($excel) {
 		$next_row = $last_row_number;
 		$summary_ws->write("A${next_row}", "suggestions \(".scalar(@{$lynis_report_data{'suggestion[]'}})."\):", $subsub_format);
 		$next_row++;
-		@header_row = [ 'Suggestion ID', 'Description', 'Severity', 'F4' ];
+		#@header_row = [ 'Suggestion ID', 'Description', 'Severity', 'F4' ];
 		if ($lynis_report_data{'suggestion[]'}[0] =~ /\|/) {
 			foreach my $sugg (sort @{$lynis_report_data{'suggestion[]'}}) {
 				my ($sugg_id,$sugg_desc,$sugg_sev,$sugg_f4) = split(/\|/, $sugg);
@@ -211,9 +228,17 @@ if ($excel) {
 			}
 		}
 		%params = (
-			'data'			=>	\@table_data,
-			'header_row'	=>	\@header_row,
-			'autofilter'	=>	0,
+			'data'				=>	\@table_data,
+			'header_row'		=>	1,
+			'autofilter'		=>	0,
+			'banded_columns'	=>	0,
+			'banded_rows'		=>	1,
+			'columns'			=>	[
+				{ 'header'		=>	'Suggestion ID' },
+				{ 'header'		=>	'Description' },
+				{ 'header'		=>	'Severity' },
+				{ 'header'		=>	'F4' },
+			]
 		);
 		$last_row_number = $next_row + scalar(@table_data);
 		$summary_ws->add_table("A${next_row}:D${last_row_number}", \%params);
@@ -242,7 +267,7 @@ if ($excel) {
 	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
 	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
 	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
-	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'});
+	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
 	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
 	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
 	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', $to_bool{$lynis_report_data{'notebook'}}, $merge_format);
@@ -318,13 +343,13 @@ if ($excel) {
 	} else {
 		$net_ws->write('B7', "N/A");
 	}
-	$net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}});
+	$net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}}, $merge_format);
 	$net_ws->write('A8', 'name servers:', $label_format); 
 	if (exists($lynis_report_data{'nameserver[]'})) {
 		if (ref($lynis_report_data{'name_server[]'}) eq 'ARRAY') {
-			$net_ws->write('B8', join("\n", @{$lynis_report_data{'nameserver[]'}}));
+			$net_ws->write('B8', join("\n", @{$lynis_report_data{'nameserver[]'}}), $merge_format);
 		} else {
-			$net_ws->write('B8', $lynis_report_data{'nameserver[]'});
+			$net_ws->write('B8', $lynis_report_data{'nameserver[]'}, $merge_format);
 		}
 	} else {
 		$net_ws->write('B8', "N/A");
@@ -509,8 +534,57 @@ if ($excel) {
 	### service info
 	my $svc_ws = $wb->add_worksheet('service info');
 	$svc_ws->write('A1', "service info:", $title_format);
-	$i = 5;
-	$svc_ws->write("A$i", "running services:", $subsub_format);
+	$i = 3;
+	foreach my $prog ( sort qw( redis ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd nginx ) ) {
+		if ((!defined($lynis_report_data{"${prog}_running"})) or ($lynis_report_data{"${prog}_running"} eq "")) {
+			$lynis_report_data{"${prog}_running"} = 0;
+		}
+		$svc_ws->write("A$i", "$prog running:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{"${prog}_running"}});
+		$i++;
+	}
+	my $i_hold = $i; # $i should be 13
+	$i = 3;
+	$svc_ws->write("C$i", "imap daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"imap_daemon"}); $i++;
+	$svc_ws->write("C$i", "ntp daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"ntp_daemon"}); $i++;
+	$svc_ws->write("C$i", "pop3 daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"pop3_daemon"}); $i++;
+	$svc_ws->write("C$i", "printing daemon", $label_format); $svc_ws->write("D$i", $lynis_report_data{"printing_daemon"}); $i++;
+	$svc_ws->write("C$i", "running service tool:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"running_service_tool"}); $i++;
+	if ((exists($lynis_report_data{'scheduler[]'})) and (ref($lynis_report_data{'scheduler[]'}) eq 'ARRAY')) {
+		$svc_ws->write("C$i", "scheduler(s):", $label_format); $svc_ws->write("D$i", join("\n", @{$lynis_report_data{"scheduler[]"}})); $i++;
+	} else {
+		$svc_ws->write("C$i", "scheduler(s):", $label_format); $svc_ws->write("D$i", $lynis_report_data{"scheduler[]"}); $i++;
+	}
+	$svc_ws->write("C$i", "service manager:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"service_manager"}); $i++;
+	$svc_ws->write("C$i", "smtp daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"smtp_daemon"});
+	if ($i > $i_hold) { $i_hold = $i; } # $i should be 11, so this should never actually be true
+	$i = $i_hold; $i++; # reset to 13 and add 1 (14)
+	$svc_ws->merge_range("A$i:D$i", "ntp detail", $spanhead_format); $i++;
+	$svc_ws->write("A$i", "ntp config found:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{'ntp_config_found'}});
+	$svc_ws->write("C$i", 'ntp config file:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ntp_config_file'}); $i++;
+	$svc_ws->write("A$i", 'ntp version:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'ntp_version'});
+	$svc_ws->write("C$i", 'ntp unreliable peers:', $label_format); 
+	if ((exists($lynis_report_data{'ntp_unrealiable_peer[]'})) and (ref($lynis_report_data{'ntp_unreliable_peer[]'}) eq 'ARRAY')) {
+		$svc_ws->write("D$i", join("\n", @{$lynis_report_data{'ntp_unrealible_peer[]'}}));
+	} else {
+		$svc_ws->write("D$i", $lynis_report_data{'ntp_unreliable_peer[]'});
+	} 
+	$i++;
+	$svc_ws->write("A$i", "ntp config type:", $label_format); 
+	if ($lynis_report_data{'ntp_config_type_startup'}) {
+		$svc_ws->write("B$i", "startup");
+	} elsif ($lynis_report_data{'ntp_config_type_eventbased'}) {
+		$svc_ws->write("B$i", "eventbased");
+	} elsif ($lynis_report_data{'ntp_config_type_daemon'}) {
+		$svc_ws->write("B$i", "daemon");
+	} elsif ($lynis_report_data{'ntp_config_type_scheduled'}) {
+		$svc_ws->write("B$i", "scheduled");
+	} else {
+		$svc_ws->write("B$i", "unrecognized");
+	}
+
+	$i += 2; # give it a row for space
+	$i_hold = $i; # reset the ($i_hold) bar.  All lists below start at his row level
+	$svc_ws->write("A$i", "running services:", $subsub_format); $i++;
 	if ((exists($lynis_report_data{'running_service[]'})) and (ref($lynis_report_data{'running_service[]'}) eq 'ARRAY')) {
 		foreach my $svc ( sort @{$lynis_report_data{'running_service[]'}} ) {
 			$svc_ws->write("A$i", $svc); $i++;
@@ -521,26 +595,66 @@ if ($excel) {
 		print STDERR Dumper($lynis_report_data{'running_service[]'});
 		print STDERR color('reset');
 	}
-	#$svc_
+	$i = $i_hold;
+	$svc_ws->write("B$i", "systemd services not found:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'systemd_service_not_found[]'})) and (ref($lynis_report_data{'systemd_service_not_found[]'}) eq 'ARRAY')) {
+		foreach my $svc ( sort @{$lynis_report_data{'systemd_service_not_found[]'}} ) {
+			$svc_ws->write("B$i", $svc); $i++;
+		}
+	} else {
+		warn colored("systemd_service_not_found[] array not found or not an array!", "yellow");
+		print STDERR colore("yellow");
+		print STDERR Dumper($lynis_report_data{'systemd_service_not_found[]'});
+		print STDERR color('reset');
+	}
+	$i = $i_hold;
+	$svc_ws->merge_range("C$i:D$i", "systemd unit files:", $subsub_format); $i++;
+	$svc_ws->write("C$i", "unit", $label_format); $svc_ws->write("D$i", "status", $label_format); $i++;
+	if ((exists($lynis_report_data{'systemd_unit_file[]'})) and (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY')) {
+		foreach my $svc ( sort @{$lynis_report_data{'systemd_unit_file[]'}} ) {
+			chomp($svc);
+			my ($s, $st, @j) = split(/\|/, $svc);
+			$svc_ws->write("C$i", $s); $svc_ws->write("D$i", $st); $i++;
+		}
+	} else {
+		warn colored("systemd_unit_file[] array not found or not an array!", "yellow");
+		print STDERR colore("yellow");
+		print STDERR Dumper($lynis_report_data{'systemd_unit_file[]'});
+		print STDERR color('reset');
+	}
+	$i = $i_hold;
+	$svc_ws->write("E$i", "systemd unit not found:", $subsub_format); $i++;
+	if ((exists($lynis_report_data{'systemd_unit_not_found[]'})) and (ref($lynis_report_data{'systemd_unit_not_found[]'}) eq 'ARRAY')) {
+		foreach my $svc ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) {
+			$svc_ws->write("E$i", $svc); $i++;
+		}
+	} else {
+		warn colored("systemd_unit_not_found[] array not found or not an array!", "yellow");
+		print STDERR colore("yellow");
+		print STDERR Dumper($lynis_report_data{'systemd_unit_not_found[]'});
+		print STDERR color('reset');
+	}
+	$i++;
 
 	### package info
 	my $pkg_ws = $wb->add_worksheet('package info');
 	$pkg_ws->write('A1', "package info:", $title_format);
-	$pkg_ws->write('A2', "number of packages installed:"); $pkg_ws->write('B2', $lynis_report_data{'installed_packages'}); $pkg_ws->write('C2', 'number of binaries found:'); $pkg_ws->write('D2', $lynis_report_data{'binaries_count'});
+	$pkg_ws->write('A2', "number of packages installed:", $label_format); $pkg_ws->write('B2', $lynis_report_data{'installed_packages'}); $pkg_ws->write('C2', 'number of binaries found:', $label_format); $pkg_ws->write('D2', $lynis_report_data{'binaries_count'});
 	$pkg_ws->merge_range('A4:D4', 'installed packages:', $subsub_format);
-	$pkg_ws->merge_range('A5:B5', 'name', $label_format); $pkg_ws->merge_range('C5:D5', 'version', $label_format);
-	$i = 6;
+	#$pkg_ws->merge_range('A5:B5', 'name', $label_format); $pkg_ws->merge_range('C5:D5', 'version', $label_format);
+	$i = 5;
 	foreach my $p ( sort @{$lynis_report_data{'installed_packages_array'}} ) {
 		chomp($p);
-		my ($name, $ver) = split(/(?:\,|\-)/, $p);
-		$pkg_ws->merge_range("A$i:B$i", $name, $merge_format); $pkg_ws->merge_range("C$i:D$i", $ver, $merge_format);
+		#my ($name, $ver) = split(/(?:\,|\-)/, $p);
+		#$pkg_ws->merge_range("A$i:B$i", $name, $merge_format); $pkg_ws->merge_range("C$i:D$i", $ver, $merge_format);
+		$pkg_ws->merge_range("A$i:D$i", $p, $merge_format);
 		$i++;
 	}
 
-	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full );
-	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] );
+	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full file_integrity_tool boot_uefi_booted password_max_other_credit scheduler[] ids_ips_tooling[] malware_scanner_installed redis_running auditor );
+	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler finish );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit );
-	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full );
+	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
 	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
