@@ -322,7 +322,7 @@ if ($excel) {
 	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
 	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
 	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
-	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vm_type'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
+	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vmtype'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
 	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
 	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', $to_bool{$lynis_report_data{'notebook'}}, $merge_format);
 	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
@@ -740,7 +740,7 @@ if ($excel) {
 		}
 	} else {
 		warn colored("systemd_service_not_found[] array not found or not an array!", "yellow");
-		print STDERR colore("yellow");
+		print STDERR color("yellow");
 		print STDERR Dumper($lynis_report_data{'systemd_service_not_found[]'});
 		print STDERR color('reset');
 	}
@@ -755,7 +755,7 @@ if ($excel) {
 		}
 	} else {
 		warn colored("systemd_unit_file[] array not found or not an array!", "yellow");
-		print STDERR colore("yellow");
+		print STDERR color("yellow");
 		print STDERR Dumper($lynis_report_data{'systemd_unit_file[]'});
 		print STDERR color('reset');
 	}
@@ -767,7 +767,7 @@ if ($excel) {
 		}
 	} else {
 		warn colored("systemd_unit_not_found[] array not found or not an array!", "yellow");
-		print STDERR colore("yellow");
+		print STDERR color("yellow");
 		print STDERR Dumper($lynis_report_data{'systemd_unit_not_found[]'});
 		print STDERR color('reset');
 	}
@@ -792,7 +792,7 @@ if ($excel) {
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses );
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype );
 	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
