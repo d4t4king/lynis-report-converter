@@ -272,7 +272,7 @@ if ($excel) {
 
 	### lynis report data
 	my $lynis_ws = $wb->add_worksheet('lynis info');
-	$lynis_ws->write('A1', 'lynis info:', $title_format);
+	$lynis_ws->merge_range('A1:D1', 'lynis info:', $title_format);
 	$lynis_ws->write('A2', 'lynis version:', $label_format); $lynis_ws->write('B2', $lynis_report_data{'lynis_version'}); $lynis_ws->write('C2', 'lynis tests done:', $label_format);	$lynis_ws->write('D2', $lynis_report_data{'lynis_tests_done'});
 	$lynis_report_data{'lynis_update_available'} = 0 if ((defined($lynis_report_data{'lynis_update_available'})) and ($lynis_report_data{'lynis_update_available'} eq ""));
 	$lynis_ws->write('A3', 'lynis update available:', $label_format); $lynis_ws->write('B3', $to_bool{$lynis_report_data{'lynis_update_available'}}); $lynis_ws->write('C3', 'license key:', $label_format); $lynis_ws->write('D3', $lynis_report_data{'license_key'});
@@ -283,10 +283,25 @@ if ($excel) {
 	$lynis_ws->write('A8', 'report start time:', $label_format); $lynis_ws->write('B8', $lynis_report_data{'report_datetime_start'}); $lynis_ws->write('C8', 'report end time:', $label_format); $lynis_ws->write('D8', $lynis_report_data{'report_datetime_end'});
 	$lynis_ws->write('A9', 'hostid1:', $label_format); $lynis_ws->merge_range('B9:D9', $lynis_report_data{'hostid'}, $merge_format);
 	$lynis_ws->write('A10', 'hostid2:', $label_format); $lynis_ws->merge_range('B10:D10', $lynis_report_data{'hostid2'}, $merge_format);
-	$lynis_ws->write('A12', 'plugin data:', $subtitle_format); 
-	$lynis_ws->write('A13', "plugin -> firewall:", $subsub_format);
-	$lynis_ws->write('A14', 'iptables list:', $label_format);
-	$i = 15;
+	$lynis_ws->merge_range('A12:D12', 'plugin data:', $subtitle_format); 
+	$i = 13;
+	if (exists($lynis_report_data{'plugin_enabled_phase1[]'})) {
+		$lynis_ws->write("A$i", "plugins enabled:", $subsub_format); $i++;
+		$lynis_ws->write("A$i", "name", $label_format); $lynis_ws->write("B$i", "version", $label_format); $i++;
+		if (ref($lynis_report_data{'plugin_enabled_phase1[]'}) eq 'ARRAY') {
+			foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) {
+				if ($plug =~ /\|/) {
+					my ($n, $v, $j) = split(/\|/, $plug);
+					$lynis_ws->write("A$i", $n); $lynis_ws->write("B$i", $v); $i++;
+				} else {
+					$lynis_ws->write("A$i", $plug); $i++;
+				}
+			}
+		}
+	}
+	$i++;		
+	$lynis_ws->write("A$i", "plugin -> firewall:", $subsub_format); $i++;
+	$lynis_ws->write("A$i", 'iptables list:', $label_format); $i++;
 	if (exists($lynis_report_data{'plugin_firewall_iptables_list'})) {
 		if (ref($lynis_report_data{'plugin_firewall_iptables_list'}) eq 'ARRAY') {
 			foreach my $ipt ( sort @{$lynis_report_data{'plugin_firewall_iptables_list'}} ) {
@@ -299,15 +314,15 @@ if ($excel) {
 		$lynis_ws->write("A$i", "N/A");
 	}
 	$i++;
-	$lynis_ws->write("A$i", 'plugin -> processes:', $subsub_format); $i++;
-	$lynis_ws->write("A$i", "all processes", $label_format); $i++;
+	$lynis_ws->merge_range("A$i:D$i", 'plugin -> processes:', $subsub_format); $i++;
+	$lynis_ws->merge_range("A$i:D$i", "all processes", $label_format); $i++;
 	if (exists($lynis_report_data{'plugin_processes_allprocesses'})) {
 		if (ref($lynis_report_data{'plugin_processes_allprocesses'}) eq 'ARRAY') {
 			foreach my $proc ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) {
-				$lynis_ws->write("A$i", $proc); $i++;
+				$lynis_ws->merge_range("A$i:D$i", $proc, $merge_format); $i++;
 			}
 		} else {
-			$lynis_ws->write("A$i", $lynis_report_data{'plugin_processes_allprocesses'}); $i++;
+			$lynis_ws->merge_range("A$i:D$i", $lynis_report_data{'plugin_processes_allprocesses'}, $merge_format); $i++;
 		}
 	} else {
 		$lynis_ws->write("A$i", "N/A");
@@ -792,7 +807,7 @@ if ($excel) {
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype );
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] );
 	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
@@ -1974,8 +1989,10 @@ END
 	}	
 }
 
-print colored("I don't know how to handle these objects yet:\n", "bold yellow");
-print colored(Dumper(\%lynis_report_data), "bold yellow");
+if ($verbose) {
+	print colored("I don't know how to handle these objects yet:\n", "bold yellow");
+	print colored(Dumper(\%lynis_report_data), "bold yellow");
+}
 
 ###############################################################################
 # subs
