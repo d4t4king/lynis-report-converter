@@ -9,9 +9,7 @@ use Term::ANSIColor;
 use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 #use Spreadsheet::WriteExcel;
-use Excel::Writer::XLSX;
 #use File::Basename;
-use HTML::HTMLDoc;
 
 my ($help,$verbose,$excel,$output,$pdf);
 GetOptions(
@@ -148,6 +146,7 @@ delete($lynis_report_data{'tests_executed'});
 #print Dumper(\%warnings);
 
 if ($excel) {
+	use Excel::Writer::XLSX;
 	my $i = 0;
 	# do the Excel thing....
 	my $wb = Excel::Writer::XLSX->new($output);
@@ -1980,6 +1979,7 @@ END
 	}
 
 	if ($pdf) {
+		use HTML::HTMLDoc;
 		my $htmlobj = new HTML::HTMLDoc();
 		$htmlobj->set_input_file($htmldoc);
 		my $pdfdoc = $htmlobj->generate_pdf();
@@ -2007,8 +2007,7 @@ Where:
 -h|--help			Display this useful message, then exit.
 -v|--verbose		Display more detailed output.  This is typically used for
 					debugging, but may provide insight when running into problems.
--E|--excel			Output the report in Microsoft Excel binary format.  This
-					options is not yet implemented (NYI).
+-E|--excel			Output the report in Microsoft Excel binary format.
 -o|--output			Specifies the output file to print the report to.
 
 END
