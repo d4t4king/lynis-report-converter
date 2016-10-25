@@ -22,7 +22,8 @@ GetOptions(
 	'p|pdf'			=>	\$pdf,
 );
 
-if ($help) { &usage; }
+&usage if ($help);
+&usage if (!$output);
 
 my %to_bool = (	0 => 'false', 1 => 'true' );
 my %vm_mode = ( 0 => 'false', 1 => 'guest', 2 => 'host' );
