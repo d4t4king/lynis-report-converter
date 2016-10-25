@@ -8,10 +8,7 @@ no if $] ge '5.018', warnings => "experimental::smartmatch";
 use Term::ANSIColor;
 use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
-#use Spreadsheet::WriteExcel;
-use Excel::Writer::XLSX;
-#use File::Basename;
-use HTML::HTMLDoc;
+use Module::Load::Conditional qw( can_load check_install requires );
 
 my ($help,$verbose,$excel,$output,$pdf);
 GetOptions(
@@ -149,6 +146,7 @@ delete($lynis_report_data{'tests_executed'});
 #print Dumper(\%warnings);
 
 if ($excel) {
+	require Excel::Writer::XLSX;
 	my $i = 0;
 	# do the Excel thing....
 	my $wb = Excel::Writer::XLSX->new($output);
@@ -1981,6 +1979,7 @@ END
 	}
 
 	if ($pdf) {
+		require HTML::HTMLDoc;
 		my $htmlobj = new HTML::HTMLDoc();
 		$htmlobj->set_input_file($htmldoc);
 		my $pdfdoc = $htmlobj->generate_pdf();
