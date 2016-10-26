@@ -2005,8 +2005,7 @@ $0 -h|--help -v|--verbose -E|--excel -o|--output
 Where:
 
 -h|--help			Display this useful message, then exit.
--v|--verbose		Display more detailed output.  This is typically used for
-					debugging, but may provide insight when running into problems.
+-v|--verbose			Display more detailed output.  This is typically used for debugging, but may provide insight when running into problems.
 -E|--excel			Output the report in Microsoft Excel binary format.
 -o|--output			Specifies the output file to print the report to.
 
