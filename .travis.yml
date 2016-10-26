@@ -1,0 +1,22 @@
+language: perl
+perl:
+  - "5.22"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+before_install:
+  - sudo apt-get update -q
+  - sudo apt-get install -y htmldoc
+  - cpanm -v --installdeps --notest HTML::HTMLDoc
+  - cpanm -v --installdeps --notest Excel::Writer::XLSX
+#  - cpanm -v --installdeps --notest .
+branches:
+  only:
+    - master
+notification:
+  recipients:
+    - dataking@gmail.com
+  email:
+    on_success: change
+    on_failure: always
+#env:
