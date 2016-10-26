@@ -114,14 +114,6 @@ if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
 my $pass_score = &calc_password_complexity_score;
 
 my (%warnings, %suggestions);
-#foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
-#	my ($warn_id,$descr, $sev, $field4) = split(/\|/, $warn);
-#	$warnings{$warn_id}{'id'} = $warn_id;
-#	$warnings{$warn_id}{'descr'} = $descr;
-#	$warnings{$warn_id}{'severity'} = $sev;
-#	$warnings{$warn_id}{'f4'} = $field4;
-#}
-#delete($lynis_report_data{'warning[]'});
 
 # process "string array" values delimited by a pipe (|)
 foreach my $key ( sort keys %lynis_report_data ) {
@@ -142,8 +134,6 @@ my ($lynis_version);
 delete($lynis_report_data{'tests_skipped'});
 @tests_executed = @{$lynis_report_data{'tests_executed'}};
 delete($lynis_report_data{'tests_executed'});
-
-#print Dumper(\%warnings);
 
 if ($excel) {
 	require Excel::Writer::XLSX;
@@ -1261,7 +1251,11 @@ END
 						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
 					</tr>
 END
-	print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'nameserver[]'}})."</td></tr>\n";
+	if (ref($lynis_report_data{'nameserver[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'nameserver[]'}})."</td></tr>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">$lynis_report_data{'nameserver[]'}</td></tr>\n";
+	}
 	print OUT <<END;
 					<tr>
 						<td colspan="2">resolv.conf search domain:</td>
