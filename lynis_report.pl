@@ -819,6 +819,7 @@ if ($excel) {
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<style type="text/css">
 			html,body {color: #fff; background-color: #000;}
+			h3#exceptions {color: #ff0000;}
 			div#content_section {margin: 0 10% 0 10%;}
 			div.content_subsection {margin: 0 5% 0 5%;}
 			div.collapsable {display:none;}
@@ -906,6 +907,23 @@ END
 	}
 
 	print OUT "\t\t\t</tr></table></td><td><table><tr><td id=\"auditor\">Auditor:</td><td>$lynis_report_data{'auditor'}</td></tr></table></td></tr></table>\n";
+	# handle "exception events"
+	if (exists($lynis_report_data{'exception_event[]'})) {
+		print OUT "<h3 id=\"exceptions\">exceptions!</h3>\n";
+		print OUT "<div class=\"content_subsection\">\n";
+		print OUT "<div> There were exceptions found on this system.  This means that there is something drastically wrong with the system OR lynis doesn't quite know how to handle what it found.</div><br />\n";
+		if (ref($lynis_report_data{'exception_event[]'}) eq 'ARRAY') {
+			print OUT "<table border=\"1\">\n";
+			foreach my $exp ( @{$lynis_report_data{'exception_event[]'}} ) {
+				print OUT "<tr><td>$exp</td></tr>\n";
+			}
+			print OUT "</table>\n</div>\n";
+		} else {
+			print OUT "<table border=\"1\"><tr><td>$lynis_report_data{'exception_event[]'}</td></tr></table>\n";
+		}
+	}
+
+	# warnings
 	if (!exists($lynis_report_data{'warning[]'})) {
 		print OUT "<h4>warnings (0):</h4>\n";
 	} else {
