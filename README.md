@@ -8,7 +8,8 @@ If you want to be able to use the PDF or Excel output formats, you must install 
 ## Instriuctions for pre-requisite installation:
 
 ### For Debian/Ubuntu
-```(as root)
+```
+(as root)
 apt update							# versions prior to 16.04 LTS should use 'apt-get'
 apt -y install htmldoc
 
@@ -28,7 +29,8 @@ popd
 popd
 ```
 ### For RHEL/CentOS/Fedora
-```(as root)
+```
+(as root)
 yum -y install htmldoc perl-Excel-Writer-XLSX
 pushd /tmp/
 wget http://search.cpan.org/CPAN/authors/id/M/MF/MFRANKL/HTML-HTMLDoc-0.10.tar.gz
@@ -41,7 +43,8 @@ popd
 ```
 
 ### for Gentoo
-```(as root)
+```
+(as root)
 emerge -av1 app-text/htmldoc dev-perl/HTML-HTMLDoc 
 
 pushd /tmp/
@@ -52,6 +55,7 @@ perl Makefile.PL
 make && make install
 popd
 popd
+```
 
 
 \* It's possible that the Excel format will load for LibreOffic Calc, but this is currentl untested.  YMMV.
