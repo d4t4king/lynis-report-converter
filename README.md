@@ -5,7 +5,7 @@ Manageable report from lynis text output. Currently available report formats: HT
 
 If you want to be able to use the PDF or Excel output formats, you must install some additional software.  As is, the modules are required regardless of whether you use these features or not.  Attempts are being made to change that behavior.
 
-## Instriuctions for pre-requisite installation:
+## Instructions for pre-requisite installation:
 
 ### For Debian/Ubuntu
 ```
