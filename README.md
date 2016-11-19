@@ -1,9 +1,13 @@
-# lynis_report
+# lynis-report-converter
 [![Build Status](https://travis-ci.org/d4t4king/lynis_report.svg?branch=master)](https://travis-ci.org/d4t4king/lynis_report)
 
-Manageable report from lynis text output. Currently available report formats: HTML, PDF, Microsoft Excel (XLSX)\*.
+Manageable report from lynis text output. Currently available report formats: HTML, PDF, Microsoft Excel (XLSX)\*, JSON, XML\*\*.
 
 If you want to be able to use the PDF or Excel output formats, you must install some additional software.  As is, the modules are required regardless of whether you use these features or not.  Attempts are being made to change that behavior.
+
+\* It's possible that the Excel format will load for LibreOffic Calc, but this is currentl untested.  YMMV.
+
+\*\* WIP
 
 ## Instructions for pre-requisite installation:
 
@@ -56,9 +60,6 @@ make && make install
 popd
 popd
 ```
-
-
-\* It's possible that the Excel format will load for LibreOffic Calc, but this is currentl untested.  YMMV.
 
 ## Help Statement
 ```
