@@ -63,24 +63,35 @@ popd
 
 ## Help Statement
 ```
-./lynis_report.pl -h|--help -v|--verbose -E|--excel -o|--output
+./lynis-report-converter.pl -h|--help -v|--verbose -E|--excel -o|--output -j|--json -x|--xml
 
 Where:
 
 -h|--help                       Display this useful message, then exit.
 -v|--verbose                    Display more detailed output.  This is typically used for
                                 debugging, but may provide insight when running into problems.
--E|--excel                      Output the report in Microsoft Excel binary format.  This
-                                options is not yet implemented (NYI).
+-E|--excel                      Output the report in Microsoft Excel binary format.
+-j|--json						Output the report in JSON format.  The default is to print to 
+							STDOUT, unlike the other formats which require an output file.  This 
+							is based on the assumption that anyone using the JSON output will likely
+							prefer to pipe the output to json_pp or another API or programmatic
+							interface.
 -o|--output                     Specifies the output file to print the report to.
 ```
-* HTML out features (default)
-	* Summarizes the lynis report into a single HTML file.
-* Excel out features
-	* Breaks out sections into worksheets.
-* PDF out features
-	* Copy of the HTML report ported to PDF.
 
+### Output Features:
+* HTML (default)
+	* Summarizes the lynis report into a single HTML file.
+* Excel:
+	* Breaks out sections into worksheets.
+* PDF:
+	* Copy of the HTML report ported to PDF.
+	* (This could use refinement.)
+* JSON:
+	* prints to STDOUT
+	* can also be written to a file with the -o option
+* XML:
+	* Work in Progress (WIP)
 
 ## TODO:
 * PDF out needs refinement
