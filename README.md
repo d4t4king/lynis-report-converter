@@ -76,6 +76,7 @@ Where:
 							is based on the assumption that anyone using the JSON output will likely
 							prefer to pipe the output to json_pp or another API or programmatic
 							interface.
+-x|--xml						Output the report in XML.
 -o|--output                     Specifies the output file to print the report to.
 ```
 
