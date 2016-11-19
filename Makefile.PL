@@ -8,8 +8,8 @@ use ExtUtils::MakeMaker;
 my ($mm) = $ExtUtils::MakeMaker::VERSION =~ /^([^_]+)/;
 
 WriteMakefile(
-	NAME			=>	'lynis_report',
-	VERSION_FROM	=>	'lynis_report.pl',
+	NAME			=>	'lynis-report-converter',
+	VERSION_FROM	=>	'lynis-report-converter.pl',
 	ABSTRACT		=>	'Because lynis needs a transportable report sometimes.',
 	AUTHOR			=>	'Charlie Heselton <dataking@gmail.com>',
 
