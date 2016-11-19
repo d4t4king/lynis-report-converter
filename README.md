@@ -1,5 +1,5 @@
 # lynis-report-converter
-[![Build Status](https://travis-ci.org/d4t4king/lynis_report.svg?branch=master)](https://travis-ci.org/d4t4king/lynis_report)
+[![Build Status](https://travis-ci.org/d4t4king/lynis-report-converter.svg?branch=master)](https://travis-ci.org/d4t4king/lynis-report-converter)
 
 Manageable report from lynis text output. Currently available report formats: HTML, PDF, Microsoft Excel (XLSX)\*, JSON, XML\*\*.
 
