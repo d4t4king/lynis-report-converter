@@ -10,7 +10,7 @@ use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 use Module::Load::Conditional qw( can_load check_install requires );
 
-my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet);
+my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml);
 GetOptions(
 	'h|help'		=>	\$help,
 	'v|verbose+'	=>	\$verbose,
@@ -19,6 +19,7 @@ GetOptions(
 	'p|pdf'			=>	\$pdf,
 	'D|debug'		=>	\$debug,
 	'j|json'		=>	\$json,
+	'x|xml'			=>	\$xml,
 	'q|quiet'		=>	\$quiet,
 );
 
@@ -74,6 +75,8 @@ unless ($quiet) {
 	print colored("Outputting report to $output, in ", "bold green");
 	if ($excel) { print colored("Excel ", "bold green"); }
 	elsif ($pdf) { print colored("PDF ", "bold green)"); }
+	elsif ($xml) { print colored("XML ", "bold green"); }
+	elsif ($json) { print colored("JSON ", "bold green"); }
 	else { print colored("HTML ", "bold green"); }
 	print colored("format.", "bold green");
 	print "\n";
@@ -107,23 +110,7 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
 
-if ($debug) {
-	print Dumper(\%lynis_report_data);
-	exit 1;
-}
-
-if ($json) {
-	require JSON;
-	if ($output) {
-		# open the file and write to it
-	}
-	# it's moe likely JSON consumers would want to pipe the output to another process
-	# so print to STDOUT
-	my $json = JSON->new->allow_nonref;
-	my $json_text = $json->encode( \%lynis_report_data );
-	print $json_text;
-	exit 0;
-}
+	
 
 @{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
 @{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
@@ -159,6 +146,51 @@ my ($lynis_version);
 delete($lynis_report_data{'tests_skipped'});
 @tests_executed = @{$lynis_report_data{'tests_executed'}};
 delete($lynis_report_data{'tests_executed'});
+
+if ($debug) {
+	print Dumper(\%lynis_report_data);
+	exit 1;
+}
+
+if ($json) {
+	require JSON;
+	if ($output) {
+		# open the file and write to it
+	}
+	# it's moe likely JSON consumers would want to pipe the output to another process
+	# so print to STDOUT
+	my $json_obj = JSON->new->allow_nonref;
+	my $json_text = $json_obj->encode( \%lynis_report_data );
+	print $json_text;
+	exit 0;
+}
+
+if ($xml) {
+	require XML::Writer;
+	my $writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
+	$writer->xmlDecl('UTF-8');
+	$writer->startTag('lynisReportData');
+	foreach my $key ( sort keys %lynis_report_data ) {
+		if (ref($lynis_report_data{$key}) eq 'ARRAY') {
+			my $tmpkey = $key;
+			$tmpkey =~ s/\[\]//g;
+			$writer->startTag("${tmpkey}s");
+			foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+				$writer->dataElement($tmpkey, $ele);
+			}
+			$writer->endTag("${tmpkey}s");
+		} else {	
+			$writer->dataElement($key, $lynis_report_data{$key});
+		}
+	}
+	$writer->endTag('lynisReportData');
+	my $xml = $writer->end();
+	if ($output) {
+		# open the file and write to it
+	}
+	print $xml;
+	exit 0;
+}
 
 if ($excel) {
 	require Excel::Writer::XLSX;
