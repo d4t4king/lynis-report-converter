@@ -177,6 +177,30 @@ if ($json) {
 			my $tmpkey = $key;
 			$tmpkey =~ s/\[\]//g;
 			given ($key) {
+				when (/installed_packages_array/) {
+					$writer->startTag('installed_packages');
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my ($name,$version) = split(/\,/, $ele);
+						$writer->emptyTag('installed_package', 'name' => $name, 'version' => $version);
+					}
+					$writer->endTag();
+				}
+				when (/details\[\]/) {
+					$writer->startTag('details');
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my @parts = split(/\|/, $ele);
+						$writer->emptyTag('detail', 'id' => $parts[0], 'service' => $parts[1], 'description' => $parts[2]);
+					}
+					$writer->endTag();
+				}
+				when (/warning\[\]/) {
+					$writer->startTag('warnings');
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my @parts = split(/\|/, $ele);
+						$writer->emptyTag('warning', 'id' => $parts[0], 'description' => $parts[1], 'severity' => $parts[2], 'f4' => $parts[3]);
+					}
+					$writer->endTag();
+				}
 				when (/suggestion\[\]/) {
 					$writer->startTag('suggestions');
 					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
