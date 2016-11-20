@@ -154,18 +154,20 @@ if ($debug) {
 
 if ($json) {
 	require JSON;
-	if ($output) {
-		# open the file and write to it
-	}
-	# it's moe likely JSON consumers would want to pipe the output to another process
-	# so print to STDOUT
 	my $json_obj = JSON->new->allow_nonref;
 	my $json_text = $json_obj->encode( \%lynis_report_data );
-	print $json_text;
+	if ($output) {
+		# open the file and write to it
+		open OUT, ">$output" or die colored("There was a problem with the output file: $!", "bold red");
+		print OUT $json_text."\n";
+		close OUT
+	} else {
+		# it's more likely JSON consumers would want to pipe the output to another process
+		# so print to STDOUT
+		print $json_text;
+	}
 	exit 0;
-}
-
-if ($xml) {
+} elsif ($xml) {
 	require XML::Writer;
 	my $writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
 	$writer->xmlDecl('UTF-8');
@@ -174,11 +176,33 @@ if ($xml) {
 		if (ref($lynis_report_data{$key}) eq 'ARRAY') {
 			my $tmpkey = $key;
 			$tmpkey =~ s/\[\]//g;
-			$writer->startTag("${tmpkey}s");
-			foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
-				$writer->dataElement($tmpkey, $ele);
+			given ($key) {
+				when (/suggestion\[\]/) {
+					$writer->startTag('suggestions');
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my @parts = split(/\|/, $ele);
+						$writer->emptyTag('suggestion', 'id' => $parts[0], 'description' => $parts[1], 'severity' => $parts[2], 'f4' => $parts[3]);
+					}
+					$writer->endTag();
+				}
+				when (/real_user\[\]/) {
+					$writer->startTag('real_users');
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my ($name,$uid) = split(/\,/, $ele);
+						$writer->startTag('real_user', 'uid' => $uid);
+						$writer->characters($name);
+						$writer->endTag();
+					}
+					$writer->endTag();
+				}
+				default {
+					$writer->startTag("${tmpkey}s");
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						$writer->dataElement($tmpkey, $ele);
+					}
+					$writer->endTag();
+				}
 			}
-			$writer->endTag("${tmpkey}s");
 		} else {	
 			$writer->dataElement($key, $lynis_report_data{$key});
 		}
@@ -190,9 +214,7 @@ if ($xml) {
 	}
 	print $xml;
 	exit 0;
-}
-
-if ($excel) {
+} elsif ($excel) {
 	require Excel::Writer::XLSX;
 	my $i = 0;
 	# do the Excel thing....
@@ -867,7 +889,7 @@ if ($excel) {
 	}
 
 } else {
-	open OUT, ">$htmldoc" or die colored("There was a problem opening the output file ($htmldoc): $! \n", "bold red");
+	open OUT, ">$htmldoc" or die colored("There was a problem opening the output file ($htmldoc): $!", "bold red");
 	print OUT <<END;
 <!DOCTYPE HTML>
 <html lang="en">
