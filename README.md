@@ -49,7 +49,7 @@ popd
 ### For Gentoo
 ```
 # (as root)
-emerge -av1 app-text/htmldoc dev-perl/HTML-HTMLDoc 
+emerge --ask --verbose --one app-text/htmldoc dev-perl/HTML-HTMLDoc dev-perl/XML-Writer
 
 pushd /tmp/
 wget http://search.cpan.org/CPAN/authors/id/J/JM/JMCNAMARA/Excel-Writer-XLSX-0.95.tar.gz
