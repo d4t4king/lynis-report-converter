@@ -177,6 +177,23 @@ if ($json) {
 			my $tmpkey = $key;
 			$tmpkey =~ s/\[\]//g;
 			given ($key) {
+				when (/home_directory\[\]/) {
+					$writer->startTag("home_directories");
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						$writer->dataElement($tmpkey, $ele);
+					}
+					$writer->endTag();
+				}
+				when (/network_listen_port\[\]/) {
+					$writer->startTag($tmpkey);
+					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
+						my ($port,$proto,$proc) = split(/\|/, $ele);
+						$writer->startTag('network_listen_port', 'protocol' => $proto, 'owner_process' => $proc);
+						$writer->characters($port);
+						$writer->endTag();
+					}
+					$writer->endTag();
+				}
 				when (/installed_packages_array/) {
 					$writer->startTag('installed_packages');
 					foreach my $ele ( sort @{$lynis_report_data{$key}} ) {
