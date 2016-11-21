@@ -167,6 +167,33 @@ if ($json) {
 		push @nlp_new, { 'port' => $port, 'protocol' => $proto, 'owner_process' => $proc };
 	}
 	$lynis_report_data{'network_listen_port[]'} = \@nlp_new;
+	my @details = @{$lynis_report_data{'details[]'}};
+	my @det_new;
+	foreach my $d ( @details ) {
+		my ($id,$svc,$desc,$nmn) = split(/\|/, $d);
+		my %descr;
+		my @p = split(/\;/, $desc);
+		foreach my $p ( @p ) { 
+			my ($k, $v) = split(/\s*\:\s*/, $p);
+			$descr{$k} = $v;
+		}
+		push @det_new, { 'id' => $id, 'service' => $svc, 'description' => \%descr };
+	}
+	$lynis_report_data{'details[]'} = \@det_new;
+	my @plugs = @{$lynis_report_data{'plugin_enabled_phase1[]'}};
+	my @plugs_new;
+	foreach my $p ( @plugs ) {
+		my ($name,$vers) = split(/\|/, $p);
+		push @plugs_new, { 'name' => $name, 'version' => $vers };
+	}
+	$lynis_report_data{'plugin_enabled_phase1[]'} = \@plugs_new;
+	my @suggs = @{$lynis_report_data{'suggestion[]'}};
+	my @suggs_new;
+	foreach my $s ( @suggs ) {
+		my ($id,$desc,$sev,$f4) = split(/\|/, $s);
+		push @suggs_new, { 'id' => $id, 'description' => $desc, 'severity' => $to_long_severity{$sev} }
+	}
+	$lynis_report_data{'suggestion[]'} = \@suggs_new;
 	my $json_obj = JSON->new->allow_nonref;
 	my $json_text = $json_obj->encode( \%lynis_report_data );
 	if ($output) {
