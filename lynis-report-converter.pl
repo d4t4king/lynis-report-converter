@@ -160,6 +160,13 @@ if ($debug) {
 if ($json) {
 	require JSON;
 	# tidy up some of the "object" variables
+	my @ipa = @{$lynis_report_data{'installed_packages_array'}};
+	my @ipa_new;
+	foreach my $pkg ( @ipa ) {
+		my ($name,$vers) = split(/\,/, $pkg);
+		push @ipa_new, { 'name' => $name, 'version' => $vers };
+	}
+	$lynis_report_data{'installed_packages_array'} = \@ipa_new;
 	my @nlp = @{$lynis_report_data{'network_listen_port[]'}};
 	my @nlp_new;
 	foreach my $pt (@nlp) {
