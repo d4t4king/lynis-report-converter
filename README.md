@@ -35,7 +35,7 @@ popd
 ### For RHEL/CentOS/Fedora
 ```
 # (as root)
-yum -y install htmldoc perl-Excel-Writer-XLSX
+yum -y install htmldoc perl-Excel-Writer-XLSX perl-Module-Load-Conditional perl-JSON
 pushd /tmp/
 wget http://search.cpan.org/CPAN/authors/id/M/MF/MFRANKL/HTML-HTMLDoc-0.10.tar.gz
 tar xvf HTML-HTMLDoc-0.10.tar.gz
