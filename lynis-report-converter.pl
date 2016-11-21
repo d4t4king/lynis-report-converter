@@ -28,7 +28,7 @@ GetOptions(
 
 my %to_bool = (	0 => 'false', 1 => 'true' );
 my %vm_mode = ( 0 => 'false', 1 => 'guest', 2 => 'host' );
-my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational' );
+my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational', '-' => 'NA' );
 my %systemd_uf_status_color = (
 	'enabled'	=>	'#00ff00',
 	'disabled'	=>	'#ff0000',
@@ -45,6 +45,10 @@ if ($excel) {
 } elsif ($pdf) {
 	$output = 'report.pdf' unless ((defined($output)) and ($output ne ''));
 	$htmldoc = "$$.html";
+} elsif ($json) {
+	$output = undef unless ((defined($output)) and ($output ne ''));
+} elsif ($xml) {
+	$output = 'report.xml' unless ((defined($output)) and ($output ne ''));
 } else {
 	$output = "report.html" unless ((defined($output)) and ($output ne ""));
 	$htmldoc = $output
@@ -133,6 +137,7 @@ foreach my $key ( sort keys %lynis_report_data ) {
 	if (((ref($lynis_report_data{$key}) ne 'ARRAY') and
 		(ref($lynis_report_data{$key}) ne 'HASH')) and
 		($lynis_report_data{$key} =~ /\|/)) {
+		print colored($key."\n", "bold green") if (($verbose) and ($verbose > 1));
 		my @fs = split(/\|/, $lynis_report_data{$key});
 		undef($lynis_report_data{$key});
 		push @{$lynis_report_data{$key}}, @fs;
@@ -154,6 +159,14 @@ if ($debug) {
 
 if ($json) {
 	require JSON;
+	# tidy up some of the "object" variables
+	my @nlp = @{$lynis_report_data{'network_listen_port[]'}};
+	my @nlp_new;
+	foreach my $pt (@nlp) {
+		my ($port,$proto,$proc) = split(/\|/, $pt);
+		push @nlp_new, { 'port' => $port, 'protocol' => $proto, 'owner_process' => $proc };
+	}
+	$lynis_report_data{'network_listen_port[]'} = \@nlp_new;
 	my $json_obj = JSON->new->allow_nonref;
 	my $json_text = $json_obj->encode( \%lynis_report_data );
 	if ($output) {
@@ -166,7 +179,7 @@ if ($json) {
 		# so print to STDOUT
 		print $json_text;
 	}
-	exit 0;
+	#exit 0;
 } elsif ($xml) {
 	require XML::Writer;
 	my $writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
@@ -1062,6 +1075,7 @@ END
 					print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
 				}
 			} elsif (${$lynis_report_data{'warning[]'}}[0] =~ /[A-Z]{4}\-\d{4}/) {					# one warning
+				print colored(Dumper(\@{$lynis_report_data{'warning[]'}})."\n", "bold green") if ($verbose);
 				my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
 				my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
 				my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
@@ -1713,7 +1727,7 @@ END
 		@{$lynis_report_data{'swap_partition[]'}} = &dedup_array(@{$lynis_report_data{'swap_partition[]'}});
 		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
 	} else {
-		print STDERR colored("swap_partition[] is a string\n", "yellow");
+		print STDERR colored("swap_partition[] is a string\n", "yellow") if (($verbose) and ($verbose > 1));
 		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
 	}
 	$lynis_report_data{'journal_bootlogs'} = 0 if ((!defined($lynis_report_data{'journal_bootlogs'})) or ($lynis_report_data{'journal_bootlogs'} eq ""));
@@ -1764,7 +1778,7 @@ END
 			print OUT "\t\t\t\t\t</table>\n<br />\n";
 		}
 	} else { 
-		warn colored("Didn't find journal_meta_data object!", "yellow"); 
+		warn colored("Didn't find journal_meta_data object!", "yellow") if ($verbose); 
 	}
 	print OUT <<END;
 				</div>
