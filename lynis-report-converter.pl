@@ -1593,7 +1593,11 @@ END
 	print OUT "\t\t\t\t\t\t<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>\n";
 	$lynis_report_data{'password_strength_tested'} = 0 if ((!defined($lynis_report_data{'password_strength_tested'})) or ($lynis_report_data{'password_strength_tested'} eq ''));
 	print OUT "\t\t\t\t\t\t<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>PAM Password Quality:</td><td>$lynis_report_data{'pam_pwquality'}</td>\n";
+	if (exists($lynis_report_data{'pam_pwquality'})) {
+		print OUT "\t\t\t\t\t\t<td>PAM Password Quality:</td><td>$lynis_report_data{'pam_pwquality'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>PAM Password Quality:</td><td>&nbsp;</td>\n";
+	}
 	print OUT <<END;
 					</tr>
 					<tr>
