@@ -96,7 +96,7 @@ unless ($quiet) {
 
 # the report is easy to process, and actually doesn't contain the "audit findings"....just the data.
 # but it is not our job to draw conclusions here, just present the findings of the tool.
-open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis report: $! \n", "bold red");
+open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis report: $! ", "bold red");
 while (my $line = <RPT>) {
 	next if ($line =~ /^#/);								# skip commented lines
 	next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
@@ -114,13 +114,17 @@ while (my $line = <RPT>) {
 		} else {
 			my $tmp_v = $lynis_report_data{$k};
 			undef($lynis_report_data{$k});
-			push @{$lynis_report_data{$k}}, $tmp_v, $v;
+			if ($tmp_v eq '&nbsp;') {
+				push @{$lynis_report_data{$k}}, $v;
+			} else {
+				push @{$lynis_report_data{$k}}, $tmp_v, $v;
+			}
 		}
 	} else {
 		$lynis_report_data{$k} = $v;
 	}
 }
-close RPT or die colored("There was a problem closing the lynis report: $! \n", "bold red");
+close RPT or die colored("There was a problem closing the lynis report: $! ", "bold red");
 
 	
 
@@ -1130,10 +1134,10 @@ END
 			my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
 			print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
 		} else {
-			die colored("Unexpected ARRAY format! \n", "bold red");
+			die colored("Unexpected ARRAY format!\n".Dumper(\@{$lynis_report_data{'warning[]'}}), "bold red");
 		}
 	} else {
-		die colored("warning[] not ARRAY ref!: ".ref($lynis_report_data{'warning[]'})."\n", "bold red");
+		die colored("warning[] not ARRAY ref!: ".ref($lynis_report_data{'warning[]'}), "bold red");
 	}
 	print OUT <<END;
 				</table>
@@ -1183,7 +1187,7 @@ END
 			}
 			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<option>$f\n"; }
 		} else {
-			warn colored("Deleted files object not an array! \n", "yellow");
+			warn colored("Deleted files object not an array! ", "yellow");
 			print Dumper($lynis_report_data{'delete_file[]'});
 		}
 	}
@@ -1221,7 +1225,7 @@ END
 	} elsif ($lynis_report_data{'lynis_update_available'} == -1) {
 		print OUT "\t\t\t\t\t<td>lynis update available:</td><td>N/A - There was an unexpected error trying to retrieve update status.</td>\n";
 	} else {
-		warn colored("Unexpected result from lynis update available check!\n", "yellow");
+		warn colored("Unexpected result from lynis update available check!", "yellow");
 		print Dumper($lynis_report_data{'lynis_update_available'});
 	}
 	print OUT "\n\n\n\n\n\n<td>license key:</td><td>$lynis_report_data{'license_key'}</td>\n";
@@ -1273,7 +1277,7 @@ END
 			foreach my $p ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) { print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		} else {
-			warn colored("plugin processess allprocesses object not an array! \n", "yellow");
+			warn colored("plugin processess allprocesses object not an array! ", "yellow");
 			print Dumper($lynis_report_data{'plugin_processes_allprocesses'});
 		}
 	}
@@ -1918,7 +1922,7 @@ END
 			print OUT "\t\t\t\t\t\t<li>$lynis_report_data{'nginx_config_option'}</li>\n";
 		} else {
 			print OUT "\t\t\t\t\t\t<li>N/A - Unable to detect nginx config </li>\n";
-			warn colored("nginx config options opbject not an array! \n", "yellow");
+			warn colored("nginx config options opbject not an array!", "yellow");
 			print Dumper($lynis_report_data{'nginx_config_option'});
 		}
 	}
@@ -1952,7 +1956,7 @@ END
 	if (ref($lynis_report_data{'apache_module[]'}) eq 'ARRAY') {
 		foreach my $m ( sort @{$lynis_report_data{'apache_module[]'}} ) { print OUT "\t\t\t\t\t\t\t\t<li>$m</li>\n"; }
 	} else {
-		warn colored("apache module object not an array!\n", "yellow");
+		warn colored("apache module object not an array!", "yellow");
 		print Dumper($lynis_report_data{'apache_module[]'});
 	}
 	print OUT "\t\t\t\t\t\t\t</ul>\n";
@@ -1987,7 +1991,7 @@ END
 			print OUT "\t\t\t\t\t\t\t<tr><td>$f</td><td>$s</td><td>$t</td></tr>\n"; 
 		}
 	} else {
-		warn colored("systemd unit file object not an array! \n", "yellow");
+		warn colored("systemd unit file object not an array! ", "yellow");
 	}
 	print OUT <<END;
 						</table>
@@ -2001,7 +2005,7 @@ END
 	if (ref($lynis_report_data{'systemd_unit_not_found[]'})) {
 		foreach my $unf ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$unf</li>\n"; }
 	} else {
-		warn colored("systemd unitnot found object not an array! \n", "yellow");
+		warn colored("systemd unitnot found object not an array! ", "yellow");
 	}
 	print OUT <<END; 
 						</ul>
@@ -2015,7 +2019,7 @@ END
 	if (ref($lynis_report_data{'systemd_service_not_found[]'}) eq 'ARRAY') {
 		foreach my $snf ( sort @{$lynis_report_data{'systemd_service_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$snf</li>\n"; }
 	} else {
-		warn colored("systemd service not found object not an array! \n", "yellow");
+		warn colored("systemd service not found object not an array! ", "yellow");
 	}
 	print OUT <<END;
 						</ul>
@@ -2061,7 +2065,7 @@ END
 
 END
 
-	close OUT or die colored("There was a problem closing the output file ($output): $! \n", "bold red");
+	close OUT or die colored("There was a problem closing the output file ($output): $! ", "bold red");
 
 	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found );
 	my @idx2 = qw( vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
@@ -2152,10 +2156,14 @@ sub pop_inconsistent_keys {
 	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notbook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] local-host-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm+volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
-		given ($fmt) {
-			when (/excel/) { $lrd_hash_ref->{$key} = "NA"; }
-			when (/json/) { $lrd_hash_ref->{$key} = "NA"; }
-			default { $lrd_hash_ref->{$key} = "\&nbsp;"; }		# covers XML, PDF and HTML (default)
+		if ($key =~ /(?:notebook|container)/) {					# boolena values
+			$lrd_hash_ref->{$key} = 0;
+		} else {
+			given ($fmt) {
+				when (/excel/) { $lrd_hash_ref->{$key} = "NA"; }
+				when (/json/) { $lrd_hash_ref->{$key} = "NA"; }
+				default { $lrd_hash_ref->{$key} = "\&nbsp;"; }		# covers XML, PDF and HTML (default)
+			}
 		}
 	}
 	# should operate on the main \%lynis_report_data hash, so we shouldn't need to return anything.  Maybe success/fail?	
