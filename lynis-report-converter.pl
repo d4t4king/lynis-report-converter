@@ -2007,7 +2007,6 @@ END
 						</ul>
 					</div><!-- END systemdUnitNotFoundToggle div -->
 END
-	}
 	print OUT <<END;
 					<h5>systemd service not found:</h5><a id="systemdServiceNotFoundLink" href="javascript:toggle('systemdServiceNotFoundLink','systemdServiceNotFoundToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
 					<div id="systemdServiceNotFoundToggle" style="display:none;">
