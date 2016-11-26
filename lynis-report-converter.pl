@@ -241,7 +241,14 @@ if ($json) {
 	undef(%lynis_report_data);
 } elsif ($xml) {
 	require XML::Writer;
-	my $writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
+	my ($xmlout,$writer);
+	if (($xml) and ($output)) {
+		require IO::File;
+		$xmlout = IO::File->new(">$output");
+		$writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,'OUTPUT'=>$xmlout);
+	} else {
+		$writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
+	}
 	$writer->xmlDecl('UTF-8');
 	$writer->startTag('lynisReportData');
 	foreach my $key ( sort keys %lynis_report_data ) {
@@ -323,12 +330,10 @@ if ($json) {
 	$writer->endTag('lynisReportData');
 	my $xml = $writer->end();
 	if ($output) {
-		# open the file and write to it
-		open OUT, ">$output" or die colored("There was a problem opening the output ($output) file for writing: $! ", "bold red");
-		print OUT $xml;
-		close OUT or die colored("There was a problem closing the output file ($output) after writing: $! ", "bold red");
+		$xmlout->close();
+	} else {
+		print $xml;
 	}
-	print $xml if (($verbose) and ($verbose > 1));
 	
 	# XML is parsed directly from the report data array, using the XML::Writer module.  So there should be no unhandled key-value pairs.
 	# So just undef the hash.
