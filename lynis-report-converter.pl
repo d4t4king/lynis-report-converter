@@ -235,7 +235,10 @@ if ($json) {
 		# so print to STDOUT
 		print $json_text;
 	}
-	#exit 0;
+
+	# JSON is parsed directly from the report data array, using the JSON module.  So there should be no unhandled key-value pairs.
+	# So just undef the hash.
+	undef(%lynis_report_data);
 } elsif ($xml) {
 	require XML::Writer;
 	my $writer = XML::Writer->new('CONTENT'=>'self','DATA_MODE'=>1,'DATA_INDENT'=>2,);
@@ -321,9 +324,15 @@ if ($json) {
 	my $xml = $writer->end();
 	if ($output) {
 		# open the file and write to it
+		open OUT, ">$output" or die colored("There was a problem opening the output ($output) file for writing: $! ", "bold red");
+		print OUT $xml;
+		close OUT or die colored("There was a problem closing the output file ($output) after writing: $! ", "bold red");
 	}
-	print $xml;
-	exit 0;
+	print $xml if (($verbose) and ($verbose > 1));
+	
+	# XML is parsed directly from the report data array, using the XML::Writer module.  So there should be no unhandled key-value pairs.
+	# So just undef the hash.
+	undef(%lynis_report_data);
 } elsif ($excel) {
 	require Excel::Writer::XLSX;
 	my $i = 0;
