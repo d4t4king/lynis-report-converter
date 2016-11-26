@@ -126,7 +126,10 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! ", "bold red");
 
-if ($lynis_report_data{'container'} != 1) { $lynis_report_data{'container'} = 0; }
+foreach my $k ( qw(container apparmor_enabled apparmor_policy_loaded ) ) {
+	if ($lynis_report_data{$k} != 1) { $lynis_report_data{$k} = 0; }
+}
+
 
 @{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
 @{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
@@ -2167,7 +2170,7 @@ sub calc_password_complexity_score {
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
-	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded );
+	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
 		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded)/) {					# boolena values
