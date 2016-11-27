@@ -103,7 +103,12 @@ while (my $line = <RPT>) {
 	chomp($line);
 	my ($k, $v) = split(/=/, $line);
 	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
-	if ((!defined($v)) or ($v eq "")) { $v = "&nbsp;"; }	# fill with a blank(ish) value if nothing
+	if ((!defined($v)) or ($v eq "")) { 
+		given($format) {
+			when (/(excel|json)/) { $v = "NA"; }
+			default { $v = "&nbsp;"; }	# fill with a blank(ish) value if nothing
+		}
+	}
 	print "k=$k\n" if (($verbose) and ($verbose > 1));
 	print "v=$v\n" if (($verbose) and ($verbose > 1));
 	# if the key already exists, assume it's supposed to be an array value.  Array values are handled a couple
@@ -467,7 +472,7 @@ if ($json) {
 	$lynis_ws->merge_range('A1:D1', 'lynis info:', $title_format);
 	$lynis_ws->write('A2', 'lynis version:', $label_format); $lynis_ws->write('B2', $lynis_report_data{'lynis_version'}); $lynis_ws->write('C2', 'lynis tests done:', $label_format);	$lynis_ws->write('D2', $lynis_report_data{'lynis_tests_done'});
 	$lynis_report_data{'lynis_update_available'} = 0 if ((defined($lynis_report_data{'lynis_update_available'})) and ($lynis_report_data{'lynis_update_available'} eq ""));
-	$lynis_ws->write('A3', 'lynis update available:', $label_format); $lynis_ws->write('B3', $to_bool{$lynis_report_data{'lynis_update_available'}}); $lynis_ws->write('C3', 'license key:', $label_format); $lynis_ws->write('D3', $lynis_report_data{'license_key'});
+	$lynis_ws->write('A3', 'lynis update available:', $label_format); $lynis_ws->write('B3', uc($to_bool{$lynis_report_data{'lynis_update_available'}})); $lynis_ws->write('C3', 'license key:', $label_format); $lynis_ws->write('D3', $lynis_report_data{'license_key'});
 	$lynis_ws->write('A4', 'report version:', $label_format); $lynis_ws->merge_range('B4:C4', "$lynis_report_data{'report_version_major'}\.$lynis_report_data{'report_version_minor'}", $version_format);
 	$lynis_ws->write('A5', "test category:", $label_format); $lynis_ws->write('B5', $lynis_report_data{'test_category'}); $lynis_ws->write('C5', 'test group:', $label_format); $lynis_ws->write('D5', $lynis_report_data{'test_group'});
 	$lynis_ws->write('A6', 'plugins enabled:', $label_format); $lynis_ws->write('B6', $lynis_report_data{'plugin_enabled[]'}); $lynis_ws->write('C6', 'plugin directory:', $label_format); $lynis_ws->write('D6', $lynis_report_data{'plugin_directory'});
@@ -526,12 +531,12 @@ if ($json) {
 	$host_ws->write('A1', "host info:", $title_format);
 	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain:', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
 	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
-	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', $to_bool{$lynis_report_data{'framework_grsecurity'}}); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', $to_bool{$lynis_report_data{'framework_selinux'}}); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
-	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', $to_bool{$lynis_report_data{'cpu_pae'}}); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', $to_bool{$lynis_report_data{'cpu_nx'}});
+	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', uc($to_bool{$lynis_report_data{'framework_grsecurity'}})); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', uc($to_bool{$lynis_report_data{'framework_selinux'}})); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
+	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', uc($to_bool{$lynis_report_data{'cpu_pae'}})); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', uc($to_bool{$lynis_report_data{'cpu_nx'}}));
 	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
 	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vmtype'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
 	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
-	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', $to_bool{$lynis_report_data{'notebook'}}, $merge_format);
+	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', uc($to_bool{$lynis_report_data{'notebook'}}), $merge_format);
 	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
 	$host_ws->write('C9', 'certificates:', $label_format); 
 	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
@@ -560,7 +565,7 @@ if ($json) {
 	}
 	$i++;
 	$host_ws->write("A$i", "logging info:", $subsub_format); $i++;
-	$host_ws->write("A$i", "log rotation tool:", $label_format); $host_ws->write("B$i", $lynis_report_data{'log_rotation_tool'}); $host_ws->write("C$i", "log rotation config found:", $label_format); $host_ws->write("D$i", $to_bool{$lynis_report_data{'log_rotation_config_found'}});
+	$host_ws->write("A$i", "log rotation tool:", $label_format); $host_ws->write("B$i", $lynis_report_data{'log_rotation_tool'}); $host_ws->write("C$i", "log rotation config found:", $label_format); $host_ws->write("D$i", uc($to_bool{$lynis_report_data{'log_rotation_config_found'}}));
 	$i += 2; $host_ws->write("A$i", "log directories:", $subsub_format); $i++;
 	if ((exists($lynis_report_data{'log_directory[]'})) and (ref($lynis_report_data{'log_directory[]'}) eq 'ARRAY')) {
 		foreach my $dir ( sort @{$lynis_report_data{'log_directory[]'}} ) {
@@ -589,7 +594,7 @@ if ($json) {
 	### network infdo
 	my $net_ws = $wb->add_worksheet('network info');
 	$net_ws->write('A1', "network info:", $title_format);
-	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); $net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', $to_bool{$lynis_report_data{'ipv6_only'}});
+	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); $net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', uc($to_bool{$lynis_report_data{'ipv6_only'}}));
 	$net_ws->write('A3', 'network interfaces:', $label_format); $net_ws->write('B3', join("\n", @{$lynis_report_data{'network_interface[]'}}));
 	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
 	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
@@ -604,7 +609,7 @@ if ($json) {
 	} else {
 		$net_ws->write('B7', "N/A");
 	}
-	$net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', $to_bool{$lynis_report_data{'name_cache_used'}}, $merge_format);
+	$net_ws->write('C7', 'name cache used:', $label_format); $net_ws->write('D7', uc($to_bool{$lynis_report_data{'name_cache_used'}}), $merge_format);
 	$net_ws->write('A8', 'name servers:', $label_format); 
 	if (exists($lynis_report_data{'nameserver[]'})) {
 		if (ref($lynis_report_data{'name_server[]'}) eq 'ARRAY') {
@@ -642,33 +647,33 @@ if ($json) {
 	### security info
 	my $sec_ws = $wb->add_worksheet('security info');
 	$sec_ws->write('A1', "security info:", $title_format);
-	$sec_ws->write('A2', 'host firewall installed:', $label_format); $sec_ws->write('B2', $to_bool{$lynis_report_data{'firewall_installed'}});
+	$sec_ws->write('A2', 'host firewall installed:', $label_format); $sec_ws->write('B2', uc($to_bool{$lynis_report_data{'firewall_installed'}}));
 	$sec_ws->write('C2', 'firewall software:', $label_format); $sec_ws->write('D2', $lynis_report_data{'firewall_software[]'});
-	$sec_ws->write('E2', 'firewall empty ruleset:', $label_format); $sec_ws->write('F2', $to_bool{$lynis_report_data{'firewall_empty_ruleset'}});
-	$sec_ws->write('G2', 'firewall active:', $label_format); $sec_ws->write('H2', $to_bool{$lynis_report_data{'firewall_active'}});
-	$sec_ws->write('A3', 'package audit tool found', $label_format); $sec_ws->write('B3', $to_bool{$lynis_report_data{'package_audit_tool_found'}});
+	$sec_ws->write('E2', 'firewall empty ruleset:', $label_format); $sec_ws->write('F2', uc($to_bool{$lynis_report_data{'firewall_empty_ruleset'}}));
+	$sec_ws->write('G2', 'firewall active:', $label_format); $sec_ws->write('H2', uc($to_bool{$lynis_report_data{'firewall_active'}}));
+	$sec_ws->write('A3', 'package audit tool found', $label_format); $sec_ws->write('B3', uc($to_bool{$lynis_report_data{'package_audit_tool_found'}}));
 	$sec_ws->write('C3', 'package audit tool;', $label_format); $sec_ws->write('D3', $lynis_report_data{'package_audit_tool'});
-	$sec_ws->write('E3', 'vulnerable packages found:', $label_format); $sec_ws->write('F3', $to_bool{$lynis_report_data{'vulnerable_packages_found'}});
+	$sec_ws->write('E3', 'vulnerable packages found:', $label_format); $sec_ws->write('F3', uc($to_bool{$lynis_report_data{'vulnerable_packages_found'}}));
 	$sec_ws->write('G3', 'package manager:', $label_format); $sec_ws->write('H3', $lynis_report_data{'package_manager[]'});
-	$sec_ws->write('A4', 'two-factor authentication enabled:', $label_format); $sec_ws->write('B4', $to_bool{$lynis_report_data{'authentication_two_factor_enabled'}});
-	$sec_ws->write('C4', 'two-factor authentication required:', $label_format); $sec_ws->write('D4', $to_bool{$lynis_report_data{'authentication_two_factor_required'}});
-	$sec_ws->write('E4', 'LDAP PAM module enabled:', $label_format); $sec_ws->write('F4', $to_bool{$lynis_report_data{'ldap_pam_enabled'}});
-	$sec_ws->write('G4', 'LDAP authentication enabled:', $label_format); $sec_ws->write('H4', $to_bool{$lynis_report_data{'ldap_auth_enabled'}});
+	$sec_ws->write('A4', 'two-factor authentication enabled:', $label_format); $sec_ws->write('B4', uc($to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}));
+	$sec_ws->write('C4', 'two-factor authentication required:', $label_format); $sec_ws->write('D4', uc($to_bool{$lynis_report_data{'authentication_two_factor_required'}}));
+	$sec_ws->write('E4', 'LDAP PAM module enabled:', $label_format); $sec_ws->write('F4', uc($to_bool{$lynis_report_data{'ldap_pam_enabled'}}));
+	$sec_ws->write('G4', 'LDAP authentication enabled:', $label_format); $sec_ws->write('H4', uc($to_bool{$lynis_report_data{'ldap_auth_enabled'}}));
 	$sec_ws->write('A5', 'minimum password length:', $label_format); $sec_ws->write('B5', $lynis_report_data{'minimum_password_length'});
 	$sec_ws->write('C5', 'maximum password days:', $label_format); $sec_ws->write('D5', $lynis_report_data{'password_max_days'});
 	$sec_ws->write('E5', 'minimum password days:', $label_format); $sec_ws->write('F5', $lynis_report_data{'password_min_days'});
 	$sec_ws->write('G5', 'maximum password retries:', $label_format); $sec_ws->write('H5', $lynis_report_data{'max_password_retry'});
 	$sec_ws->write('A6', 'password complexity score:', $label_format); $sec_ws->write_formula('B6', "=DEC2BIN($pass_score)");
-	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', $to_bool{$lynis_report_data{'pam_cracklib'}});
-	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', $to_bool{$lynis_report_data{'password_strength_tested'}});
-	$sec_ws->write('G6', 'failed logins logged:', $label_format); $sec_ws->write('H6', $to_bool{$lynis_report_data{'auth_failed_logins_logged'}});
-	$sec_ws->write('A7', 'file integrity tool installed:', $label_format); $sec_ws->write('B7', $to_bool{$lynis_report_data{'file_integrity_tool_installed'}});
+	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', uc($to_bool{$lynis_report_data{'pam_cracklib'}}));
+	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', uc($to_bool{$lynis_report_data{'password_strength_tested'}}));
+	$sec_ws->write('G6', 'failed logins logged:', $label_format); $sec_ws->write('H6', uc($to_bool{$lynis_report_data{'auth_failed_logins_logged'}}));
+	$sec_ws->write('A7', 'file integrity tool installed:', $label_format); $sec_ws->write('B7', uc($to_bool{$lynis_report_data{'file_integrity_tool_installed'}}));
 	$sec_ws->write('C7', 'file integreity tool(s):', $label_format); $sec_ws->write('D7', $lynis_report_data{'file_integrity_tool[]'});
-	$sec_ws->write('E7', 'automation tool present:', $label_format); $sec_ws->write('F7', $to_bool{$lynis_report_data{'automation_tool_present'}});
+	$sec_ws->write('E7', 'automation tool present:', $label_format); $sec_ws->write('F7', uc($to_bool{$lynis_report_data{'automation_tool_present'}}));
 	$sec_ws->write('G7', 'automation tool(s):', $label_format); $sec_ws->write('H7', $lynis_report_data{'automation_tool_running[]'});
-	$sec_ws->write('A8', 'malware scanner installed', $label_format); $sec_ws->write('B8', $to_bool{$lynis_report_data{'malware_scanner_installed'}});
+	$sec_ws->write('A8', 'malware scanner installed', $label_format); $sec_ws->write('B8', uc($to_bool{$lynis_report_data{'malware_scanner_installed'}}));
 	$sec_ws->write('C8', 'malware scanner(s):', $label_format); $sec_ws->write('D8', $lynis_report_data{'malware_scanner[]'});
-	$sec_ws->write('E8', 'compiler installed:', $label_format); $sec_ws->write('F8', $to_bool{$lynis_report_data{'compiler_installed'}});
+	$sec_ws->write('E8', 'compiler installed:', $label_format); $sec_ws->write('F8', uc($to_bool{$lynis_report_data{'compiler_installed'}}));
 	$sec_ws->write('G8', 'compiler(s):', $label_format); $sec_ws->write('H8', $lynis_report_data{'compiler[]'});
 	$sec_ws->write('A9', 'IDS/IPS tooling', $label_format); 
 	if (exists($lynis_report_data{'ids_ips_tooling'})) {
@@ -695,7 +700,7 @@ if ($json) {
 		}
 	}
 	$sec_ws->write("G9", "session timeout enabled:", $label_format);
-	$sec_ws->write("H9", $to_bool{$lynis_report_data{'session_timeout_enabled'}});
+	$sec_ws->write("H9", uc($to_bool{$lynis_report_data{'session_timeout_enabled'}}));
 	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
 	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
 	$i = 13;
@@ -740,8 +745,8 @@ if ($json) {
 	### boot info
 	my $boot_ws = $wb->add_worksheet('boot info');
 	$boot_ws->write('A1', "boot info:", $title_format);
-	$boot_ws->write('A2', 'UEFI booted:', $label_format); $boot_ws->write('B2', $to_bool{$lynis_report_data{'boot_uefi_booted'}});
-	$boot_ws->write('C2', 'UEFI booted secure:', $label_format); $boot_ws->write('D2', $to_bool{$lynis_report_data{'boot_uefi_booted_secure'}});
+	$boot_ws->write('A2', 'UEFI booted:', $label_format); $boot_ws->write('B2', uc($to_bool{$lynis_report_data{'boot_uefi_booted'}}));
+	$boot_ws->write('C2', 'UEFI booted secure:', $label_format); $boot_ws->write('D2', uc($to_bool{$lynis_report_data{'boot_uefi_booted_secure'}}));
 	$boot_ws->write('E2', 'boot loader:', $label_format); $boot_ws->write('F2', $lynis_report_data{'boot_loader'});
 	$boot_ws->write('A3', 'default runlevel:', $label_format); $boot_ws->write('B3', $lynis_report_data{'linux_default_runlevel'});
 	$boot_ws->write('C3', 'boot service tool:', $label_format); $boot_ws->write('D3', $lynis_report_data{'boot_service_tool'});
@@ -800,8 +805,8 @@ if ($json) {
 	$fs_ws->write('A2', "journal disk size:", $label_format); $fs_ws->write('B2', $lynis_report_data{'journal_disk_size'});
 	$fs_ws->write('A3', "most recent journal coredump:", $label_format); $fs_ws->write('B3', $lynis_report_data{'journal_coredump_lastday'});
 	$fs_ws->write('A4', 'oldest boot date on journal:', $label_format); $fs_ws->write('B4', $lynis_report_data{'journal_oldest_bootdate'});
-	$fs_ws->write('A5', 'journal contains errors:', $label_format); $fs_ws->write('B5', $to_bool{$lynis_report_data{'journal_contains_errors'}});
-	$fs_ws->write('A6', 'journal boot logging enabled:', $label_format); $fs_ws->write('B6', $to_bool{$lynis_report_data{'journal_bootlogs'}});
+	$fs_ws->write('A5', 'journal contains errors:', $label_format); $fs_ws->write('B5', uc($to_bool{$lynis_report_data{'journal_contains_errors'}}));
+	$fs_ws->write('A6', 'journal boot logging enabled:', $label_format); $fs_ws->write('B6', uc($to_bool{$lynis_report_data{'journal_bootlogs'}}));
 	$fs_ws->write("C2", 'swap partitions:', $label_format);
 	if (exists($lynis_report_data{'swap_partition[]'})) {
 		if (ref($lynis_report_data{'swap_partition[]'}) eq 'ARRAY') {
@@ -876,7 +881,7 @@ if ($json) {
 		if ((!defined($lynis_report_data{"${prog}_running"})) or ($lynis_report_data{"${prog}_running"} eq "")) {
 			$lynis_report_data{"${prog}_running"} = 0;
 		}
-		$svc_ws->write("A$i", "$prog running:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{"${prog}_running"}});
+		$svc_ws->write("A$i", "$prog running:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{"${prog}_running"}}));
 		$i++;
 	}
 	my $i_hold = $i; # $i should be 13
@@ -894,20 +899,20 @@ if ($json) {
 	$svc_ws->write("C$i", "service manager:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"service_manager"}); $i++;
 	$svc_ws->write("C$i", "smtp daemon:", $label_format); $svc_ws->write("D$i", $lynis_report_data{"smtp_daemon"}); $i++;
 	$svc_ws->write("C$i", "systemctl exit code:", $label_format); $svc_ws->write("D$i", $lynis_report_data{'systemctl_exit_code'}); $i = 3;
-	$svc_ws->write("E$i", "syslog daemon present:", $label_format); $svc_ws->write("F$i", $to_bool{$lynis_report_data{'syslog_daemon_present'}}); $i++;
+	$svc_ws->write("E$i", "syslog daemon present:", $label_format); $svc_ws->write("F$i", uc($to_bool{$lynis_report_data{'syslog_daemon_present'}})); $i++;
 	$svc_ws->write("E$i", "syslog daemon(s):", $label_format); $svc_ws->write("F$i", join("\n", @{$lynis_report_data{'syslog_daemon[]'}})); $i++;
 	#if ($i > $i_hold) { $i_hold = $i; } # $i should be 11, so this should never actually be true
 	#$i = $i_hold; $i++; # reset to 13 and add 1 (14)
 	# Just manually reset to 14, since we added the new column.
 	$i = 14;
 	$svc_ws->merge_range("A$i:D$i", "systemd detail", $spanhead_format); $i++;
-	$svc_ws->write("A$i", "systemd enabled:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{'systemd'}});
+	$svc_ws->write("A$i", "systemd enabled:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{'systemd'}}));
 	$svc_ws->write("C$i", "systemd status:", $label_format); $svc_ws->write("D$i", $lynis_report_data{'systemd_status'}); $i++;
 	$svc_ws->write("A$i", "systemd built-in components:", $label_format); $svc_ws->merge_range("B$i:D$i", $lynis_report_data{'systemd_builtin_components'}, $merge_format); $i++;
 	$svc_ws->write("A$i", "systemd version:", $label_format); $svc_ws->write("B$i", $lynis_report_data{'systemd_version'}); $i++;
 	$i += 2;
 	$svc_ws->merge_range("A$i:D$i", "ntp detail", $spanhead_format); $i++;
-	$svc_ws->write("A$i", "ntp config found:", $label_format); $svc_ws->write("B$i", $to_bool{$lynis_report_data{'ntp_config_found'}});
+	$svc_ws->write("A$i", "ntp config found:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{'ntp_config_found'}}));
 	$svc_ws->write("C$i", 'ntp config file:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ntp_config_file'}); $i++;
 	$svc_ws->write("A$i", 'ntp version:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'ntp_version'});
 	$svc_ws->write("C$i", 'ntp unreliable peers:', $label_format); 
