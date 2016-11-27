@@ -536,19 +536,27 @@ if ($json) {
 	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
 	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vmtype'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
 	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
-	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->merge_range('B8:C8', uc($to_bool{$lynis_report_data{'notebook'}}), $merge_format);
+	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->write('B8', uc($to_bool{$lynis_report_data{'notebook'}}));
+	$host_ws->write('C8', 'is container:', $label_format); $host_ws->write('D8', uc($to_bool{$lynis_report_data{'container'}}));
 	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
 	$host_ws->write('C9', 'certificates:', $label_format); 
-	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
-		$host_ws->write('D9', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
+	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D9', join("\n", @{$lynis_report_data{'certificate[]'}}));
 	} else {
-		$host_ws->write('D9', $lynis_report_data{'valid_certificate[]'});
+		$host_ws->write('D9', $lynis_report_data{'certificate[]'});
 	}
 	$host_ws->write('A10', 'authorized default USB devices:', $label_format); $host_ws->write('B10', join("\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})); 
-	if ((exists($lynis_report_data{'expired_certificate[]'})) and (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY')) {
-		$host_ws->write('C10', 'expired certificates:', $label_format); $host_ws->write('D10', join("\n", @{$lynis_report_data{'expired_certificate[]'}}));
+	$host_ws->write('C10', 'valid certificates:', $label_format); 
+	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D10', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
 	} else {
-		$host_ws->write('C10', 'expired certificates:', $label_format); $host_ws->write('D10', $lynis_report_data{'expired_certificate[]'});
+		$host_ws->write('D10', $lynis_report_data{'valid_certificate[]'});
+	}
+	$host_ws->write('C11', 'expired certificates:', $label_format); 
+	if (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D11', join("\n", @{$lynis_report_data{'expired_certificate[]'}}));
+	} else {
+		$host_ws->write('D11', $lynis_report_data{'expired_certificate[]'});
 	}
 
 	$host_ws->write('A12', 'cron jobs:', $label_format); 
@@ -963,26 +971,26 @@ if ($json) {
 	$i = $i_hold;
 	$svc_ws->merge_range("C$i:D$i", "systemd unit files:", $subsub_format); $i++;
 	$svc_ws->write("C$i", "unit", $label_format); $svc_ws->write("D$i", "status", $label_format); $i++;
-	if ((exists($lynis_report_data{'systemd_unit_file[]'})) and (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY')) {
+	if (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') {
 		foreach my $svc ( sort @{$lynis_report_data{'systemd_unit_file[]'}} ) {
 			chomp($svc);
 			my ($s, $st, @j) = split(/\|/, $svc);
 			$svc_ws->write("C$i", $s); $svc_ws->write("D$i", $st); $i++;
 		}
 	} else {
-		warn colored("systemd_unit_file[] array not found or not an array!", "yellow");
+		warn colored("systemd_unit_file[] not an array!", "yellow");
 		print STDERR color("yellow");
 		print STDERR Dumper($lynis_report_data{'systemd_unit_file[]'});
 		print STDERR color('reset');
 	}
 	$i = $i_hold;
 	$svc_ws->write("E$i", "systemd unit not found:", $subsub_format); $i++;
-	if ((exists($lynis_report_data{'systemd_unit_not_found[]'})) and (ref($lynis_report_data{'systemd_unit_not_found[]'}) eq 'ARRAY')) {
+	if (ref($lynis_report_data{'systemd_unit_not_found[]'}) eq 'ARRAY') {
 		foreach my $svc ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) {
 			$svc_ws->write("E$i", $svc); $i++;
 		}
 	} else {
-		warn colored("systemd_unit_not_found[] array not found or not an array!", "yellow");
+		warn colored("systemd_unit_not_found[] not an array!", "yellow");
 		print STDERR color("yellow");
 		print STDERR Dumper($lynis_report_data{'systemd_unit_not_found[]'});
 		print STDERR color('reset');
