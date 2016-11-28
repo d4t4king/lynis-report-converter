@@ -539,28 +539,29 @@ if ($json) {
 	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->write('B8', uc($to_bool{$lynis_report_data{'notebook'}}));
 	$host_ws->write('C8', 'is container:', $label_format); $host_ws->write('D8', uc($to_bool{$lynis_report_data{'container'}}));
 	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
-	$host_ws->write('C9', 'certificates:', $label_format); 
-	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
-		$host_ws->write('D9', join("\n", @{$lynis_report_data{'certificate[]'}}));
-	} else {
-		$host_ws->write('D9', $lynis_report_data{'certificate[]'});
-	}
+	$host_ws->write('C9', 'certificate count:', $label_format); $host_ws->write('D9', $lynis_report_data{'certificates'});
 	$host_ws->write('A10', 'authorized default USB devices:', $label_format); $host_ws->write('B10', join("\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})); 
-	$host_ws->write('C10', 'valid certificates:', $label_format); 
-	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
-		$host_ws->write('D10', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
+	$host_ws->write('C10', 'certificates:', $label_format); 
+	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D10', join("\n", @{$lynis_report_data{'certificate[]'}}));
 	} else {
-		$host_ws->write('D10', $lynis_report_data{'valid_certificate[]'});
+		$host_ws->write('D10', $lynis_report_data{'certificate[]'});
 	}
-	$host_ws->write('C11', 'expired certificates:', $label_format); 
-	if (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY') {
-		$host_ws->write('D11', join("\n", @{$lynis_report_data{'expired_certificate[]'}}));
+	$host_ws->write('C11', 'valid certificates:', $label_format); 
+	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D11', join("\n", @{$lynis_report_data{'valid_certificate[]'}}));
 	} else {
-		$host_ws->write('D11', $lynis_report_data{'expired_certificate[]'});
+		$host_ws->write('D11', $lynis_report_data{'valid_certificate[]'});
+	}
+	$host_ws->write('C12', 'expired certificates:', $label_format); 
+	if (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY') {
+		$host_ws->write('D12', join("\n", @{$lynis_report_data{'expired_certificate[]'}}));
+	} else {
+		$host_ws->write('D12', $lynis_report_data{'expired_certificate[]'});
 	}
 
-	$host_ws->write('A12', 'cron jobs:', $label_format); 
-	$i = 13;
+	$host_ws->write('A13', 'cron jobs:', $label_format); 
+	$i = 14;
 	if ((exists($lynis_report_data{'cronjob[]'})) and (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY')) {
 		foreach my $job ( sort @{$lynis_report_data{'cronjob[]'}} ) {
 			$job =~ s/\,/ /g;
@@ -569,7 +570,7 @@ if ($json) {
 			$i++;
 		}
 	} else {
-		$host_ws->write('A13', $lynis_report_data{'cronjob[]'});
+		$host_ws->write("A$i", $lynis_report_data{'cronjob[]'});
 	}
 	$i++;
 	$host_ws->write("A$i", "logging info:", $subsub_format); $i++;
@@ -674,44 +675,46 @@ if ($json) {
 	$sec_ws->write('A6', 'password complexity score:', $label_format); $sec_ws->write_formula('B6', "=DEC2BIN($pass_score)");
 	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', uc($to_bool{$lynis_report_data{'pam_cracklib'}}));
 	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', uc($to_bool{$lynis_report_data{'password_strength_tested'}}));
-	$sec_ws->write('G6', 'failed logins logged:', $label_format); $sec_ws->write('H6', uc($to_bool{$lynis_report_data{'auth_failed_logins_logged'}}));
-	$sec_ws->write('A7', 'file integrity tool installed:', $label_format); $sec_ws->write('B7', uc($to_bool{$lynis_report_data{'file_integrity_tool_installed'}}));
-	$sec_ws->write('C7', 'file integreity tool(s):', $label_format); $sec_ws->write('D7', $lynis_report_data{'file_integrity_tool[]'});
-	$sec_ws->write('E7', 'automation tool present:', $label_format); $sec_ws->write('F7', uc($to_bool{$lynis_report_data{'automation_tool_present'}}));
-	$sec_ws->write('G7', 'automation tool(s):', $label_format); $sec_ws->write('H7', $lynis_report_data{'automation_tool_running[]'});
-	$sec_ws->write('A8', 'malware scanner installed', $label_format); $sec_ws->write('B8', uc($to_bool{$lynis_report_data{'malware_scanner_installed'}}));
-	$sec_ws->write('C8', 'malware scanner(s):', $label_format); $sec_ws->write('D8', $lynis_report_data{'malware_scanner[]'});
-	$sec_ws->write('E8', 'compiler installed:', $label_format); $sec_ws->write('F8', uc($to_bool{$lynis_report_data{'compiler_installed'}}));
-	$sec_ws->write('G8', 'compiler(s):', $label_format); $sec_ws->write('H8', $lynis_report_data{'compiler[]'});
-	$sec_ws->write('A9', 'IDS/IPS tooling', $label_format); 
+	$sec_ws->write('G6', 'PAM password quality:', $label_format); $sec_ws->write('H6', $lynis_report_data{'pam_pwquality'});
+	$sec_ws->write('A7', 'PAM brute force protection module:', $label_format); $sec_ws->write('B7', join("\n", @{$lynis_report_data{'pam_auth_brute_force_protection_module[]'}}));
+	$sec_ws->write('C7', 'failed logins logged:', $label_format); $sec_ws->write('D7', uc($to_bool{$lynis_report_data{'auth_failed_logins_logged'}}));
+	$sec_ws->write('A8', 'file integrity tool installed:', $label_format); $sec_ws->write('B8', uc($to_bool{$lynis_report_data{'file_integrity_tool_installed'}}));
+	$sec_ws->write('C8', 'file integreity tool(s):', $label_format); $sec_ws->write('D8', $lynis_report_data{'file_integrity_tool[]'});
+	$sec_ws->write('E8', 'automation tool present:', $label_format); $sec_ws->write('F8', uc($to_bool{$lynis_report_data{'automation_tool_present'}}));
+	$sec_ws->write('G8', 'automation tool(s):', $label_format); $sec_ws->write('H8', $lynis_report_data{'automation_tool_running[]'});
+	$sec_ws->write('A9', 'malware scanner installed', $label_format); $sec_ws->write('B9', uc($to_bool{$lynis_report_data{'malware_scanner_installed'}}));
+	$sec_ws->write('C9', 'malware scanner(s):', $label_format); $sec_ws->write('D9', $lynis_report_data{'malware_scanner[]'});
+	$sec_ws->write('E9', 'compiler installed:', $label_format); $sec_ws->write('F9', uc($to_bool{$lynis_report_data{'compiler_installed'}}));
+	$sec_ws->write('G9', 'compiler(s):', $label_format); $sec_ws->write('H9', $lynis_report_data{'compiler[]'});
+	$sec_ws->write('A10', 'IDS/IPS tooling', $label_format); 
 	if (exists($lynis_report_data{'ids_ips_tooling'})) {
 		if (ref($lynis_report_data{'ids_ips_tooling'}) eq 'ARRAY') {
-			$sec_ws->write('B9', join("\n", @{$lynis_report_data{'ids_ips_tooling'}}), $merge_format);
+			$sec_ws->write('B10', join("\n", @{$lynis_report_data{'ids_ips_tooling'}}), $merge_format);
 		} else {
-			$sec_ws->write('B9', $lynis_report_data{'ids_ips_tooling'}, $merge_format);
+			$sec_ws->write('B10', $lynis_report_data{'ids_ips_tooling'}, $merge_format);
 		}
 	} else {
-		$sec_ws->write('B9', 'N/A', $merge_format);
+		$sec_ws->write('B10', 'NA', $merge_format);
 	}
 	if (exists($lynis_report_data{'fail2ban_config'})) {
-		$sec_ws->write('C9', 'fail2ban config file(s):', $label_format);
-		$sec_ws->write('D9', $lynis_report_data{'fail2ban_config'}, $merge_format);
+		$sec_ws->write('C10', 'fail2ban config file(s):', $label_format);
+		$sec_ws->write('D10', $lynis_report_data{'fail2ban_config'}, $merge_format);
 	} else {
-		$sec_ws->write('D9', 'N/A', $merge_format);
+		$sec_ws->write('D10', 'NA', $merge_format);
 	}
 	if (exists($lynis_report_data{'fail2ban_enabled_service[]'})) {
-		$sec_ws->write('E9', 'fail2ban enabled service(s):', $label_format);
+		$sec_ws->write('E10', 'fail2ban enabled service(s):', $label_format);
 		if (ref($lynis_report_data{'fail2ban_enabled_service[]'}) eq 'ARRAY') {
-			$sec_ws->write('F9', join("\n", @{$lynis_report_data{'fail2ban_enabled_service[]'}}), $merge_format);
+			$sec_ws->write('F10', join("\n", @{$lynis_report_data{'fail2ban_enabled_service[]'}}), $merge_format);
 		} else {
-			$sec_ws->write('F9', $lynis_report_data{'fail2ban_enabled_service[]'}, $merge_format);
+			$sec_ws->write('F10', $lynis_report_data{'fail2ban_enabled_service[]'}, $merge_format);
 		}
 	}
-	$sec_ws->write("G9", "session timeout enabled:", $label_format);
-	$sec_ws->write("H9", uc($to_bool{$lynis_report_data{'session_timeout_enabled'}}));
-	$sec_ws->merge_range('A11:B11', 'real users:', $subsub_format); $sec_ws->merge_range('C11:D11', 'home directories:', $subsub_format);
-	$sec_ws->write('A12', 'name', $label_format); $sec_ws->write('B12', 'uid', $label_format);
-	$i = 13;
+	$sec_ws->write("G10", "session timeout enabled:", $label_format);
+	$sec_ws->write("H10", uc($to_bool{$lynis_report_data{'session_timeout_enabled'}}));
+	$sec_ws->merge_range('A12:B12', 'real users:', $subsub_format); $sec_ws->merge_range('C12:D12', 'home directories:', $subsub_format);
+	$sec_ws->write('A13', 'name', $label_format); $sec_ws->write('B13', 'uid', $label_format);
+	$i = 14;
 	if ((exists($lynis_report_data{'real_user[]'})) and (ref($lynis_report_data{'real_user[]'}) eq 'ARRAY')) {
 		foreach my $usr ( sort @{$lynis_report_data{'real_user[]'}} ) {
 			my ($n, $uid) = split(/\,/, $usr);
@@ -1016,7 +1019,7 @@ if ($json) {
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] );
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] valid_certificate[] certificate[] certificates );
 	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
