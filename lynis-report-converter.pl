@@ -933,12 +933,7 @@ if ($json) {
 	#$i = $i_hold; $i++; # reset to 13 and add 1 (14)
 	# Just manually reset to 14, since we added the new column.
 	$i = 14;
-	$svc_ws->merge_range("A$i:D$i", "systemd detail", $spanhead_format); $i++;
-	$svc_ws->write("A$i", "systemd enabled:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{'systemd'}}));
-	$svc_ws->write("C$i", "systemd status:", $label_format); $svc_ws->write("D$i", $lynis_report_data{'systemd_status'}); $i++;
-	$svc_ws->write("A$i", "systemd built-in components:", $label_format); $svc_ws->merge_range("B$i:D$i", $lynis_report_data{'systemd_builtin_components'}, $merge_format); $i++;
-	$svc_ws->write("A$i", "systemd version:", $label_format); $svc_ws->write("B$i", $lynis_report_data{'systemd_version'}); $i++;
-	$i += 2;
+	#$i += 2;
 	$svc_ws->merge_range("A$i:D$i", "ntp detail", $spanhead_format); $i++;
 	$svc_ws->write("A$i", "ntp config found:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{'ntp_config_found'}}));
 	$svc_ws->write("C$i", 'ntp config file:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ntp_config_file'}); $i++;
@@ -965,11 +960,38 @@ if ($json) {
 
 	$i += 2;
 	$svc_ws->merge_range("A$i:D$i", "Apache detail", $spanhead_format); $i++;
+	$svc_ws->write("A$i", 'apache_version:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'apache_version'});
+	$svc_ws->write("C$i", 'apache modules:', $label_format); 
+	if (ref($lynis_report_data{'apache_module[]'}) eq 'ARRAY') {
+		$svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'apache_module[]'}}), $list_format); $i++;
+	} else {
+		$svc_ws->write("D$i", $lynis_report_data{'apache_module[]'}, $list_format); $i++;
+	}
 
-	$i += 2;
+	$i++;
+	if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY') {
+		@{$lynis_report_data{'nginx_config[]'}} = &dedup_array($lynis_report_data{'nginx_config[]'});
+	}
 	$svc_ws->merge_range("A$i:D$i", "nginx detail", $spanhead_format); $i++;
+	$svc_ws->write("A$i", 'nginx main config file:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'nginx_main_conf_file'}); 
+	$svc_ws->write("C$i", 'nginx sub config files:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}}), $list_format); $i++;
+	$svc_ws->write("A$i", 'nginx log files:', $label_format); $svc_ws->write("B$i", join("\r\n", @{$lynis_report_data{'log_file'}}), $list_format);
+	if (ref($lynis_report_data{'ssl_tls_protocol_enabled[]'}) eq 'ARRAY') {
+		$svc_ws->write("C$i", 'SSL/TLS protocols enabled:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'ssl_tls_protocol_enabled[]'}}), $list_format); $i++;
+	} else {
+		$svc_ws->write("C$i", 'SSL/TLS protocols enabled:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ssl_tls_protocol_enabled[]'}, $list_format); $i++;
+	}
+	$svc_ws->write("A$i", 'nginx config options:', $label_format); 
+	foreach my $opt ( @{$lynis_report_data{'nginx_config_option[]'}} ) {
+		$svc_ws->write("B$i", $opt); $i++;
+	}
 
-	$i += 2; # give it a row for space
+	$i++; # give it a row for space
+	$svc_ws->merge_range("A$i:D$i", "systemd detail", $spanhead_format); $i++;
+	$svc_ws->write("A$i", "systemd enabled:", $label_format); $svc_ws->write("B$i", uc($to_bool{$lynis_report_data{'systemd'}}));
+	$svc_ws->write("C$i", "systemd status:", $label_format); $svc_ws->write("D$i", $lynis_report_data{'systemd_status'}); $i++;
+	$svc_ws->write("A$i", "systemd built-in components:", $label_format); $svc_ws->merge_range("B$i:D$i", $lynis_report_data{'systemd_builtin_components'}, $merge_format); $i++;
+	$svc_ws->write("A$i", "systemd version:", $label_format); $svc_ws->write("B$i", $lynis_report_data{'systemd_version'}); $i++;
 	$i_hold = $i; # reset the ($i_hold) bar.  All lists below start at his row level
 	$svc_ws->write("A$i", "running services:", $subsub_format); $i++;
 	if ((exists($lynis_report_data{'running_service[]'})) and (ref($lynis_report_data{'running_service[]'}) eq 'ARRAY')) {
@@ -1042,7 +1064,7 @@ if ($json) {
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] valid_certificate[] certificate[] certificates apparmor_enabled apparmor_policy_loaded pam_auth_brute_force_protection_module[] authentication_brute_force_protection container pam_pwquality localhost-mapped-to );
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] valid_certificate[] certificate[] certificates apparmor_enabled apparmor_policy_loaded pam_auth_brute_force_protection_module[] authentication_brute_force_protection container pam_pwquality localhost-mapped-to apache_version apache_module[] expired_certificate[] nginx_main_conf_file nginx_sub_conf_file[] log_file ssl_tls_protocol_enabled nginx_config[] ssl_tls_protocol_enabled[] nginx_config_option[] );
 	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
@@ -1967,10 +1989,10 @@ END
 					<tr>
 END
 	print OUT "\t\t\t\t\t\t<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
-	if (ref($lynis_report_data{'nginx_sub_conf_file'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file'}})."</td>\n";
+	if (ref($lynis_report_data{'nginx_sub_conf_file[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>$lynis_report_data{'nginx_sub_conf_file'}</td>\n";
+		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>$lynis_report_data{'nginx_sub_conf_file[]'}</td>\n";
 	}
 	print OUT <<END;
 					</tr>
@@ -1989,15 +2011,15 @@ END
 	print OUT "\t\t\t\t<h5>nginx config options:</h5><a id=\"nginxConfigLink\" href=\"javascript: toggle('nginxConfigLink', 'nginxConfigToggle');\">&gt;&nbsp;show&nbsp;&lt;</a>\n";
 	print OUT "\t\t\t\t\t<div id=\"nginxConfigToggle\" style=\"display:none;\">\n";
 	print OUT "\t\t\t\t\t<ul>\n";
-	if (ref($lynis_report_data{'nginx_config_option'}) eq 'ARRAY') {
-		foreach my $o ( @{$lynis_report_data{'nginx_config_option'}} ) { print OUT "\t\t\t\t\t\t<li>$o</li>\n"; }
+	if (ref($lynis_report_data{'nginx_config_option[]'}) eq 'ARRAY') {
+		foreach my $o ( @{$lynis_report_data{'nginx_config_option[]'}} ) { print OUT "\t\t\t\t\t\t<li>$o</li>\n"; }
 	} else {
-		if ((defined($lynis_report_data{'nginx_config_option'})) and ($lynis_report_data{'nginx_config_option'} ne "")) {
-			print OUT "\t\t\t\t\t\t<li>$lynis_report_data{'nginx_config_option'}</li>\n";
+		if ((defined($lynis_report_data{'nginx_config_option[]'})) and ($lynis_report_data{'nginx_config_option[]'} ne "")) {
+			print OUT "\t\t\t\t\t\t<li>$lynis_report_data{'nginx_config_option[]'}</li>\n";
 		} else {
 			print OUT "\t\t\t\t\t\t<li>N/A - Unable to detect nginx config </li>\n";
 			warn colored("nginx config options opbject not an array!", "yellow");
-			print Dumper($lynis_report_data{'nginx_config_option'});
+			print Dumper($lynis_report_data{'nginx_config_option[]'});
 		}
 	}
 	print OUT "\t\t\t\t\t</ul>\n";
@@ -2144,7 +2166,7 @@ END
 	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found );
 	my @idx2 = qw( vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
 	my @idx3 = qw( details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled );
-	my @idx4 = qw( ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file nginx_config_option ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] container exception_event[] certificates certificate[] localhost-mapped-to manual_event[] syslog_daemon[] syslog_daemon_present apparmor_enabled apparmor_policy_loaded pam_pwquality selinux_status selinux_mode );
+	my @idx4 = qw( ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file[] nginx_config_option[] ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] container exception_event[] certificates certificate[] localhost-mapped-to manual_event[] syslog_daemon[] syslog_daemon_present apparmor_enabled apparmor_policy_loaded pam_pwquality selinux_status selinux_mode );
 	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
@@ -2227,7 +2249,7 @@ sub calc_password_complexity_score {
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
-	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname lynis_update_available );
+	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file[] log_file nginx_config_option[] ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname lynis_update_available );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
 		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded|lynis_update_available)/) {					# boolena values
