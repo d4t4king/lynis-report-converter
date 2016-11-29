@@ -139,6 +139,7 @@ foreach my $k ( qw(container apparmor_enabled apparmor_policy_loaded ) ) {
 @{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
 @{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
 @{$lynis_report_data{'cronjob[]'}} = &dedup_array($lynis_report_data{'cronjob[]'}) if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY');
+@{$lynis_report_data{'nginx_config[]'}} = &dedup_array($lynis_report_data{'nginx_config[]'}) if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY');
 
 if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
 	if (ref($lynis_report_data{'pam_auth_brute_force_protection_module[]'}) eq 'ARRAY') {
@@ -969,9 +970,6 @@ if ($json) {
 	}
 
 	$i++;
-	if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY') {
-		@{$lynis_report_data{'nginx_config[]'}} = &dedup_array($lynis_report_data{'nginx_config[]'});
-	}
 	$svc_ws->merge_range("A$i:D$i", "nginx detail", $spanhead_format); $i++;
 	$svc_ws->write("A$i", 'nginx main config file:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'nginx_main_conf_file'}); 
 	$svc_ws->write("C$i", 'nginx sub config files:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}}), $list_format); $i++;
@@ -1202,24 +1200,26 @@ END
 				<table>
 					<tr><td>Warning ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
 END
-	if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
-		if (${$lynis_report_data{'warning[]'}}[0] =~ /\|/) { 									# more than one
-			foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
-				my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
+	if (exists($lynis_report_data{'warning[]'})) {
+		if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
+			if (${$lynis_report_data{'warning[]'}}[0] =~ /\|/) { 									# more than one
+				foreach my $warn ( sort @{$lynis_report_data{'warning[]'}} ) {
+					my ($warn_id,$warn_desc,$warn_sev,$warn_f4) = split(/\|/, $warn);
+					print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+				}
+			} elsif (${$lynis_report_data{'warning[]'}}[0] =~ /[A-Z]{4}\-\d{4}/) {					# one warning
+				print colored(Dumper(\@{$lynis_report_data{'warning[]'}})."\n", "bold green") if ($verbose);
+				my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
+				my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
+				my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
+				my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
 				print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
+			} else {
+				die colored("Unexpected ARRAY format!\n".Dumper(\@{$lynis_report_data{'warning[]'}}), "bold red");
 			}
-		} elsif (${$lynis_report_data{'warning[]'}}[0] =~ /[A-Z]{4}\-\d{4}/) {					# one warning
-			print colored(Dumper(\@{$lynis_report_data{'warning[]'}})."\n", "bold green") if ($verbose);
-			my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
-			my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
-			my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
-			my $warn_f4 = ${$lynis_report_data{'warning[]'}}[3];
-			print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
 		} else {
-			die colored("Unexpected ARRAY format!\n".Dumper(\@{$lynis_report_data{'warning[]'}}), "bold red");
+			die colored("warning[] not ARRAY ref: ".ref($lynis_report_data{'warning[]'}), "bold red");
 		}
-	} else {
-		die colored("warning[] not ARRAY ref!: ".ref($lynis_report_data{'warning[]'}), "bold red");
 	}
 	print OUT <<END;
 				</table>
@@ -1269,8 +1269,10 @@ END
 			}
 			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<option>$f\n"; }
 		} else {
-			warn colored("Deleted files object not an array! ", "yellow");
-			print Dumper($lynis_report_data{'delete_file[]'});
+			if ($verbose > 1) {
+				warn colored("Deleted files object not an array! ", "yellow");
+				print Dumper($lynis_report_data{'delete_file[]'});
+			}
 		}
 	}
 	print OUT "\t\t\t\t</select><br />\n";
@@ -1281,8 +1283,10 @@ END
 			foreach my $p ( @{$lynis_report_data{'vulnerable_package[]'}} ) { print OUT "\t\t\t\t\t<li>$p</li>\n"; }
 			print OUT "\t\t\t\t</ul><br />\n";
 		} else {
-			warn colored("Vulnerable package object not an array!", "yellow");
-			print color('yellow'); print Dumper($lynis_report_data{'vulnerable_package[]'}); print color('reset');
+			if (($verbose > 1) or ($debug)) {
+				warn colored("Vulnerable package object not an array!", "yellow");
+				print color('yellow'); print Dumper($lynis_report_data{'vulnerable_package[]'}); print color('reset');
+			}
 		}
 	}
 	# It's easier to move stuff around if there is one cell (or cell group) per libe for the tables.  Maybe this
@@ -1359,8 +1363,10 @@ END
 			foreach my $p ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) { print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		} else {
-			warn colored("plugin processess allprocesses object not an array! ", "yellow");
-			print Dumper($lynis_report_data{'plugin_processes_allprocesses'});
+			if (($verbose > 1) or ($debug)) {
+				warn colored("plugin processess allprocesses object not an array! ", "yellow");
+				print Dumper($lynis_report_data{'plugin_processes_allprocesses'});
+			}
 		}
 	}
 	print OUT <<END;
@@ -1765,8 +1771,10 @@ END
 		}
 		print OUT "\t\t\t\t\t</select>\n";
 	} else {
-		warn colored("boot_service[] object not an array", "yellow");
-		print Dumper($lynis_report_data{'boot_service[]'});
+		if (($verbose > 1) or ($debug)) {
+			warn colored("boot_service[] object not an array", "yellow");
+			print Dumper($lynis_report_data{'boot_service[]'});
+		}
 	}
 	$lynis_report_data{'linux_kernel_io_scheduler'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_kernel_io_scheduler'})) or ($lynis_report_data{'linux_kernel_io_scheduler'} eq ""));
 	$lynis_report_data{'linux_amount_of_kernels'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_amount_of_kernels'})) or ($lynis_report_data{'linux_amount_of_kernels'} eq ""));
@@ -1840,7 +1848,7 @@ END
 	}
 	if ((exists($lynis_report_data{'swap_partition[]'})) and (ref($lynis_report_data{'swap_partition[]'}) eq "ARRAY")) {
 		#warn colored("swap_partition[] is an array".Dumper(\@{$lynis_report_data{'swap_partition[]'}}), "yellow") if ($verbose);
-		warn colored("swap_partition[] is an array.", "yellow") if ($verbose);
+		warn colored("swap_partition[] is an array.", "yellow") if (($verbose > 1 ) or ($debug));
 		if (scalar(@{$lynis_report_data{'swap_partition[]'}}) == 1) {
 			if ($lynis_report_data{'swap_partition[]'}[0] =~ /\,/) {
 				my @p = split(/\,/, $lynis_report_data{'swap_partition[]'}[0]);
@@ -1851,8 +1859,10 @@ END
 		}
 		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
 	} else {
-		warn colored("swap_partition[] is a string.", "yellow") if ($verbose);
-		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
+		if (($verbose > 1) or ($debug)) {
+			warn colored("swap_partition[] is a string.", "yellow") if ($verbose);
+			print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
+		}
 	}
 	$lynis_report_data{'journal_bootlogs'} = 0 if ((!defined($lynis_report_data{'journal_bootlogs'})) or ($lynis_report_data{'journal_bootlogs'} eq ""));
 	print OUT <<END;
@@ -1900,7 +1910,7 @@ END
 			print OUT "\t\t\t\t\t</table>\n<br />\n";
 		}
 	} else { 
-		warn colored("Didn't find journal_meta_data object!", "yellow") if ($verbose); 
+		warn colored("Didn't find journal_meta_data object!", "yellow") if (($verbose > 1) or ($debug)); 
 	}
 	print OUT <<END;
 				</div>
@@ -2052,8 +2062,10 @@ END
 	if (ref($lynis_report_data{'apache_module[]'}) eq 'ARRAY') {
 		foreach my $m ( sort @{$lynis_report_data{'apache_module[]'}} ) { print OUT "\t\t\t\t\t\t\t\t<li>$m</li>\n"; }
 	} else {
-		warn colored("apache module object not an array!", "yellow");
-		print Dumper($lynis_report_data{'apache_module[]'});
+		if (($verbose > 1) or ($debug)) {
+			warn colored("apache module object not an array!", "yellow");
+			print Dumper($lynis_report_data{'apache_module[]'});
+		}
 	}
 	print OUT "\t\t\t\t\t\t\t</ul>\n";
 	print OUT "\t\t\t\t\t\t</div><!-- END apacheModulesToggle div -->\n";
@@ -2087,7 +2099,7 @@ END
 			print OUT "\t\t\t\t\t\t\t<tr><td>$f</td><td>$s</td><td>$t</td></tr>\n"; 
 		}
 	} else {
-		warn colored("systemd unit file object not an array! ", "yellow");
+		warn colored("systemd unit file object not an array! ", "yellow") if (($verbose > 1) or ($debug));
 	}
 	print OUT <<END;
 						</table>
@@ -2101,7 +2113,7 @@ END
 	if (ref($lynis_report_data{'systemd_unit_not_found[]'})) {
 		foreach my $unf ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$unf</li>\n"; }
 	} else {
-		warn colored("systemd unitnot found object not an array! ", "yellow");
+		warn colored("systemd unitnot found object not an array! ", "yellow") if (($verbose > 1) or ($debug));
 	}
 	print OUT <<END; 
 						</ul>
@@ -2115,7 +2127,7 @@ END
 	if (ref($lynis_report_data{'systemd_service_not_found[]'}) eq 'ARRAY') {
 		foreach my $snf ( sort @{$lynis_report_data{'systemd_service_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$snf</li>\n"; }
 	} else {
-		warn colored("systemd service not found object not an array! ", "yellow");
+		warn colored("systemd service not found object not an array! ", "yellow") if (($verbose > 1) or ($debug));
 	}
 	print OUT <<END;
 						</ul>
@@ -2249,11 +2261,15 @@ sub calc_password_complexity_score {
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
-	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file[] log_file nginx_config_option[] ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname lynis_update_available );
+	my @inconsistent_keys = qw( plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file[] log_file nginx_config_option[] ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
-		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded|lynis_update_available)/) {					# boolena values
+		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded)/) {		
+			# boolena values
 			$lrd_hash_ref->{$key} = 0;
+		} elsif ($key =~ /(?:warning\[\]|running_service\[\])/) {
+			# these keys expet to be arrays
+			@{$lrd_hash_ref->{$key}} = qw( "NA" );
 		} else {
 			given ($fmt) {
 				when (/excel/) { $lrd_hash_ref->{$key} = "NA"; }
