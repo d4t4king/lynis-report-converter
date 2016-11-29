@@ -100,6 +100,7 @@ open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis
 while (my $line = <RPT>) {
 	next if ($line =~ /^#/);								# skip commented lines
 	next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
+	next if ($line =~ /Result.*expose\_php.*/);			# This looks like a bug in the report output.  Skip it.
 	chomp($line);
 	my ($k, $v) = split(/=/, $line);
 	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
@@ -131,7 +132,7 @@ while (my $line = <RPT>) {
 }
 close RPT or die colored("There was a problem closing the lynis report: $! ", "bold red");
 
-foreach my $k ( qw(container apparmor_enabled apparmor_policy_loaded ) ) {
+foreach my $k ( qw(container notebook apparmor_enabled apparmor_policy_loaded ) ) {
 	if ($lynis_report_data{$k} != 1) { $lynis_report_data{$k} = 0; }
 }
 
@@ -147,6 +148,14 @@ if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
 	}
 }
 
+foreach my $key ( qw( certificates domainname journal_disk_size pop3_daemon imap_daemon printing_daemon ntp_daemon ntp_version apache_version systemd_version systemd_status systemd_builtin_components journal_coredumps_lastday running_service_tool ) ) {
+	# if element is not an array we don't need to flatten it
+	if (ref($lynis_report_data{$key}) ne 'ARRAY') {
+		warn colored("Skipped flatten $key since it's not an array.", "yellow") if ($verbose);
+		next;
+	}
+	$lynis_report_data{$key} = &flatten(@{$lynis_report_data{$key}});
+}
 
 my $pass_score = &calc_password_complexity_score;
 
@@ -1449,6 +1458,7 @@ END
 					</tr>
 					<tr>
 END
+	if ($verbose) { print colored(Dumper($lynis_report_data{'certificates'}), "bold yellow"); }
 	print OUT "\t\t\t\t\t\t<td>certificate count:</td><td colspan=\"2\">$lynis_report_data{'certificates'}</td>\n";
 	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'certificate[]'}})."</td>\n";
@@ -2049,6 +2059,9 @@ END
 	}
 	print OUT "\t\t\t\t\t</ul>\n";
 	print OUT "\t\t\t\t</div><!-- END ssltlsProtoToggle div --><br />\n";
+	if (ref($lynis_report_data{'apache_version'}) eq 'ARRAY') {
+		die colored("apache version is an array:\n".Dumper(\@{$lynis_report_data{'apache_version'}}), "bold red");
+	}
 	print OUT <<END;
 					<h5>apache details:</h5>
 					<a id="apacheDetailsLink" href="javascript:toggle('apacheDetailsLink','apacheDetailsToggle');">&gt; &nbsp; show &nbsp; &lt;</a>
@@ -2280,3 +2293,27 @@ sub pop_inconsistent_keys {
 	}
 	# should operate on the main \%lynis_report_data hash, so we shouldn't need to return anything.  Maybe success/fail?	
 }		
+
+sub flatten {
+	my @ary = shift;
+	# check if there's more than one element
+	if (scalar(@ary) > 1) {
+	# if so, dedup
+		@ary = &dedup_array(@ary);
+	# check again
+		if (scalar(@ary) > 1) {
+	# if > 1 check for "NA" or "&nbsp;"
+	# remove if present
+			for (my $i = 0; $i<=scalar(@ary); $i++) {
+				delete $ary[$i] if ($ary[$i] =~ /(?:NA|\&nbsp;)/);
+			}
+	# else throw an error, or just return the array (?)
+			if (scalar(@ary) > 1) { return @ary; }
+	# if only one, return the scalar.
+			elsif (scalar(@ary) == 1) { return $ary[0]; }
+			else { die colored("flatten() array results in 0 elements.", "bold red"); }
+		} elsif (scalar(@ary) == 1) { return $ary[0]; }
+		else { die colored("flatten() array results in 0 elements.", "bold red"); }	
+	} elsif (scalar(@ary) == 1) { return $ary[0]; } 
+	else { die colored("flatten() array results in 0 elements.", "bold red"); }	
+}
