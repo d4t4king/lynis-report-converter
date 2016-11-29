@@ -364,6 +364,7 @@ if ($json) {
 	$version_format->set_num_format( '0.00' );
 
 	my $list_format = $wb->add_format('valign'=>'top', 'align'=>'left');
+	$list_format->set_text_wrap();
 
 	my $merge_format = $wb->add_format('valign'=>'top', 'align'=>'left');
 
@@ -529,18 +530,29 @@ if ($json) {
 	### host infor
 	my $host_ws = $wb->add_worksheet('host info');
 	$host_ws->write('A1', "host info:", $title_format);
-	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); $host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); $host_ws->write('E2', 'resolv.conf domain:', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
-	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); $host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); $host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
-	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', uc($to_bool{$lynis_report_data{'framework_grsecurity'}})); $host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', uc($to_bool{$lynis_report_data{'framework_selinux'}})); $host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
-	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); $host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', uc($to_bool{$lynis_report_data{'cpu_pae'}})); $host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', uc($to_bool{$lynis_report_data{'cpu_nx'}}));
-	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}})); $host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
-	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); $host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vmtype'}); $host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
+	$host_ws->write('A2', 'hostname:', $label_format); $host_ws->write('B2', $lynis_report_data{'hostname'}); 
+	$host_ws->write('C2', 'domainname:', $label_format); $host_ws->write('D2', $lynis_report_data{'domainname'}); 
+	$host_ws->write('E2', 'resolv.conf domain:', $label_format); $host_ws->write('F2', $lynis_report_data{'resolv_conf_domain'});
+	$host_ws->write('A3', 'os:', $label_format); $host_ws->write('B3', $lynis_report_data{'os'}); 
+	$host_ws->write('C3', 'os fullname:', $label_format); $host_ws->write('D3', $lynis_report_data{'os_fullname'}); 
+	$host_ws->write('E3', 'os version:', $label_format); $host_ws->write('F3', $lynis_report_data{'os_version'});
+	$host_ws->write('A4', 'GRsecurity:', $label_format); $host_ws->write('B4', uc($to_bool{$lynis_report_data{'framework_grsecurity'}})); 
+	$host_ws->write('C4', 'SELinux:', $label_format); $host_ws->write('D4', uc($to_bool{$lynis_report_data{'framework_selinux'}})); 
+	$host_ws->write('E4', 'memory:', $label_format); $host_ws->write('F4', "$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}");
+	$host_ws->write('A5', 'linux version:', $label_format); $host_ws->write('B5', $lynis_report_data{'linux_version'}); 
+	$host_ws->write('C5', 'PAE enabled:', $label_format); $host_ws->write('D5', uc($to_bool{$lynis_report_data{'cpu_pae'}})); 
+	$host_ws->write('E5', 'NX enabled:', $label_format); $host_ws->write('F5', uc($to_bool{$lynis_report_data{'cpu_nx'}}));
+	$host_ws->write('A6', 'available shells:', $label_format); $host_ws->write('B6', join("\n", @{$lynis_report_data{'available_shell[]'}}), $list_format); 
+	$host_ws->write('C6', 'locatedb:', $label_format); $host_ws->write('D6', $lynis_report_data{'locate_db'}, $merge_format); $host_ws->write('E6', 'uptime (days):', $label_format); $host_ws->write('F6', $lynis_report_data{'uptime_in_days'}, $merge_format);
+	$host_ws->write('A7', 'vm:', $label_format); $host_ws->write('B7', $vm_mode{$lynis_report_data{'vm'}}); 
+	$host_ws->write('C7', 'vm_type:', $label_format); $host_ws->write('D7', $lynis_report_data{'vmtype'}); 
+	$host_ws->write('E7', 'uptime(secs):', $label_format); $host_ws->write('F7', $lynis_report_data{'uptime_in_seconds'});
 	$lynis_report_data{'notebook'} = 0 if ((!exists($lynis_report_data{'notbook'})) or ($lynis_report_data{'notebook'} eq ''));
 	$host_ws->write('A8', 'is notebook/laptop:', $label_format); $host_ws->write('B8', uc($to_bool{$lynis_report_data{'notebook'}}));
 	$host_ws->write('C8', 'is container:', $label_format); $host_ws->write('D8', uc($to_bool{$lynis_report_data{'container'}}));
 	$host_ws->write('A9', 'binary paths:', $label_format); $host_ws->write('B9', $lynis_report_data{'binary_paths'});
 	$host_ws->write('C9', 'certificate count:', $label_format); $host_ws->write('D9', $lynis_report_data{'certificates'});
-	$host_ws->write('A10', 'authorized default USB devices:', $label_format); $host_ws->write('B10', join("\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})); 
+	$host_ws->write('A10', 'authorized default USB devices:', $label_format); $host_ws->write('B10', join("\n", @{$lynis_report_data{'usb_authorized_default_device[]'}}), $list_format); 
 	$host_ws->write('C10', 'certificates:', $label_format); 
 	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
 		$host_ws->write('D10', join("\n", @{$lynis_report_data{'certificate[]'}}));
@@ -603,10 +615,12 @@ if ($json) {
 	### network infdo
 	my $net_ws = $wb->add_worksheet('network info');
 	$net_ws->write('A1', "network info:", $title_format);
-	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); $net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', uc($to_bool{$lynis_report_data{'ipv6_only'}}));
-	$net_ws->write('A3', 'network interfaces:', $label_format); $net_ws->write('B3', join("\n", @{$lynis_report_data{'network_interface[]'}}));
-	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
-	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
+	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); 
+	$net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', uc($to_bool{$lynis_report_data{'ipv6_only'}}));
+	$net_ws->write('A3', 'network interfaces:', $label_format); $net_ws->write('B3', join("\r\n", @{$lynis_report_data{'network_interface[]'}}));
+	$net_ws->write('C3', 'localhost mapped to:', $label_format); $net_ws->write('D3', join("\r\n", @{$lynis_report_data{'localhost-mapped-to'}}));
+	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\r\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
+	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\r\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
 	$net_ws->write('A6', 'default gateway', $label_format); $net_ws->write('B6', $lynis_report_data{'default_gateway[]'});
 	$net_ws->write('A7', 'mac addresses', $label_format); 
 	if (exists($lynis_report_data{'network_mac_address[]'})) {
@@ -678,6 +692,9 @@ if ($json) {
 	$sec_ws->write('G6', 'PAM password quality:', $label_format); $sec_ws->write('H6', $lynis_report_data{'pam_pwquality'});
 	$sec_ws->write('A7', 'PAM brute force protection module:', $label_format); $sec_ws->write('B7', join("\n", @{$lynis_report_data{'pam_auth_brute_force_protection_module[]'}}));
 	$sec_ws->write('C7', 'failed logins logged:', $label_format); $sec_ws->write('D7', uc($to_bool{$lynis_report_data{'auth_failed_logins_logged'}}));
+	$sec_ws->write('E7', 'apparmor enabled:', $label_format); $sec_ws->write('F7', uc($to_bool{$lynis_report_data{'apparmor_enabled'}}));
+	$sec_ws->write('G7', 'apparmor policy loaded:', $label_format); $sec_ws->write('H7', uc($to_bool{$lynis_report_data{'apparmor_policy_loaded'}}));
+	$sec_ws->write('A8', 'authentication brute force protection:', $label_format); $sec_ws->write('B8', uc($to_bool{$lynis_report_data{'authentication_brute_force_protection'}}));
 	$sec_ws->write('A8', 'file integrity tool installed:', $label_format); $sec_ws->write('B8', uc($to_bool{$lynis_report_data{'file_integrity_tool_installed'}}));
 	$sec_ws->write('C8', 'file integreity tool(s):', $label_format); $sec_ws->write('D8', $lynis_report_data{'file_integrity_tool[]'});
 	$sec_ws->write('E8', 'automation tool present:', $label_format); $sec_ws->write('F8', uc($to_bool{$lynis_report_data{'automation_tool_present'}}));
@@ -946,6 +963,12 @@ if ($json) {
 		$svc_ws->write("B$i", "unrecognized");
 	}
 
+	$i += 2;
+	$svc_ws->merge_range("A$i:D$i", "Apache detail", $spanhead_format); $i++;
+
+	$i += 2;
+	$svc_ws->merge_range("A$i:D$i", "nginx detail", $spanhead_format); $i++;
+
 	$i += 2; # give it a row for space
 	$i_hold = $i; # reset the ($i_hold) bar.  All lists below start at his row level
 	$svc_ws->write("A$i", "running services:", $subsub_format); $i++;
@@ -1019,7 +1042,7 @@ if ($json) {
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
 	my @idx4 = qw( compiler_installed compiler[] ids_ips_tooling file_integrity_tool_installed file_integrity_tool[] automation_tool_present automation_tool_installed[] malware_scanner installed malware_scanner[] fail2ban_config fail2ban_enabled_service[] loaded_kernel_module[] linux_default_runlevel boot_service_tool boot_urfi_booted boot_uefi_booted_secure boot_service[] linux_kernel_scheduler[] linux_amount_of_kernels linux_kernel_type linux_kernel_release linux_kernel_version os_kernel_version_full systemd_service_not_found[] systemd_unit_file[] systemd_unit_not_found[] ssh_daemon_running postgresql_running mysql_running audit_daemon_running crond_running arpwatch_running ntp_daemon_running nginx_running dhcp_client_running ntp_daemon printing_daemon pop3_daemon smtp_daemon imap_daemon );
-	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] valid_certificate[] certificate[] certificates );
+	my @idx5 = qw( session_timeout_enabled details[] deleted_file[] file_systems_ext[] journal_contains_errors vulnerable_package[] boot_loader systemd systemd_status systemd_builtin_components service_manager systemd_version running_service_tool systemctl_exit_code plugin_firewall_iptables_list systemctl_exit_code plugin_processes_allprocesses vmtype plugin_enabled_phase1[] syslog_daemon_present syslog_daemon[] valid_certificate[] certificate[] certificates apparmor_enabled apparmor_policy_loaded pam_auth_brute_force_protection_module[] authentication_brute_force_protection container pam_pwquality localhost-mapped-to );
 	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
@@ -2204,10 +2227,10 @@ sub calc_password_complexity_score {
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
-	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname );
+	my @inconsistent_keys = qw( warning[] plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file log_file nginx_config_option ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname lynis_update_available );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
-		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded)/) {					# boolena values
+		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded|lynis_update_available)/) {					# boolena values
 			$lrd_hash_ref->{$key} = 0;
 		} else {
 			given ($fmt) {
