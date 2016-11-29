@@ -74,20 +74,20 @@ if (( -e $lynis_report) and ( ! -z $lynis_report )) {
 }
 
 if (($audit_run) and ($audit_run >= 1)) {
-	print colored("Looks like the audit has been run.", "bold green") unless ($quiet);
+	print colored("Looks like the audit has been run.", "green") unless ($quiet);
 	print "\n" unless ($quiet);
 } else {
 	warn colored("Couldn't find one or more of the lynis output files.  Try running the audit again. \n", "bold red");
 }
 
 unless ($quiet) {
-	print colored("Outputting report to $output, in ", "bold green");
-	if ($excel) { print colored("Excel ", "bold green"); }
-	elsif ($pdf) { print colored("PDF ", "bold green)"); }
-	elsif ($xml) { print colored("XML ", "bold green"); }
-	elsif ($json) { print colored("JSON ", "bold green"); }
-	else { print colored("HTML ", "bold green"); }
-	print colored("format.", "bold green");
+	print colored("Outputting report to $output, in ", "green");
+	if ($excel) { print colored("Excel ", "green"); }
+	elsif ($pdf) { print colored("PDF ", "green)"); }
+	elsif ($xml) { print colored("XML ", "green"); }
+	elsif ($json) { print colored("JSON ", "green"); }
+	else { print colored("HTML ", "green"); }
+	print colored("format.", "green");
 	print "\n";
 }
 
@@ -148,7 +148,7 @@ if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
 	}
 }
 
-foreach my $key ( qw( certificates domainname journal_disk_size pop3_daemon imap_daemon printing_daemon ntp_daemon ntp_version apache_version systemd_version systemd_status systemd_builtin_components journal_coredumps_lastday running_service_tool ) ) {
+foreach my $key ( qw( certificates domainname journal_disk_size pop3_daemon imap_daemon printing_daemon ntp_daemon ntp_version apache_version systemd_version systemd_status systemd_builtin_components journal_coredumps_lastday running_service_tool service_manager localhost-mapped-to ) ) {
 	# if element is not an array we don't need to flatten it
 	if (ref($lynis_report_data{$key}) ne 'ARRAY') {
 		warn colored("Skipped flatten $key since it's not an array.", "yellow") if ($verbose);
@@ -167,7 +167,7 @@ foreach my $key ( sort keys %lynis_report_data ) {
 	if (((ref($lynis_report_data{$key}) ne 'ARRAY') and
 		(ref($lynis_report_data{$key}) ne 'HASH')) and
 		($lynis_report_data{$key} =~ /\|/)) {
-		print colored($key."\n", "bold green") if (($verbose) and ($verbose > 1));
+		print colored($key."\n", "green") if (($verbose) and ($verbose > 1));
 		my @fs = split(/\|/, $lynis_report_data{$key});
 		undef($lynis_report_data{$key});
 		push @{$lynis_report_data{$key}}, @fs;
@@ -339,6 +339,9 @@ if ($json) {
 				}
 			}
 		} else {	
+			if ($key =~ /.*\[\]$/) {
+				$key =~ s/\[\]//g;
+			}
 			$writer->dataElement($key, $lynis_report_data{$key});
 		}
 	}
@@ -1217,7 +1220,7 @@ END
 					print OUT "\t\t\t\t\t<tr><td>$warn_id</td><td>$warn_desc</td><td>$to_long_severity{$warn_sev}</td><td>$warn_f4</td></tr>\n";
 				}
 			} elsif (${$lynis_report_data{'warning[]'}}[0] =~ /[A-Z]{4}\-\d{4}/) {					# one warning
-				print colored(Dumper(\@{$lynis_report_data{'warning[]'}})."\n", "bold green") if ($verbose);
+				print colored(Dumper(\@{$lynis_report_data{'warning[]'}})."\n", "green") if ($verbose);
 				my $warn_id = ${$lynis_report_data{'warning[]'}}[0];
 				my $warn_desc = ${$lynis_report_data{'warning[]'}}[1];
 				my $warn_sev = ${$lynis_report_data{'warning[]'}}[2];
@@ -1278,7 +1281,7 @@ END
 			}
 			foreach my $f ( @{$lynis_report_data{'deleted_file[]'}} ) { print OUT "\t\t\t\t\t<option>$f\n"; }
 		} else {
-			if ($verbose > 1) {
+			if (($verbose) and ($verbose > 1)) {
 				warn colored("Deleted files object not an array! ", "yellow");
 				print Dumper($lynis_report_data{'delete_file[]'});
 			}
@@ -1292,7 +1295,7 @@ END
 			foreach my $p ( @{$lynis_report_data{'vulnerable_package[]'}} ) { print OUT "\t\t\t\t\t<li>$p</li>\n"; }
 			print OUT "\t\t\t\t</ul><br />\n";
 		} else {
-			if (($verbose > 1) or ($debug)) {
+			if ((($verbose) and ($verbose > 1)) or ($debug)) {
 				warn colored("Vulnerable package object not an array!", "yellow");
 				print color('yellow'); print Dumper($lynis_report_data{'vulnerable_package[]'}); print color('reset');
 			}
@@ -1372,7 +1375,7 @@ END
 			foreach my $p ( sort @{$lynis_report_data{'plugin_processes_allprocesses'}} ) { print OUT "\t\t\t\t\t\t<option>$p\n"; }
 			print OUT "\t\t\t\t\t</select>\n";
 		} else {
-			if (($verbose > 1) or ($debug)) {
+			if ((($verbose) and ($verbose > 1)) or ($debug)) {
 				warn colored("plugin processess allprocesses object not an array! ", "yellow");
 				print Dumper($lynis_report_data{'plugin_processes_allprocesses'});
 			}
@@ -1458,7 +1461,7 @@ END
 					</tr>
 					<tr>
 END
-	if ($verbose) { print colored(Dumper($lynis_report_data{'certificates'}), "bold yellow"); }
+	if ($verbose) { print colored("Contents of \$lynis_report_data\{\'certificates\'\}:\n".Dumper($lynis_report_data{'certificates'}), "yellow"); }
 	print OUT "\t\t\t\t\t\t<td>certificate count:</td><td colspan=\"2\">$lynis_report_data{'certificates'}</td>\n";
 	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'certificate[]'}})."</td>\n";
@@ -1700,7 +1703,11 @@ END
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
+	if (ref($lynis_report_data{'ids_ips_tooling[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>".join("<br />\n", @{$lynis_report_data{'ids_ips_tooling[]'}})."</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
+	}
 	print OUT "\t\t\t\t\t\t<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>\n";
 	if (ref($lynis_report_data{'fail2ban_config'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td>fail2ban config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'fail2ban_config'}})."</td>\n";
@@ -1714,8 +1721,8 @@ END
 	}
 	print OUT "</tr>\n";
 	print OUT "<tr><td>AppArmor Enabled:</td><td>$to_bool{$lynis_report_data{'apparmor_enabled'}}</td>\n";
-	print OUT "<td>AppArmor Policy Loaded:</td><td>$to_bool{$lynis_report_data{'apparmor_policy_loaded'}}</td></tr>\n";
-	print OUT "<tr><td>SELinux Status:</td><td>$to_bool{$lynis_report_data{'selinux_status'}}</td>\n";
+	print OUT "<td>AppArmor Policy Loaded:</td><td>$to_bool{$lynis_report_data{'apparmor_policy_loaded'}}</td>\n";
+	print OUT "<td>SELinux Status:</td><td>$to_bool{$lynis_report_data{'selinux_status'}}</td>\n";
 	print OUT "<td>SELinux mode:</td><td>$lynis_report_data{'selinux_mode'}</td></tr>\n";
 	print OUT <<END;
 				</table>
@@ -1781,7 +1788,7 @@ END
 		}
 		print OUT "\t\t\t\t\t</select>\n";
 	} else {
-		if (($verbose > 1) or ($debug)) {
+		if ((($verbose) and ($verbose > 1)) or ($debug)) {
 			warn colored("boot_service[] object not an array", "yellow");
 			print Dumper($lynis_report_data{'boot_service[]'});
 		}
@@ -1804,7 +1811,11 @@ END
 					<tr>
 END
 	print OUT "\t\t\t\t\t<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>\n";
-	print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>\n";
+	if (ref($lynis_report_data{'linux_kernel_io_scheduler[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>".join("<br />\n", @{$lynis_report_data{'linux_kernel_io_scheduler[]'}})."</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>\n";
+	}
 	print OUT <<END;
 					</tr>
 					<tr>
@@ -1858,7 +1869,7 @@ END
 	}
 	if ((exists($lynis_report_data{'swap_partition[]'})) and (ref($lynis_report_data{'swap_partition[]'}) eq "ARRAY")) {
 		#warn colored("swap_partition[] is an array".Dumper(\@{$lynis_report_data{'swap_partition[]'}}), "yellow") if ($verbose);
-		warn colored("swap_partition[] is an array.", "yellow") if (($verbose > 1 ) or ($debug));
+		warn colored("swap_partition[] is an array.", "yellow") if ((($verbose) and ($verbose > 1 )) or ($debug));
 		if (scalar(@{$lynis_report_data{'swap_partition[]'}}) == 1) {
 			if ($lynis_report_data{'swap_partition[]'}[0] =~ /\,/) {
 				my @p = split(/\,/, $lynis_report_data{'swap_partition[]'}[0]);
@@ -1869,7 +1880,7 @@ END
 		}
 		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
 	} else {
-		if (($verbose > 1) or ($debug)) {
+		if ((($verbose) and ($verbose > 1)) or ($debug)) {
 			warn colored("swap_partition[] is a string.", "yellow") if ($verbose);
 			print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
 		}
@@ -1920,7 +1931,7 @@ END
 			print OUT "\t\t\t\t\t</table>\n<br />\n";
 		}
 	} else { 
-		warn colored("Didn't find journal_meta_data object!", "yellow") if (($verbose > 1) or ($debug)); 
+		warn colored("Didn't find journal_meta_data object!", "yellow") if ((($verbose) and ($verbose > 1)) or ($debug)); 
 	}
 	print OUT <<END;
 				</div>
@@ -2075,7 +2086,7 @@ END
 	if (ref($lynis_report_data{'apache_module[]'}) eq 'ARRAY') {
 		foreach my $m ( sort @{$lynis_report_data{'apache_module[]'}} ) { print OUT "\t\t\t\t\t\t\t\t<li>$m</li>\n"; }
 	} else {
-		if (($verbose > 1) or ($debug)) {
+		if ((($verbose) and ($verbose > 1)) or ($debug)) {
 			warn colored("apache module object not an array!", "yellow");
 			print Dumper($lynis_report_data{'apache_module[]'});
 		}
@@ -2112,7 +2123,7 @@ END
 			print OUT "\t\t\t\t\t\t\t<tr><td>$f</td><td>$s</td><td>$t</td></tr>\n"; 
 		}
 	} else {
-		warn colored("systemd unit file object not an array! ", "yellow") if (($verbose > 1) or ($debug));
+		warn colored("systemd unit file object not an array! ", "yellow") if ((($verbose) and ($verbose > 1)) or ($debug));
 	}
 	print OUT <<END;
 						</table>
@@ -2126,7 +2137,7 @@ END
 	if (ref($lynis_report_data{'systemd_unit_not_found[]'})) {
 		foreach my $unf ( sort @{$lynis_report_data{'systemd_unit_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$unf</li>\n"; }
 	} else {
-		warn colored("systemd unitnot found object not an array! ", "yellow") if (($verbose > 1) or ($debug));
+		warn colored("systemd unitnot found object not an array! ", "yellow") if ((($verbose) and ($verbose > 1)) or ($debug));
 	}
 	print OUT <<END; 
 						</ul>
@@ -2140,7 +2151,7 @@ END
 	if (ref($lynis_report_data{'systemd_service_not_found[]'}) eq 'ARRAY') {
 		foreach my $snf ( sort @{$lynis_report_data{'systemd_service_not_found[]'}} ) { print OUT "\t\t\t\t\t\t\t<li>$snf</li>\n"; }
 	} else {
-		warn colored("systemd service not found object not an array! ", "yellow") if (($verbose > 1) or ($debug));
+		warn colored("systemd service not found object not an array! ", "yellow") if ((($verbose) and ($verbose > 1)) or ($debug));
 	}
 	print OUT <<END;
 						</ul>
@@ -2209,8 +2220,8 @@ END
 }
 
 if ($verbose) {
-	print colored("I don't know how to handle these objects yet:\n", "bold yellow");
-	print colored(Dumper(\%lynis_report_data), "bold yellow");
+	print colored("I don't know how to handle these objects yet:\n", "yellow");
+	print colored(Dumper(\%lynis_report_data), "yellow");
 }
 
 ###############################################################################
@@ -2219,7 +2230,7 @@ if ($verbose) {
 sub usage {
 
 	if (!$output) {
-		print colored("You must specify an output file.\n", "bold yellow");
+		print colored("You must specify an output file.\n", "yellow");
 	}
 
 	print <<END;
@@ -2274,7 +2285,7 @@ sub calc_password_complexity_score {
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
-	my @inconsistent_keys = qw( plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file[] log_file nginx_config_option[] ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data ids_ips_tooling deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname selinux_status selinux_mode );
+	my @inconsistent_keys = qw( plugin_firewall_iptables_list notebook container valid_certificate[] usb_authorized_default_device[] expired_certificate[] certificates certificate[] syslog_daemon[] localhost-mapped-to resolv_conf_search_domain[] pam_pwquality malware_scanner[] compiler[] ids_ips_tooling[] fail2ban_config fail2ban_enabled_service[] pam_module[] linux_kernel_io_scheduler[] loaded_kernel_module[] journal_disk_size journal_coredumps_lastday lvm_volume_group[] running_service[] ntp_config_file[] ntp_version ntp_unreliable_peer[] nginx_main_conf_file nginx_sub_conf_file[] log_file nginx_config_option[] ssl_tls_protocol_enabled[] apache_version apache_module[] systemd_version systemd_status systemd_builtin_components systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] installed_packages_array pam_auth_brute_force_protection_module[] vulnerable_package[] plugin_enabled_phase1[] plugin_processes_allprocesses nameserver[] boot_service[] swap_partition[] lvm_volume[] file_systems_ext[] journal_meta_data deleted_file[] license_key pop3_daemon imap_daemon printing_daemon ntp_daemon scheduler[] service_manager running_service_tool cronjob[] apparmor_enabled apparmor_policy_loaded domainname selinux_status selinux_mode );
 
 	foreach my $key ( sort @inconsistent_keys ) { 
 		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded|selinux_status)/) {		
