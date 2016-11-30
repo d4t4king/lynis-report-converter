@@ -1451,7 +1451,11 @@ END
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>authorized default USB devices:</td><td colspan=\"2\">".join("<br \>\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})."</td>\n";
+	if (ref($lynis_report_data{'usb_authorized_default_device[]'}) eq 'ARRAY') {
+		print OUT "\t\t\t\t\t\t<td>authorized default USB devices:</td><td colspan=\"2\">".join("<br \>\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})."</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>authorized default USB devices:</td><td colspan=\"2\">$lynis_report_data{'usb_authorized_default_device[]'}</td>\n";
+	}
 	if (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td>expired certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'expired_certificate[]'}})."</td>\n";
 	} else {
