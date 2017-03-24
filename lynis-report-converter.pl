@@ -177,10 +177,14 @@ foreach my $key ( sort keys %lynis_report_data ) {
 my (@tests_skipped, @tests_executed);
 my ($lynis_version);
 
-@tests_skipped = @{$lynis_report_data{'tests_skipped'}};
-delete($lynis_report_data{'tests_skipped'});
-@tests_executed = @{$lynis_report_data{'tests_executed'}};
-delete($lynis_report_data{'tests_executed'});
+if (exists($lynis_report_data{'tests_skipped'})) {
+	@tests_skipped = @{$lynis_report_data{'tests_skipped'}};
+	delete($lynis_report_data{'tests_skipped'});
+}
+if (exists($lynis_report_data{'tests_executed'})) {
+	@tests_executed = @{$lynis_report_data{'tests_executed'}};
+	delete($lynis_report_data{'tests_executed'});
+}
 
 if ($debug) {
 	print Dumper(\%lynis_report_data);
