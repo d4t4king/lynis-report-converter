@@ -83,7 +83,7 @@ if (($audit_run) and ($audit_run >= 1)) {
 unless ($quiet) {
 	print colored("Outputting report to $output, in ", "green");
 	if ($excel) { print colored("Excel ", "green"); }
-	elsif ($pdf) { print colored("PDF ", "green)"); }
+	elsif ($pdf) { print colored("PDF ", "green"); }
 	elsif ($xml) { print colored("XML ", "green"); }
 	elsif ($json) { print colored("JSON ", "green"); }
 	else { print colored("HTML ", "green"); }
@@ -99,8 +99,8 @@ unless ($quiet) {
 open RPT, "<$lynis_report" or die colored("There was a problem opening the lynis report: $! ", "bold red");
 while (my $line = <RPT>) {
 	next if ($line =~ /^#/);								# skip commented lines
-	next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
-	next if ($line =~ /Result.*expose\_php.*/);			# This looks like a bug in the report output.  Skip it.
+	#next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
+	#next if ($line =~ /Result.*expose\_php.*/);			# This looks like a bug in the report output.  Skip it.
 	chomp($line);
 	my ($k, $v) = split(/=/, $line);
 	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
