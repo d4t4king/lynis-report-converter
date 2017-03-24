@@ -26,9 +26,9 @@ GetOptions(
 &usage if ($help);
 &usage if ((!$output) and (!$json));
 
-my %to_bool = (	0 => 'false', 1 => 'true' );
+my %to_bool = (	0 => 'false', 1 => 'true', "" => 'false' );
 my %vm_mode = ( 0 => 'false', 1 => 'guest', 2 => 'host' );
-my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational', '-' => 'NA' );
+my %to_long_severity = ( 'C' => 'Critical', 'S' => 'Severe', 'H' => 'High', 'M' => 'Medium', 'L' => 'Low', 'I' => 'Informational', '-' => 'NA', "" => 'NA' );
 my %systemd_uf_status_color = (
 	'enabled'	=>	'#00ff00',
 	'disabled'	=>	'#ff0000',
@@ -1678,10 +1678,18 @@ END
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>
-						<td>File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>
-						<td>Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>
 END
+	if (exists($lynis_report_data{'file_integrity_tool_installed'})) {
+		print OUT "\t\t\t\t\t\t<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>File Integrity Tools Installed:</td><td>false</td>\n";
+	}
+	if (exists($lynis_report_data{'file_integrity_tool'})) {
+		print OUT "\t\t\t\t\t\t<td>File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>\n";
+	} else {
+		print OUT "\t\t\t\t\t\t<td>File Integrity Tool:</td><td>NA</td>\n";
+	}
+	print OUT "\t\t\t\t\t\t<td>Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>\n";
 	if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
 	} elsif ((defined($lynis_report_data{'automation_tool_running[]'})) and ($lynis_report_data{'automation_tool_running[]'} ne "")) {
