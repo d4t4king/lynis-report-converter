@@ -1241,7 +1241,12 @@ END
 				</table>
 			</div>
 END
-	print OUT "\t\t\t<h4>suggestions (".scalar(@{$lynis_report_data{'suggestion[]'}})."):</h4>\n";
+	if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and 
+		(${$lynis_report_data{'suggestion[]'}}[0] =~ /\|/)) {
+			print OUT "\t\t\t<h4>suggestions (".scalar(@{$lynis_report_data{'suggestion[]'}})."):</h4>\n";
+	} else {
+		print OUT "\t\t\t<h4>suggestions (0):</h4>\n";
+	}
 	print OUT <<END;
 			<div class="content_subsection">
 				<table>
