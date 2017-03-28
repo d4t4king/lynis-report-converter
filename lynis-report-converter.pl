@@ -1,6 +1,8 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
+# turn off warnings so as not to confuse people
+# unless debugging, etc.
 use warnings;
 use feature qw( switch );
 require 5.010;
@@ -25,6 +27,8 @@ GetOptions(
 
 &usage if ($help);
 &usage if ((!$output) and (!$json));
+ 
+#if ($verbose) { use warnings; }
 
 my %to_bool = (	0 => 'false', 1 => 'true', "" => 'false' );
 my %vm_mode = ( 0 => 'false', 1 => 'guest', 2 => 'host' );
@@ -1113,6 +1117,7 @@ if ($json) {
 			table#lynis_plugins_table {width:100%;}
 			table#scoreauditor {border-collapse:collapse;border:none;width:90%;}
 			td {padding:2px 5px 2px 5px;vertical-align:top;border:1px solid gray;}
+			td.field_label {font-size:1.1em;font-weight:bold;color:#555;}
 			td.good {background-color: #006400; color: #fff; font-weight: bold;}
 			td.fair {background-color: #ffd700; color: #000; font-weight: bold;}
 			td.poor {background-color: #ffa500; color: #000; font-weight: bold;}
@@ -1316,43 +1321,48 @@ END
 	print OUT <<END;
 			</div>
 			<hr />
+<!-- 
+###############################
+### LYNIS INFO
+###############################
+-->
 			<h3><a id="lynis_info">lynis info:</a></h3>
 			<div class="content_subsection">
 				<table>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>\n";
-	print OUT "\t\t\t\t\t<td>lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">lynis version:</td><td>$lynis_report_data{'lynis_version'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">lynis tests done:</td><td>$lynis_report_data{'lynis_tests_done'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	if (($lynis_report_data{'lynis_update_available'} == 0) or ($lynis_report_data{'lynis_update_available'} == 1)) {
-		print OUT "\t\t\t\t\t<td>lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">lynis update available:</td><td>$to_bool{$lynis_report_data{'lynis_update_available'}}</td>\n";
 	} elsif ($lynis_report_data{'lynis_update_available'} == -1) {
-		print OUT "\t\t\t\t\t<td>lynis update available:</td><td>N/A - There was an unexpected error trying to retrieve update status.</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">lynis update available:</td><td>N/A - There was an unexpected error trying to retrieve update status.</td>\n";
 	} else {
 		warn colored("Unexpected result from lynis update available check!", "yellow");
 		print Dumper($lynis_report_data{'lynis_update_available'});
 	}
-	print OUT "\n\n\n\n\n\n<td>license key:</td><td>$lynis_report_data{'license_key'}</td>\n";
+	print OUT "\n\n\n\n\n\n<td class=\"field_label\">license key:</td><td>$lynis_report_data{'license_key'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td colspan="2">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
+						<td colspan="2" class="field_label">report version:</td><td colspan="2">$lynis_report_data{'report_version_major'}.$lynis_report_data{'report_version_minor'}</td>
 					</tr>
 					<tr>
-						<td>test category:</td><td>$lynis_report_data{'test_category'}</td>
-						<td>test group:</td><td>$lynis_report_data{'test_group'}</td>
+						<td class="field_label">test category:</td><td>$lynis_report_data{'test_category'}</td>
+						<td class="field_label">test group:</td><td>$lynis_report_data{'test_group'}</td>
 					</tr>
 					<tr>
-						<td>number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td>
-						<td>plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
+						<td class="field_label">number of plugins enabled:</td><td>$lynis_report_data{'plugins_enabled'}</td>
+						<td class="field_label">plugin directory:</td><td>$lynis_report_data{'plugin_directory'}</td>
 					</tr>
 					<tr>
 END
 
-	print OUT "\t\t\t\t\t\t<td>phase 1 plugins enabled:</td><td colspan=\"3\">\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">phase 1 plugins enabled:</td><td colspan=\"3\">\n";
 	print OUT "\t\t\t\t\t\t\t<table id=\"lynis_plugins_table\">\n";
 	foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
 		my ($n,$v) = split(/\|/, $plug);
@@ -1364,10 +1374,10 @@ END
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>report start time:</td><td>$lynis_report_data{'report_datetime_start'}</td><td>report end time:</td><td>$lynis_report_data{'report_datetime_end'}</td>
+						<td class="field_label">report start time:</td><td>$lynis_report_data{'report_datetime_start'}</td><td>report end time:</td><td>$lynis_report_data{'report_datetime_end'}</td>
 					</tr>
-					<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
-					<tr><td>hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
+					<tr><td class="field_label">hostid:</td><td colspan="3">$lynis_report_data{'hostid'}</td></tr>
+					<tr><td class="field_label">hostid:</td><td colspan="3">$lynis_report_data{'hostid2'}</td></tr>
 END
 	if (ref($lynis_report_data{'plugin_firewall_iptables_list'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t<tr><td>Plugin-firewall iptables list:</td><td colspan=\"3\">".join("<br />\n", @{$lynis_report_data{'plugin_firewall_iptables_list'}})."</td></tr>\n";
@@ -1390,6 +1400,9 @@ END
 			}
 		}
 	}
+###########################
+### HOST INFO
+###########################
 	print OUT <<END;
 			</div>
 			<hr />
@@ -1397,91 +1410,108 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>hostname:</td><td>$lynis_report_data{'hostname'}</td>
-						<td>domainname:</td><td>$lynis_report_data{'domainname'}</td>
+						<td class="field_label">hostname:</td><td>$lynis_report_data{'hostname'}</td>
+						<td class="field_label">domainname:</td><td>$lynis_report_data{'domainname'}</td>
 END
 	if ((defined($lynis_report_data{'resolv_conf_domain'})) and ($lynis_report_data{'resolv_conf_domain'} ne "")) {
-		print OUT "\t\t\t\t\t\t<td>resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">resolv.conf domain:</td><td>$lynis_report_data{'resolv_conf_domain'}</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>resolv.conf domain:</td><td>&nbsp;</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">resolv.conf domain:</td><td>&nbsp;</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>os:</td><td>$lynis_report_data{'os'}</td>
-						<td>os fullname:</td><td>$lynis_report_data{'os_fullname'}</td>
-						<td>os_version:</td><td>$lynis_report_data{'os_version'}</td>
+						<td class="field_label">os:</td><td>$lynis_report_data{'os'}</td>
+						<td class="field_label">os fullname:</td><td>$lynis_report_data{'os_fullname'}</td>
+						<td class="field_label">os_version:</td><td>$lynis_report_data{'os_version'}</td>
 					</tr>
 					<tr>
-						<td>GRSecurity:</td><td>$to_bool{$lynis_report_data{'framework_grsecurity'}}</td>
-						<td>SELinux:</td><td>$to_bool{$lynis_report_data{'framework_selinux'}}</td>
-						<td>memory:</td><td>$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}</td>
+						<td class="field_label">GRSecurity:</td><td>$to_bool{$lynis_report_data{'framework_grsecurity'}}</td>
+						<td class="field_label">SELinux:</td><td>$to_bool{$lynis_report_data{'framework_selinux'}}</td>
+						<td class="field_label">memory:</td><td>$lynis_report_data{'memory_size'} $lynis_report_data{'memory_units'}</td>
 					</tr>
 					<tr>
-						<td>linux version:</td><td>$lynis_report_data{'linux_version'}</td>
-						<td>pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td>
-						<td>nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td>
+						<td class="field_label">linux version:</td><td>$lynis_report_data{'linux_version'}</td>
+						<td class="field_label">pae enabled:</td><td>$to_bool{$lynis_report_data{'cpu_pae'}}</td>
+						<td class="field_label">nx enabled:</td><td>$to_bool{$lynis_report_data{'cpu_nx'}}</td>
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
 	$lynis_report_data{'locate_db'} = "&nbsp;" if ((!defined($lynis_report_data{'locate_db'})) or ($lynis_report_data{'locate_db'} eq ""));
 	#print STDERR colored($lynis_report_data{'vm'}."\n", "bold magenta");
 	$lynis_report_data{'vm'} = 0 if ((!defined($lynis_report_data{'vm'})) or ($lynis_report_data{'vm'} eq ""));
 	#print STDERR colored($lynis_report_data{'vm'}."\n", "bold magenta");
-	print OUT "\t\t\t\t\t<td>locate db:</td><td>$lynis_report_data{'locate_db'}</td>\n";
-	print OUT "\t\t\t\t\t<td>uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">locate db:</td><td>$lynis_report_data{'locate_db'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">uptime (days):</td><td>$lynis_report_data{'uptime_in_days'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>vm:</td><td>$vm_mode{$lynis_report_data{'vm'}}</td>
+						<td class="field_label">vm:</td><td>$vm_mode{$lynis_report_data{'vm'}}</td>
 END
 	if ((defined($lynis_report_data{'vmtype'})) and ($lynis_report_data{'vmtype'} ne "")) {
-		print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>$lynis_report_data{'vmtype'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">vm_type:</td><td>$lynis_report_data{'vmtype'}</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>vm_type:</td><td>&nbsp;</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">vm_type:</td><td>&nbsp;</td>\n";
 	}
 	print OUT <<END;
-						<td>uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
+						<td class="field_label">uptime (secs):</td><td>$lynis_report_data{'uptime_in_seconds'}</td>
 					</tr>
 END
-	print OUT "<tr><td>is notebook/laptop:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'notebook'}}</td>";
-	print OUT "<td>is Docker container:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'container'}}</td></tr>\n";
+	print OUT "<tr><td class=\"field_label\">is notebook/laptop:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'notebook'}}</td>";
+	print OUT "<td class=\"field_label\">is Docker container:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'container'}}</td></tr>\n";
 	print OUT <<END;
 					<tr>
-						<td>binary paths:</td><td colspan="2">$lynis_report_data{'binary_paths'}</td>
+						<td class="field_label">binary paths:</td><td colspan="2">$lynis_report_data{'binary_paths'}</td>
 END
 	if (ref($lynis_report_data{'valid_certificate[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>valid certificates:</td><td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">valid certificates:</td><td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'valid_certificate[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>valid certificates:</td><td colspan=\"2\">$lynis_report_data{'valid_certificate[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">valid certificates:</td><td colspan=\"2\">$lynis_report_data{'valid_certificate[]'}</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	if (ref($lynis_report_data{'usb_authorized_default_device[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>authorized default USB devices:</td><td colspan=\"2\">".join("<br \>\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">authorized default USB devices:</td><td colspan=\"2\">".join("<br \>\n", @{$lynis_report_data{'usb_authorized_default_device[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>authorized default USB devices:</td><td colspan=\"2\">$lynis_report_data{'usb_authorized_default_device[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">authorized default USB devices:</td><td colspan=\"2\">$lynis_report_data{'usb_authorized_default_device[]'}</td>\n";
 	}
 	if (ref($lynis_report_data{'expired_certificate[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>expired certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'expired_certificate[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">expired certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'expired_certificate[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>expired certificates:</td><td colspan=\"2\">$lynis_report_data{'expired_certificate[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">expired certificates:</td><td colspan=\"2\">$lynis_report_data{'expired_certificate[]'}</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	if ($verbose) { print colored("Contents of \$lynis_report_data\{\'certificates\'\}:\n".Dumper($lynis_report_data{'certificates'}), "yellow"); }
-	print OUT "\t\t\t\t\t\t<td>certificate count:</td><td colspan=\"2\">$lynis_report_data{'certificates'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">certificate count:</td><td colspan=\"2\">$lynis_report_data{'certificates'}</td>\n";
 	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'certificate[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'certificate[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>certificates:</td><td colspan=\"2\">$lynis_report_data{'certificate[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">certificates:</td><td colspan=\"2\">$lynis_report_data{'certificate[]'}</td>\n";
 	}
 	print OUT <<END;
+					</tr>
+					<tr>
+END
+	if (exists($lynis_report_data{'compiler_world_executable[]'})) {
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">world executable compiler(s):</td>";
+		if (ref($lynis_report_data{'compiler_world_executable[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td colspan=\"2\">".join("<br />\n". @{$lynis_report_data{'compiler_world_executable[]'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td colspan=\"2\">$lynis_report_data{'compiler_world_executable[]'}</td>\n";
+		}
+	} else {
+		print OUT <<END;
+						<td class="field_label"></td><td colspan="2"></td>
+END
+	}
+	print OUT <<END;
+						<td class="field_label"></td><td colspan="2"></td>
 					</tr>
 				</table>
 				<h4>cron jobs:</h4>
@@ -1499,8 +1529,8 @@ END
 				<h4>logging info:</h4>
 				<table>
 					<tr>
-						<td>log rotation tool:</td><td>$lynis_report_data{'log_rotation_tool'}</td>
-						<td>log rotation config found:</td><td>$to_bool{$lynis_report_data{'log_rotation_config_found'}}</td>
+						<td class="field_label">log rotation tool:</td><td>$lynis_report_data{'log_rotation_tool'}</td>
+						<td class="field_label">log rotation config found:</td><td>$to_bool{$lynis_report_data{'log_rotation_config_found'}}</td>
 					</tr>
 END
 	
@@ -1508,16 +1538,16 @@ END
 		my $i = 0;
 		foreach my $e ( @{$lynis_report_data{'syslog_daemon_present'}} ) { $i += $e; }
 		if ($i >= 1) {
-			print OUT "<tr><td colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{1}</td></tr>\n";
+			print OUT "<tr><td  class=\"field_label\"colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{1}</td></tr>\n";
 		} else {
-			print OUT "<tr><td colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{0}</td></tr>\n";
+			print OUT "<tr><td  class=\"field_label\"colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{0}</td></tr>\n";
 		}
 	} else {
-		print OUT "<tr><td colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'syslog_daemon_present'}}</td></tr>\n";
+		print OUT "<tr><td  class=\"field_label\"colspan=\"2\">syslog daemon detected:</td><td colspan=\"2\">$to_bool{$lynis_report_data{'syslog_daemon_present'}}</td></tr>\n";
 	}
 	print OUT <<END;
 					<tr>
-						<td colspan="2">syslog daemon(s):</td>
+						<td class="field_label" colspan="2">syslog daemon(s):</td>
 END
 	if (ref($lynis_report_data{'syslog_daemon[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'syslog_daemon[]'}})."</td>\n";
@@ -1559,6 +1589,9 @@ END
 		foreach my $elf ( @{$lynis_report_data{'open_empty_log_file[]'}} ) { print OUT "\t\t\t\t\t\t<option>$elf\n"; }
 		print OUT "\t\t\t\t\t</select>\n";
 	}
+################################
+### NETWORK INFO
+################################
 	print OUT <<END;
 			</div>
 			<hr />
@@ -1566,36 +1599,36 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
-						<td>IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
+						<td class="field_label">IPv6 Mode:</td><td>$lynis_report_data{'ipv6_mode'}</td>
+						<td class="field_label">IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
 					</tr>
 END
-	print OUT "\t\t\t\t\t<tr><td colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">localhost mapped to:</td><td colspan=\"2\">$lynis_report_data{'localhost-mapped-to'}</td></tr>\n";
-	print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
-	print OUT "\t\t\t\t\t<tr><td colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
-	print OUT "\t\t\t\t\t<tr><td colspan=\"2\">Default Gateway</td><td colspan=\"2\">$lynis_report_data{'default_gateway[]'}</td></tr>\n";
+	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">localhost mapped to:</td><td colspan=\"2\">$lynis_report_data{'localhost-mapped-to'}</td></tr>\n";
+	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
+	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">Default Gateway</td><td colspan=\"2\">$lynis_report_data{'default_gateway[]'}</td></tr>\n";
 	print OUT "\t\t\t\t\t<tr>\n";
 	#print STDERR "Should be ARRAY: |".ref($lynis_report_data{'network_mac_address[]'})."|\n";
 	if (ref($lynis_report_data{'network_mac_address[]'}) eq "ARRAY") {
-		print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">MAC Address:</td><td>".join("<br />\n", @{$lynis_report_data{'network_mac_address[]'}})."</td>\n";
 	} elsif ((defined($lynis_report_data{'network_mac_address[]'})) and ($lynis_report_data{'network_mac_address[]'} ne "")) {
-		print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>$lynis_report_data{'network_mac_address[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">MAC Address:</td><td>$lynis_report_data{'network_mac_address[]'}</td>\n";
 	} else { 
-		print OUT "\t\t\t\t\t\t<td>MAC Address:</td><td>&nbsp;</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">MAC Address:</td><td>&nbsp;</td>\n";
 	}
 	print OUT <<END;
-						<td>Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
+						<td class="field_label">Name Cache Used:</td><td>$to_bool{$lynis_report_data{'name_cache_used'}}</td>
 					</tr>
 END
 	if (ref($lynis_report_data{'nameserver[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'nameserver[]'}})."</td></tr>\n";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">name servers:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'nameserver[]'}})."</td></tr>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<tr><td colspan=\"2\">name servers:</td><td colspan=\"2\">$lynis_report_data{'nameserver[]'}</td></tr>\n";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">name servers:</td><td colspan=\"2\">$lynis_report_data{'nameserver[]'}</td></tr>\n";
 	}
 	print OUT <<END;
 					<tr>
-						<td colspan="2">resolv.conf search domain:</td>
+						<td class="field_label" colspan="2">resolv.conf search domain:</td>
 END
 	if (ref($lynis_report_data{'resolv_conf_search_domain[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td colspan=\"2\">".join("<br />\n",@{$lynis_report_data{'resolv_conf_search_domain[]'}})."</td>\n";
@@ -1624,6 +1657,9 @@ END
 		}
 		print OUT "\t\t\t\t\t<tr><td>$ip</td><td>$port</td><td>$proto</td><td>$daemon</td><td>$dunno</td></tr>\n";
 	}
+#######################################
+### SECURITY INFO
+#######################################
 	print OUT <<END;
 				</table>
 			</div>
@@ -1634,117 +1670,117 @@ END
 					<tr>
 END
 	$lynis_report_data{'firewall_installed'} = 0 if ((!defined($lynis_report_data{'firewall_installed'})) or ($lynis_report_data{'firewall_installed'} eq ''));
-	print OUT "\t\t\t\t\t<td>Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">Host Firewall Installed:</td><td>$to_bool{$lynis_report_data{'firewall_installed'}}</td>\n";
 	$lynis_report_data{'firewall_software'} = "&nbsp;" if ((!defined($lynis_report_data{'firewall_software'})) or ($lynis_report_data{'firewall_software'} eq ''));
-	print OUT "\t\t\t\t\t<td>Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">Firewall Software:</td><td>$lynis_report_data{'firewall_software'}</td>\n";
 	$lynis_report_data{'firewall_empty_ruleset'} = 0 if ((!defined($lynis_report_data{'firewall_empty_ruleset'})) or ($lynis_report_data{'firewall_empty_ruleset'} eq ''));
-	print OUT "\t\t\t\t\t<td>Firewall Empty Ruleset:</td><td>$to_bool{$lynis_report_data{'firewall_empty_ruleset'}}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">Firewall Empty Ruleset:</td><td>$to_bool{$lynis_report_data{'firewall_empty_ruleset'}}</td>\n";
 	$lynis_report_data{'firewall_active'} = 0 if ((!defined($lynis_report_data{'firewall_active'})) or ($lynis_report_data{'firewall_active'} eq ''));
-	print OUT "\t\t\t\t\t<td>Firewall Active:</td><td>$to_bool{$lynis_report_data{'firewall_active'}}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">Firewall Active:</td><td>$to_bool{$lynis_report_data{'firewall_active'}}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>Package Manager:</td><td>$lynis_report_data{'package_manager[]'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Package Audit Tools Found:</td><td>$to_bool{$lynis_report_data{'package_audit_tool_found'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Package Audit Tool:</td><td>$lynis_report_data{'package_audit_tool'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Vulnerable Packages Found:</td><td>$lynis_report_data{'vulnerable_packages_found'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Package Manager:</td><td>$lynis_report_data{'package_manager[]'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	$lynis_report_data{'authentication_two_factor_enabled'} = 0 if ((!defined($lynis_report_data{'authentication_two_factor_enabled'})) or ($lynis_report_data{'authentication_two_factor_enabled'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Two-Factor Authentication Enabled:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_enabled'}}</td>\n";
 	$lynis_report_data{'authentication_two_factor_required'} = 0 if ((!defined($lynis_report_data{'authentication_two_factor_required'})) or ($lynis_report_data{'authentication_two_factor_required'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>LDAP Auth Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_auth_enabled'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Two-Factor Authentication Required:</td><td>$to_bool{$lynis_report_data{'authentication_two_factor_required'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">LDAP PAM Module Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_pam_enabled'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">LDAP Auth Enabled:</td><td>$to_bool{$lynis_report_data{'ldap_auth_enabled'}}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	$lynis_report_data{'minimum_password_length'} = 0 if ((!defined($lynis_report_data{'minimum_password_length'})) or ($lynis_report_data{'minimum_password_length'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Minimum Password Length:</td><td>$lynis_report_data{'minimum_password_length'}</td>\n";
 	$lynis_report_data{'password_max_days'} = 0 if ((!defined($lynis_report_data{'password_max_days'})) or ($lynis_report_data{'password_max_days'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Maximum Password Days:</td><td>$lynis_report_data{'password_max_days'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Maximum Password Days:</td><td>$lynis_report_data{'password_max_days'}</td>\n";
 	$lynis_report_data{'password_min_days'} = 0 if ((!defined($lynis_report_data{'password_min_days'})) or ($lynis_report_data{'password_min_days'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Minimum Password Days:</td><td>$lynis_report_data{'password_min_days'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Minimum Password Days:</td><td>$lynis_report_data{'password_min_days'}</td>\n";
 	$lynis_report_data{'max_password_retry'} = 0 if ((!defined($lynis_report_data{'max_password_retry'})) or ($lynis_report_data{'max_password_retry'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Maximum Password Retries:</td><td>$lynis_report_data{'max_password_retry'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
-	printf OUT "\t\t\t\t\t\t<td>Password Complexity Score:</td><td>%#b</td>\n", $pass_score;
-	print OUT "\t\t\t\t\t\t<td>PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>\n";
+	printf OUT "\t\t\t\t\t\t<td class=\"field_label\">Password Complexity Score:</td><td>%#b</td>\n", $pass_score;
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">PAM Cracklib Found:</td><td>$to_bool{$lynis_report_data{'pam_cracklib'}}</td>\n";
 	$lynis_report_data{'password_strength_tested'} = 0 if ((!defined($lynis_report_data{'password_strength_tested'})) or ($lynis_report_data{'password_strength_tested'} eq ''));
-	print OUT "\t\t\t\t\t\t<td>Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>\n";
-	print OUT "\t\t\t\t\t\t<td>PAM Password Quality:</td><td>$lynis_report_data{'pam_pwquality'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Password Strength Tested:</td><td>$to_bool{$lynis_report_data{'password_strength_tested'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">PAM Password Quality:</td><td>$lynis_report_data{'pam_pwquality'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	if (exists($lynis_report_data{'file_integrity_tool_installed'})) {
-		print OUT "\t\t\t\t\t\t<td>File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">File Integrity Tool Installed:</td><td>$to_bool{$lynis_report_data{'file_integrity_tool_installed'}}</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>File Integrity Tools Installed:</td><td>false</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">File Integrity Tools Installed:</td><td>false</td>\n";
 	}
 	if (exists($lynis_report_data{'file_integrity_tool'})) {
-		print OUT "\t\t\t\t\t\t<td>File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">File Integrity Tool:</td><td>$lynis_report_data{'file_integrity_tool'}</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>File Integrity Tool:</td><td>NA</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">File Integrity Tool:</td><td>NA</td>\n";
 	}
-	print OUT "\t\t\t\t\t\t<td>Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Automation Tool Present:</td><td>$to_bool{$lynis_report_data{'automation_tool_present'}}</td>\n";
 	if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Automation Tool:</td><td>".join("<br />\n", @{$lynis_report_data{'automation_tool_running[]'}})."</td>\n";
 	} elsif ((defined($lynis_report_data{'automation_tool_running[]'})) and ($lynis_report_data{'automation_tool_running[]'} ne "")) {
-		print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>$lynis_report_data{'automation_tool_running[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Automation Tool:</td><td>$lynis_report_data{'automation_tool_running[]'}</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>Automation Tool:</td><td>&nbsp;</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Automation Tool:</td><td>&nbsp;</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
-						<td>Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
+						<td class="field_label">Malware Scanner Installed:</td><td>$to_bool{$lynis_report_data{'malware_scanner_installed'}}</td>
 END
 	if (ref($lynis_report_data{'malware_scanner[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>".join("<br />\n", @{$lynis_report_data{'malware_scanner[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Malware Scanner(s):</td><td>".join("<br />\n", @{$lynis_report_data{'malware_scanner[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>Malware Scanner(s):</td><td>$lynis_report_data{'malware_scanner[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Malware Scanner(s):</td><td>$lynis_report_data{'malware_scanner[]'}</td>\n";
 	}
 	print OUT <<END;
-						<td>compiler installed:</td><td>$to_bool{$lynis_report_data{'compiler_installed'}}</td>
+						<td class="field_label">compiler installed:</td><td>$to_bool{$lynis_report_data{'compiler_installed'}}</td>
 END
 	if (ref($lynis_report_data{'compiler[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>compilers:</td><td>".join("<br />\n", @{$lynis_report_data{'compiler[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">compilers:</td><td>".join("<br />\n", @{$lynis_report_data{'compiler[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>compilers:</td><td>$lynis_report_data{'compiler[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">compilers:</td><td>$lynis_report_data{'compiler[]'}</td>\n";
 	}
 	print OUT <<END; 
 					</tr>
 					<tr>
 END
 	if (ref($lynis_report_data{'ids_ips_tooling[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>".join("<br />\n", @{$lynis_report_data{'ids_ips_tooling[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">IDS/IPS Tooling</td><td>".join("<br />\n", @{$lynis_report_data{'ids_ips_tooling[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">IDS/IPS Tooling</td><td>$lynis_report_data{'ids_ips_tooling[]'}</td>\n";
 	}
-	print OUT "\t\t\t\t\t\t<td>Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Failed Logins Logged:</td><td>$lynis_report_data{'auth_failed_logins_logged'}</td>\n";
 	if (ref($lynis_report_data{'fail2ban_config'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>fail2ban config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'fail2ban_config'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">fail2ban config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'fail2ban_config'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>fail2ban config file(s):</td><td>$lynis_report_data{'fail2ban_config'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">fail2ban config file(s):</td><td>$lynis_report_data{'fail2ban_config'}</td>\n";
 	}
 	if (ref($lynis_report_data{'fail2ban_enabled_service[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>fail2ban enabled service(s):</td><td>".join("<br />\n", @{$lynis_report_data{'fail2ban_enabled_service[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">fail2ban enabled service(s):</td><td>".join("<br />\n", @{$lynis_report_data{'fail2ban_enabled_service[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>fail2ban enabled service(s):</td><td>$lynis_report_data{'fail2ban_enabled_service[]'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">fail2ban enabled service(s):</td><td>$lynis_report_data{'fail2ban_enabled_service[]'}</td>\n";
 	}
 	print OUT "</tr>\n";
-	print OUT "<tr><td>AppArmor Enabled:</td><td>$to_bool{$lynis_report_data{'apparmor_enabled'}}</td>\n";
-	print OUT "<td>AppArmor Policy Loaded:</td><td>$to_bool{$lynis_report_data{'apparmor_policy_loaded'}}</td>\n";
-	print OUT "<td>SELinux Status:</td><td>$to_bool{$lynis_report_data{'selinux_status'}}</td>\n";
-	print OUT "<td>SELinux mode:</td><td>$lynis_report_data{'selinux_mode'}</td></tr>\n";
+	print OUT "<tr><td class=\"field_label\">AppArmor Enabled:</td><td>$to_bool{$lynis_report_data{'apparmor_enabled'}}</td>\n";
+	print OUT "<td class=\"field_label\">AppArmor Policy Loaded:</td><td>$to_bool{$lynis_report_data{'apparmor_policy_loaded'}}</td>\n";
+	print OUT "<td class=\"field_label\">SELinux Status:</td><td>$to_bool{$lynis_report_data{'selinux_status'}}</td>\n";
+	print OUT "<td class=\"field_label\">SELinux mode:</td><td>$lynis_report_data{'selinux_mode'}</td></tr>\n";
 	print OUT <<END;
 				</table>
 				<table class="list">
@@ -1777,6 +1813,9 @@ END
 		print OUT "</select>\n";
 	}
 	if ((!defined($lynis_report_data{'boot_service_tool'})) or ($lynis_report_data{'boot_service_tool'} eq "")) { $lynis_report_data{'boot_service_tool'} = "&nbsp;"; }
+####################################
+### BOOT INFO
+####################################
 	print OUT <<END;
 					</table>
 				</div>
@@ -1786,12 +1825,12 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>UEFI booted:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted'}}</td>
-						<td>UEFI booted secure:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted_secure'}}</td>
+						<td class="field_label">UEFI booted:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted'}}</td>
+						<td class="field_label">UEFI booted secure:</td><td>$to_bool{$lynis_report_data{'boot_uefi_booted_secure'}}</td>
 					</tr>
 					<tr>
-						<td>default runlevel:</td><td>$lynis_report_data{'linux_default_runlevel'}</td>
-						<td>boot service tool:</td><td>$lynis_report_data{'boot_service_tool'}</td>
+						<td class="field_label">default runlevel:</td><td>$lynis_report_data{'linux_default_runlevel'}</td>
+						<td class="field_label">boot service tool:</td><td>$lynis_report_data{'boot_service_tool'}</td>
 					</tr>
 				</table>
 END
@@ -1817,6 +1856,9 @@ END
 	$lynis_report_data{'linux_kernel_io_scheduler'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_kernel_io_scheduler'})) or ($lynis_report_data{'linux_kernel_io_scheduler'} eq ""));
 	$lynis_report_data{'linux_amount_of_kernels'} = "&nbsp;" if ((!defined($lynis_report_data{'linux_amount_of_kernels'})) or ($lynis_report_data{'linux_amount_of_kernels'} eq ""));
 	#print Dumper($lynis_report_data{'linux_kernel_io_scheduler'});
+##########################################
+### KERNEL INFO
+##########################################
 	print OUT <<END;
 			</div>
 			<hr />
@@ -1825,24 +1867,24 @@ END
 				<table>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>\n";
-	print OUT "\t\t\t\t\t<td>full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">kernel version:</td><td>$lynis_report_data{'linux_kernel_version'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">full kernel version:</td><td>$lynis_report_data{'os_kernel_version_full'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">kernel release version:</td><td>$lynis_report_data{'linux_kernel_release'}</td>\n";
 	if (ref($lynis_report_data{'linux_kernel_io_scheduler[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>".join("<br />\n", @{$lynis_report_data{'linux_kernel_io_scheduler[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">kernel IO scheduler:</td><td>".join("<br />\n", @{$lynis_report_data{'linux_kernel_io_scheduler[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t<td>kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">kernel IO scheduler:</td><td>$lynis_report_data{'linux_kernel_io_scheduler[]'}</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>\n";
-	print OUT "\t\t\t\t\t<td>number of kernels available:</td><td>$lynis_report_data{'linux_amount_of_kernels'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">linux kernel type:</td><td>$lynis_report_data{'linux_kernel_type'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">number of kernels available:</td><td>$lynis_report_data{'linux_amount_of_kernels'}</td>\n";
 	print OUT <<END;
 					</tr>
 				</table>
@@ -1867,14 +1909,14 @@ END
 				<table>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>\n";
-	print OUT "\t\t\t\t\t<td>journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">oldest boot date:</td><td>$lynis_report_data{'journal_oldest_bootdate'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">journal errors:</td><td>$to_bool{$lynis_report_data{'journal_contains_errors'}}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t<td>journal disk size:</td><td>$lynis_report_data{'journal_disk_size'}</td>\n";
-	print OUT "\t\t\t\t\t<td>last cordumps:</td><td>$lynis_report_data{'journal_coredumps_lastday'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">journal disk size:</td><td>$lynis_report_data{'journal_disk_size'}</td>\n";
+	print OUT "\t\t\t\t\t<td class=\"field_label\">last cordumps:</td><td>$lynis_report_data{'journal_coredumps_lastday'}</td>\n";
 	print OUT <<END;
 					</tr>
 					<tr>
@@ -1883,9 +1925,9 @@ END
 		print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>".join("<br />\n", @{$lynis_report_data{'file_systems_ext[]'}})."</td>\n";
 	} else {
 		if (defined($lynis_report_data{'file_systems_ext[]'})) {
-			print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>$lynis_report_data{'file_systems_ext[]'}</td>\n";
+			print OUT "\t\t\t\t\t\t<td class=\"field_label\">filesystems:</td><td>$lynis_report_data{'file_systems_ext[]'}</td>\n";
 		} else {
-			print OUT "\t\t\t\t\t\t<td>filesystems:</td><td>&nbsp;</td>\n";
+			print OUT "\t\t\t\t\t\t<td class=\"field_label\">filesystems:</td><td>&nbsp;</td>\n";
 		}
 	}
 	if ((exists($lynis_report_data{'swap_partition[]'})) and (ref($lynis_report_data{'swap_partition[]'}) eq "ARRAY")) {
@@ -1899,11 +1941,11 @@ END
 		} else {
 			@{$lynis_report_data{'swap_partition[]'}} = &dedup_array(@{$lynis_report_data{'swap_partition[]'}});
 		}
-		print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
 	} else {
 		if ((($verbose) and ($verbose > 1)) or ($debug)) {
 			warn colored("swap_partition[] is a string.", "yellow") if ($verbose);
-			print OUT "\t\t\t\t\t\t<td>swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
+			print OUT "\t\t\t\t\t\t<td class=\"field_label\">swap partitions:</td><td>$lynis_report_data{'swap_partition[]'}</td>\n";
 		}
 	}
 	$lynis_report_data{'journal_bootlogs'} = 0 if ((!defined($lynis_report_data{'journal_bootlogs'})) or ($lynis_report_data{'journal_bootlogs'} eq ""));
@@ -1911,19 +1953,19 @@ END
 					</tr>
 END
 	if (ref($lynis_report_data{'lvm_volume_group[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<tr><td>LVM volume group(s):</td><td>".join("<br />\n", @{$lynis_report_data{'lvm_volume_group[]'}})."</td>";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">LVM volume group(s):</td><td>".join("<br />\n", @{$lynis_report_data{'lvm_volume_group[]'}})."</td>";
 	} else {
-		print OUT "\t\t\t\t\t\t<tr><td>LVM volume group(s):</td><td>$lynis_report_data{'lvm_volume_group[]'}</td>";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">LVM volume group(s):</td><td>$lynis_report_data{'lvm_volume_group[]'}</td>";
 	}
 	if (ref($lynis_report_data{'lvm_volume[]'}) eq 'ARRAY') {
-		print OUT "<td>LVM volume(s)</td><td>".join("<br />\n", @{$lynis_report_data{'lvm_volume[]'}})."</td></tr>\n";
+		print OUT "<td class=\"field_label\">LVM volume(s)</td><td>".join("<br />\n", @{$lynis_report_data{'lvm_volume[]'}})."</td></tr>\n";
 	} else {
-		print OUT "<td>LVM volume(s)</td><td>$lynis_report_data{'lvm_volume[]'}</td></tr>\n";
+		print OUT "<td class=\"field_label\">LVM volume(s)</td><td>$lynis_report_data{'lvm_volume[]'}</td></tr>\n";
 	}
 	print OUT <<END;
 					<tr>
-						<td>journal boot log found:</td><td>$to_bool{$lynis_report_data{'journal_bootlogs'}}</td>
-						<td></td><td></td>
+						<td class="field_label">journal boot log found:</td><td>$to_bool{$lynis_report_data{'journal_bootlogs'}}</td>
+						<td class="field_label"></td><td></td>
 					</tr>
 				</table>
 				<br />
@@ -1954,6 +1996,10 @@ END
 	} else { 
 		warn colored("Didn't find journal_meta_data object!", "yellow") if ((($verbose) and ($verbose > 1)) or ($debug)); 
 	}
+
+##########################################
+### SERVICE INFO
+##########################################
 	print OUT <<END;
 				</div>
 			</div>
@@ -1964,26 +2010,26 @@ END
 END
 	foreach my $prog ( sort qw( redis ntp_daemon mysql ssh_daemon dhcp_client arpwatch audit_daemon postgresql linux_auditd nginx ) ) {
 		if ((defined($lynis_report_data{$prog.'_running'})) and ($lynis_report_data{$prog.'_running'} ne "")) {
-			print OUT "\t\t\t\t\t<tr><td>$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\">$prog running:</td><td>$to_bool{$lynis_report_data{$prog.'_running'}}</td></tr>\n";
 		} else {
-			print OUT "\t\t\t\t\t<tr><td>$prog running:</td><td>$to_bool{0}</td></tr>\n";
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\">$prog running:</td><td>$to_bool{0}</td></tr>\n";
 		}
 	}
 	print OUT "\t\t\t\t</table>\n";
 	print OUT "\t\t\t\t<h4>daemon info:</h4>\n";
 	print OUT "\t\t\t\t\t<table>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>pop3 daemon:</td><td>$lynis_report_data{'pop3_daemon'}</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>imap daemon:</td><td>$lynis_report_data{'imap_daemon'}</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>smtp daemon:</td><td>$lynis_report_data{'smtp_daemon'}</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>printing daemon:</td><td>$lynis_report_data{'printing_daemon'}</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>ntp daemon:</td><td>$lynis_report_data{'ntp_daemon'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">pop3 daemon:</td><td>$lynis_report_data{'pop3_daemon'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">imap daemon:</td><td>$lynis_report_data{'imap_daemon'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">smtp daemon:</td><td>$lynis_report_data{'smtp_daemon'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">printing daemon:</td><td>$lynis_report_data{'printing_daemon'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">ntp daemon:</td><td>$lynis_report_data{'ntp_daemon'}</td></tr>\n";
 	if (ref($lynis_report_data{'scheduler[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>".join("<br />\n",@{$lynis_report_data{'scheduler[]'}})."</td></tr>\n";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">scheduler(s):</td><td>".join("<br />\n",@{$lynis_report_data{'scheduler[]'}})."</td></tr>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<tr><td>scheduler(s):</td><td>$lynis_report_data{'scheduler[]'}</td></tr>\n";
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">scheduler(s):</td><td>$lynis_report_data{'scheduler[]'}</td></tr>\n";
 	}
-	print OUT "\t\t\t\t\t\t<tr><td>service manager:</td><td>$lynis_report_data{'service_manager'}</td></tr>\n";
-	print OUT "\t\t\t\t\t\t<tr><td>running service tool:</td><td>$lynis_report_data{'running_service_tool'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">service manager:</td><td>$lynis_report_data{'service_manager'}</td></tr>\n";
+	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\">running service tool:</td><td>$lynis_report_data{'running_service_tool'}</td></tr>\n";
 	print OUT "\t\t\t\t\t</table>\n";
 	print OUT <<END;
 				<h4>running services:</h4>
@@ -2040,23 +2086,23 @@ END
 				<table>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td>main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
+	print OUT "\t\t\t\t\t\t<td class=\"field_label\">main config file:</td><td>$lynis_report_data{'nginx_main_conf_file'}</td>\n";
 	if (ref($lynis_report_data{'nginx_sub_conf_file[]'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}})."</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">other config file(s):</td><td>".join("<br />\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t<td>other config file(s):</td><td>$lynis_report_data{'nginx_sub_conf_file[]'}</td>\n";
+		print OUT "\t\t\t\t\t<td class=\"field_label\">other config file(s):</td><td>$lynis_report_data{'nginx_sub_conf_file[]'}</td>\n";
 	}
 	print OUT <<END;
 					</tr>
 					<tr>
 END
 	if (ref($lynis_report_data{'log_file'}) eq 'ARRAY') {
-		print OUT "\t\t\t\t\t\t<td>log file:</td><td>".join("<br />\n",@{$lynis_report_data{'log_file'}})."</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">log file:</td><td>".join("<br />\n",@{$lynis_report_data{'log_file'}})."</td>\n";
 	} else {
-		print OUT "\t\t\t\t\t\t<td>log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">log file:</td><td>$lynis_report_data{'log_file'}</td>\n";
 	}
 	print OUT <<END;
-						<td></td><td></td>
+						<td class="field_label"></td><td></td>
 					</tr>
 				</table>
 END
@@ -2184,8 +2230,8 @@ END
 			<div class="content_subsection">
 				<table>
 					<tr>
-						<td>Number of packages installed:</td><td>$lynis_report_data{'installed_packages'}</td>
-						<td>Number of binaries found:</td><td>$lynis_report_data{'binaries_count'}</td>
+						<td class="field_label">Number of packages installed:</td><td>$lynis_report_data{'installed_packages'}</td>
+						<td class="field_label">Number of binaries found:</td><td>$lynis_report_data{'binaries_count'}</td>
 					</tr>
 				</table>
 				<br />
@@ -2222,7 +2268,7 @@ END
 
 	my @indexes = qw( lynis_version lynis_tests_done lynis_update_available license_key report_datetime_start report_datetime_end plugins_directory plugins_enabled finish report_version_major report_version_minor hostid hostid2 plugin_enabled_phase1[] hardening_index warning[] hostname domainname linux_kernel_version linux_config_file memory_size nameserver[] network_interface[] framework_grsecurity vm vmtype uptime_in_seconds linux_kernel_release os framework_selinux uptime_in_days os_fullname default_gateway[] cpu_nx cpu_pae linux_version os_version network_ipv6_address[] boot_loader suggestion[] manual manual[] linux_version cpu_pae cpu_nx network_ipv4_address[] network_mac_address[] os_name os_kernel_version os_kernel_version_full firewall_installed max_password_retry password_max_days password_min_days pam_cracklib password_strength_tested minimum_password_length package_audit_tool package_audit_tool_found );
 	my @idx2 = qw( vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
-	my @idx3 = qw( details[] available_shell[] locate_db smtp_daemon pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled );
+	my @idx3 = qw( details[] available_shell[] locate_db smtp_daemon smtp_daemon[] pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled compiler_world_executable[]);
 	my @idx4 = qw( ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file[] nginx_config_option[] ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] container exception_event[] certificates certificate[] localhost-mapped-to manual_event[] syslog_daemon[] syslog_daemon_present apparmor_enabled apparmor_policy_loaded pam_pwquality selinux_status selinux_mode );
 	push @indexes, @idx2, @idx3, @idx4;
 	foreach my $idx ( sort @indexes ) {
