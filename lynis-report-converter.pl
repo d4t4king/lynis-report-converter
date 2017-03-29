@@ -3,7 +3,7 @@
 use strict;
 # turn off warnings so as not to confuse people
 # unless debugging, etc.
-use warnings;
+#use warnings;
 use feature qw( switch );
 require 5.010;
 no if $] ge '5.018', warnings => "experimental::smartmatch";
