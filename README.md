@@ -14,8 +14,8 @@ If you want to be able to use the PDF or Excel output formats, you must install 
 ### For Debian/Ubuntu
 ```
 # (as root)
-apt update							# versions prior to 16.04 LTS should use 'apt-get'
-apt -y install htmldoc libxml-writer-perl
+apt update							# versions prior to Ubuntu 16.04 LTS should use 'apt-get'
+apt -y install htmldoc libxml-writer-perl libarchive-zip-perl
 
 pushd /tmp/
 wget http://search.cpan.org/CPAN/authors/id/M/MF/MFRANKL/HTML-HTMLDoc-0.10.tar.gz
