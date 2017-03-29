@@ -1364,10 +1364,14 @@ END
 
 	print OUT "\t\t\t\t\t\t<td class=\"field_label\">phase 1 plugins enabled:</td><td colspan=\"3\">\n";
 	print OUT "\t\t\t\t\t\t\t<table id=\"lynis_plugins_table\">\n";
-	foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
-		my ($n,$v) = split(/\|/, $plug);
-		if ((!defined($v)) or ($v eq "")) { $v = "AAAAAAAA"; }
-		print OUT "\t\t\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
+	if (exists($lynis_report_data{'plugin_enabled_phase1[]'})) {
+		if (ref($lynis_report_data{'plugin_enabled_phase1[]'}) eq 'ARRAY') {
+			foreach my $plug ( sort @{$lynis_report_data{'plugin_enabled_phase1[]'}} ) { 
+				my ($n,$v) = split(/\|/, $plug);
+				if ((!defined($v)) or ($v eq "")) { $v = "AAAAAAAA"; }
+				print OUT "\t\t\t\t\t\t\t\t<tr><td>name:</td><td>$n</td><td>version:</td><td>$v</td></tr>\n";
+			}
+		}
 	}
 	print OUT "\t\t\t\t\t\t\t</table>\n";
 	print OUT "\t\t\t\t\t\t</td>\n";
