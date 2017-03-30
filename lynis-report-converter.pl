@@ -1441,7 +1441,15 @@ END
 					</tr>
 					<tr>
 END
-	print OUT "\t\t\t\t\t\t<td class=\"field_label\">Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
+	if (exists($lynis_report_data{'available_shell[]'})) {
+		if (ref($lynis_report_data{'available_shell[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t\t<td class=\"field_label\">Available shells:</td><td>".join("<br />\n", @{$lynis_report_data{'available_shell[]'}})."</td>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<td class=\"field_label\">Available shells:</td><td>$lynis_report_data{'available_shell[]'}</td>\n";
+		}
+	} else {
+		print OUT "\t\t\t\t\t\t<td class=\"field_label\">Available shells:</td><td>&nbsp;</td>\n";
+	}
 	$lynis_report_data{'locate_db'} = "&nbsp;" if ((!defined($lynis_report_data{'locate_db'})) or ($lynis_report_data{'locate_db'} eq ""));
 	#print STDERR colored($lynis_report_data{'vm'}."\n", "bold magenta");
 	$lynis_report_data{'vm'} = 0 if ((!defined($lynis_report_data{'vm'})) or ($lynis_report_data{'vm'} eq ""));
@@ -1607,10 +1615,34 @@ END
 						<td class="field_label">IPv6 Only:</td><td>$to_bool{$lynis_report_data{'ipv6_only'}}</td>
 					</tr>
 END
-	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
+	if (exists($lynis_report_data{'network_interface[]'})) {
+		if (ref($lynis_report_data{'network_interface[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">network interfaces:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_interface[]'}})."</td></tr>\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">network interfaces:</td><td colspan=\"2\">$lynis_report_data{'network_interface[]'}</td></tr>\n";
+		}
+	} else {
+		print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">network interfaces:</td><td colspan=\"2\">&nbsp;</td></tr>\n";
+	}
 	print OUT "\t\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">localhost mapped to:</td><td colspan=\"2\">$lynis_report_data{'localhost-mapped-to'}</td></tr>\n";
-	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
-	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+	if (exists($lynis_report_data{'network_ipv4_address[]'})) {
+		if (ref($lynis_report_data{'network_ipv4_address[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv4_address[]'}})."</td></tr>\n";
+		} else {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">$lynis_report_data{'network_ipv4_address[]'}</td></tr>\n";
+		}
+	} else {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv4 addresses:</td><td colspan=\"2\">&nbsp;</td></tr>\n";
+	}
+	if (exists($lynis_report_data{'network_ipv6_address[]'})) {
+		if (ref($lynis_report_data{'network_ipv6_address[]'}) eq 'ARRAY') {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'network_ipv6_address[]'}})."</td></tr>\n";
+		} else {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">$lynis_report_data{'network_ipv6_address[]'}</td></tr>\n";
+		}
+	} else {
+			print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">ipv6 addresses:</td><td colspan=\"2\">&nbsp;</td></tr>\n";
+	}
 	print OUT "\t\t\t\t\t<tr><td class=\"field_label\" colspan=\"2\">Default Gateway</td><td colspan=\"2\">$lynis_report_data{'default_gateway[]'}</td></tr>\n";
 	print OUT "\t\t\t\t\t<tr>\n";
 	#print STDERR "Should be ARRAY: |".ref($lynis_report_data{'network_mac_address[]'})."|\n";
@@ -1647,19 +1679,21 @@ END
 					<tr><td>IP Address</td><td>Port</td><td>Protocol</td><td>Daemon/Process</td><td>???</td></tr>
 END
 
-	foreach my $obj ( sort @{$lynis_report_data{'network_listen_port[]'}} ) {
-		my ($ipp,$proto,$daemon,$dunno) = split(/\|/, $obj);
-		my ($ip,$port);
-		if (grep(/\:/, split(//, $ipp)) > 1) {
-			# must be an IPv6 address;
-			my @parts = split(/\:/, $ipp);
-			$port = pop(@parts);					# gets the last element of the array.  like	$parts[-1];
-			$ip = join(":", @parts);				# should only be the remaining parts, which should be the ipv6 addr
-		} else {
-			# must be IPv4
-			($ip,$port) = split(/\:/, $ipp);
+	if (exists($lynis_report_data{'network_listen_port[]'})) {
+		foreach my $obj ( sort @{$lynis_report_data{'network_listen_port[]'}} ) {
+			my ($ipp,$proto,$daemon,$dunno) = split(/\|/, $obj);
+			my ($ip,$port);
+			if (grep(/\:/, split(//, $ipp)) > 1) {
+				# must be an IPv6 address;
+				my @parts = split(/\:/, $ipp);
+				$port = pop(@parts);					# gets the last element of the array.  like	$parts[-1];
+				$ip = join(":", @parts);				# should only be the remaining parts, which should be the ipv6 addr
+			} else {
+				# must be IPv4
+				($ip,$port) = split(/\:/, $ipp);
+			}
+			print OUT "\t\t\t\t\t<tr><td>$ip</td><td>$port</td><td>$proto</td><td>$daemon</td><td>$dunno</td></tr>\n";
 		}
-		print OUT "\t\t\t\t\t<tr><td>$ip</td><td>$port</td><td>$proto</td><td>$daemon</td><td>$dunno</td></tr>\n";
 	}
 #######################################
 ### SECURITY INFO
@@ -1895,13 +1929,15 @@ END
 				<h4>kernel modules loaded:</h4><a id="kernelModLink" href="javascript:toggle('kernelModLink', 'kernelModToggle');">&gt;&nbsp;show&nbsp;&lt;</a>
 				<div id="kernelModToggle" style="display: none">
 END
-	if (scalar(@{$lynis_report_data{'loaded_kernel_module[]'}}) < 25) {
-		print OUT "\t\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'loaded_kernel_module[]'}})."\">\n";
-	} else {
-		print OUT "\t\t\t\t\t\t<select size=\"25\">\n";
+	if (ref($lynis_report_data{'loaded_kernel_module[]'}) eq 'ARRAY') {
+		if (scalar(@{$lynis_report_data{'loaded_kernel_module[]'}}) < 25) {
+			print OUT "\t\t\t\t\t\t<select size=\"".scalar(@{$lynis_report_data{'loaded_kernel_module[]'}})."\">\n";
+		} else {
+			print OUT "\t\t\t\t\t\t<select size=\"25\">\n";
+		}
+		foreach my $m ( sort @{$lynis_report_data{'loaded_kernel_module[]'}} ) { print OUT "\t\t\t\t\t\t\t<option>$m\n"; }
+		print OUT "\t\t\t\t\t\t</select>\n";
 	}
-	foreach my $m ( sort @{$lynis_report_data{'loaded_kernel_module[]'}} ) { print OUT "\t\t\t\t\t\t\t<option>$m\n"; }
-	print OUT "\t\t\t\t\t\t</select>\n";
 	$lynis_report_data{'journal_oldest_bootdate'} = "&nbsp;" if ((!defined($lynis_report_data{'journal_oldest_bootdate'})) or ($lynis_report_data{'journal_oldest_bootdate'} eq ""));
 	$lynis_report_data{'journal_contains_errors'} = 0 if ((!defined($lynis_report_data{'journal_contains_errors'})) or ($lynis_report_data{'journal_contains_errors'} eq ""));
 	print OUT <<END;
