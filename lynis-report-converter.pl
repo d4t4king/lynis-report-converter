@@ -242,7 +242,7 @@ if ($json) {
 		push @plugs_new, { 'name' => $name, 'version' => $vers };
 	}
 	$lynis_report_data{'plugin_enabled_phase1[]'} = \@plugs_new;
-	my @suggs = @{$lynis_report_data{'suggestion[]'}};
+	my @suggs = @{$lynis_report_data{'suggestion[]'}} unless (!exists($lynis_report_data{'suggestion[]'}));
 	my @suggs_new;
 	foreach my $s ( @suggs ) {
 		my ($id,$desc,$sev,$f4) = split(/\|/, $s);
