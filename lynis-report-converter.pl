@@ -198,13 +198,16 @@ if ($debug) {
 if ($json) {
 	require JSON;
 	# tidy up some of the "object" variables
-	my @sduf = @{$lynis_report_data{'systemd_unit_file[]'}};
-	my @sduf_new;
-	foreach my $uf ( @sduf ) {
-		my ($name,$status) = split(/\|/, $uf);
-		push @sduf_new, { 'name' => $name, 'state' => $status };
+	my @sduf;
+	if ((ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') and ($lynis_report_data{'systemd_unit_file[]'} ne 'NA')) {
+		@sduf = @{$lynis_report_data{'systemd_unit_file[]'}};
+		my @sduf_new;
+		foreach my $uf ( @sduf ) {
+			my ($name,$status) = split(/\|/, $uf);
+			push @sduf_new, { 'name' => $name, 'state' => $status };
+		}
+		$lynis_report_data{'systemd_unit_file[]'} = \@sduf_new;
 	}
-	$lynis_report_data{'systemd_unit_file[]'} = \@sduf_new;
 	my @ipa = @{$lynis_report_data{'installed_packages_array'}};
 	my @ipa_new;
 	foreach my $pkg ( @ipa ) {
