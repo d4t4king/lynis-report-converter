@@ -219,7 +219,7 @@ if ($json) {
 		push @nlp_new, { 'port' => $port, 'protocol' => $proto, 'owner_process' => $proc };
 	}
 	$lynis_report_data{'network_listen_port[]'} = \@nlp_new;
-	my @details = @{$lynis_report_data{'details[]'}};
+	my @details = @{$lynis_report_data{'details[]'}} unless (!exists($lynis_report_data{'details[]'}));;
 	my @det_new;
 	foreach my $d ( @details ) {
 		my ($id,$svc,$desc,$nmn) = split(/\|/, $d);
