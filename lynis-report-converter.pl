@@ -235,7 +235,7 @@ if ($json) {
 		push @det_new, { 'id' => $id, 'service' => $svc, 'description' => \%descr };
 	}
 	$lynis_report_data{'details[]'} = \@det_new;
-	my @plugs = @{$lynis_report_data{'plugin_enabled_phase1[]'}};
+	my @plugs = @{$lynis_report_data{'plugin_enabled_phase1[]'}} unless (!exists($lynis_report_data{'plugin_enabled_phase1[]'}));
 	my @plugs_new;
 	foreach my $p ( @plugs ) {
 		my ($name,$vers) = split(/\|/, $p);
