@@ -12,7 +12,7 @@ use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 use Module::Load::Conditional qw( can_load check_install requires );
 
-my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml);
+my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml,$showversion);
 GetOptions(
 	'h|help'		=>	\$help,
 	'v|verbose+'	=>	\$verbose,
@@ -23,10 +23,11 @@ GetOptions(
 	'j|json'		=>	\$json,
 	'x|xml'			=>	\$xml,
 	'q|quiet'		=>	\$quiet,
+	'V|version'		=>	\$showversion,
 );
 
 &usage if ($help);
-&usage if ((!$output) and (!$json));
+&usage if ((!$output) and (!$json) and (!$showversion));
  
 #if ($verbose) { use warnings; }
 
@@ -188,6 +189,10 @@ if (exists($lynis_report_data{'tests_skipped'})) {
 if (exists($lynis_report_data{'tests_executed'})) {
 	@tests_executed = @{$lynis_report_data{'tests_executed'}};
 	delete($lynis_report_data{'tests_executed'});
+}
+
+if ($showversion) {
+	&show_version;
 }
 
 if ($debug) {
@@ -2342,7 +2347,7 @@ if ($verbose) {
 ###############################################################################
 sub usage {
 
-	if (!$output) {
+	if ((!$output) and (!$showversion)) {
 		print colored("You must specify an output file.\n", "yellow");
 	}
 
@@ -2364,6 +2369,25 @@ END
 	exit 0;
 }
 
+# show script version and gather some relevant data for troubleshooting
+sub show_version {
+	my $uname_a = `uname -a`;
+	chomp($uname_a);
+	my $perl_v = `perl --version`;
+	chomp($perl_v);
+	print <<EOS;
+
+UNAME: 			$uname_a
+OS FullName: 		$lynis_report_data{'os_fullname'}
+OS Version:		$lynis_report_data{'os_version'}
+Perl Version:	
+$perl_v
+
+EOS
+	exit 0;
+}
+
+# determine if a number is prime
 sub is_prime {
 	my $num = shift(@_);
 	my $sqrt = sqrt($num);
@@ -2375,6 +2399,7 @@ sub is_prime {
 	}
 }
 
+# deduplicate elements in an array
 sub dedup_array {
 	my $aryref = shift;
 	my %hash;
@@ -2383,6 +2408,7 @@ sub dedup_array {
 	return sort keys(%hash);
 }
 
+# calculate the binary "score" for password complexity based off the lynis script findings
 sub calc_password_complexity_score {
 	my ($lc,$uc,$n,$o);
 	if ($lynis_report_data{'password_max_l_credit'}) { $lc = 0b0001; } else { $lc = 0b0000; }
@@ -2395,6 +2421,9 @@ sub calc_password_complexity_score {
 	return $score;
 }
 
+# give inconsistent keys a value
+# some keys may be inconsistent because of OS/Distro version differences
+# some keys mey be inconsistent because of the use of plugins
 sub pop_inconsistent_keys {
 	my $fmt = shift;
 	my $lrd_hash_ref = shift;
@@ -2418,6 +2447,8 @@ sub pop_inconsistent_keys {
 	# should operate on the main \%lynis_report_data hash, so we shouldn't need to return anything.  Maybe success/fail?	
 }		
 
+# flatten an array
+# dedupe it and remove arbitrary elements if legitimate ones exist.
 sub flatten {
 	my @ary = shift;
 	# check if there's more than one element
