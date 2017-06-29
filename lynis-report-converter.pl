@@ -1089,6 +1089,7 @@ if ($json) {
 		$i++;
 	}
 
+	### Handled indeces for Excel format.
 	my @indexes = qw( lynis_version lynis_tests_done license_key report_version test_category test_group installed_packages binaries_count installed_packages_array report_datetime_start report_datetime_end hostid hostid2 hostname domainname resolv_conf_domain resolv_conf_search_domain[] os os_fullname os_version framework_grsecurity framework_selinux memory_size memory_units cpu_pae cpu_nx linux_version vm uptime_in_seconds uptime_in_days locate_db available_shell[] binary_paths open_empty_log_file[] os_kernel_version os_kernel_version_full file_integrity_tool boot_uefi_booted password_max_other_credit scheduler[] ids_ips_tooling[] malware_scanner_installed redis_running auditor journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contais_errors jounal_bootlogs );
 	my @idx2 = qw( cronjob[] log_rotation_tool log_directory[] log_rotation_config_found network_ipv4_address[] network_ipv6_address[] network_interface[] ipv6_mode ipv6_only warning[] suggestion[] network_listen_port[] usb_authorized_default_device[] network_mac_address[] default_gateway[] os_name lynis_update_available hardening_index plugin_directory plugins_enabled notebook open_logfile[] report_version_major report_version_minor valid_certificate[] min_password_class home_directory[] name_cache_used automation_tool_running[] real_user[] ntp_config_type_startup ntp_config_type_eventbased ntp_config_type_daemon ntp_config_type_scheduled ntp_version ntp_unreliable_peer[] ntp_config_file[] ntp_config_found redis_running linux_kernel_io_scheduler[] finish journal_meta_data );
 	my @idx3 = qw( firewall_installed firewall_software[] firewall_empty_ruleset firewall_active package_audit_tool_found package_audit_tool vulnerable_packages_found package_manager[] authentication_two_factor_enabled authentication_two_factor_required ldap_oam_enabled ldap_auth_enabled minimum_password_length password_max_days password_min_days max_password_retry pam_cracklib password_strength_tested auth_failed_logins_logged password_max_u_credit password_max_l_credit password_max_o_credit ldap_pam_enabled running_service[] pam_module[] nameserver[] password_max_digital_credit massword_max_other_credit swap_partition[] linux_kernel_io_scheduler firewall_software journal_bootlogs linux_config_file linux_auditd_running lvm_volume_group[] lvm_volume[] filesystems_ext[] manual[] );
@@ -1510,7 +1511,7 @@ END
 					</tr>
 					<tr>
 END
-	if ($verbose) { print colored("Contents of \$lynis_report_data\{\'certificates\'\}:\n".Dumper($lynis_report_data{'certificates'}), "yellow"); }
+	#if ($verbose) { print colored("Contents of \$lynis_report_data\{\'certificates\'\}:\n".Dumper($lynis_report_data{'certificates'}), "yellow"); }
 	print OUT "\t\t\t\t\t\t<td class=\"field_label\">certificate count:</td><td colspan=\"2\">$lynis_report_data{'certificates'}</td>\n";
 	if (ref($lynis_report_data{'certificate[]'}) eq 'ARRAY') {
 		print OUT "\t\t\t\t\t\t<td class=\"field_label\">certificates:</td><td colspan=\"2\">".join("<br />\n", @{$lynis_report_data{'certificate[]'}})."</td>\n";
@@ -1830,6 +1831,10 @@ END
 	print OUT "<td class=\"field_label\">AppArmor Policy Loaded:</td><td>$to_bool{$lynis_report_data{'apparmor_policy_loaded'}}</td>\n";
 	print OUT "<td class=\"field_label\">SELinux Status:</td><td>$to_bool{$lynis_report_data{'selinux_status'}}</td>\n";
 	print OUT "<td class=\"field_label\">SELinux mode:</td><td>$lynis_report_data{'selinux_mode'}</td></tr>\n";
+	print OUT "<tr><td class=\"field_label\">Group Names Unique</td><td>$to_bool{$lynis_report_data{'auth_group_names_unique'}}</td>\n";
+	print OUT "<td class=\"field_label\">Group IDs Unique</td><td>$to_bool{$lynis_report_data{'auth_group_ids_unique'}}</td>\n";
+	print OUT "<td class=\"field_label\"></td><td></td>\n";
+	print OUT "<td class=\"field_label\"></td><td></td></tr>\n";
 	print OUT <<END;
 				</table>
 				<table class="list">
@@ -2321,7 +2326,8 @@ END
 	my @idx2 = qw( vulnerable_packages_found firewall_active firewall_software[] firewall_software auth_failed_logins_logged authentication_two_factor_enabled memory_units default_gateway authentication_two_factor_required malware_scanner_installed file_integrity_tool_installed file_integrity_tool_installed pam_module[] ids_ips_tooling[] ipv6_mode ipv6_only name_cache_used ldap_pam_enabled ntp_daemon_running mysql_running ssh_daemon_running dhcp_client_running arpwatch_running running_service[] audit_daemon_running installed_packages binaries_count installed_packages_array crond_running network_listen_port[] firewall_empty_ruleset automation_tool_present automation_tool_running[] file_integrity_tool ldap_auth_enabled password_max_l_credit password_max_u_credit password_max_digital_credit password_max_other_credit loaded_kernel_module[] plugin_directory package_manager[] linux_kernel_io_scheduler[] linux_kernel_type );
 	my @idx3 = qw( details[] available_shell[] locate_db smtp_daemon smtp_daemon[] pop3_daemon ntp_daemon imap_daemon printing_daemon boot_service[] boot_uefi_boot_secure linux_default_runlevel boot_service_tool boot_uefi_booted systemctl_exit_code min_password_class session_timeout_enabled compiler_installed real_user[] home_directory[] swap_partition[] filesystem_ext[] journal_disk_size journal_coredumps_lastday journal_oldest_bootdate journal_contains_errors swap_partition[] file_systems_ext[] test_category test_group scheduler[] journal_meta_data boot_uefi_booted_secure service_manager running_service_tool binary_paths valid_certificate[] cronjob[] log_directory[] open_logfile[] journal_bootlogs log_rotation_tool log_rotation_config_found auditor deleted_file[] vulnerable_package[] malware_scanner[] file_integrity_tool[] plugin_firewall_iptables_list linux_amount_of_kernels ntp_config_type_startup ntp_config_type_scheduled compiler_world_executable[]);
 	my @idx4 = qw( ntp_config_type_eventbased ntp_config_type_daemon ntp_config_file[] ntp_config_found ntp_version ntp_unreliable_peer[] postgresql_running linux_auditd_running linux_kernel_io_scheduler nginx_main_conf_file log_file nginx_sub_conf_file[] nginx_config_option[] ssl_tls_protocol_enabled[] systemd systemd_builtin_components systemd_version systemd_status plugin_processes_allprocesses usb_authorized_default_device[] systemd_unit_file[] systemd_unit_not_found[] systemd_service_not_found[] resolv_conf_search_domain[] expired_certificate[] compiler[] fail2ban_config fail2ban_enabled_service[] apache_version apache_module[] resolv_conf_domain redis_running nginx_running open_empty_log_file[] notebook lvm_volume_group[] lvm_volume[] container exception_event[] certificates certificate[] localhost-mapped-to manual_event[] syslog_daemon[] syslog_daemon_present apparmor_enabled apparmor_policy_loaded pam_pwquality selinux_status selinux_mode );
-	push @indexes, @idx2, @idx3, @idx4;
+	my @idx5 = qw( auth_group_ids_unique auth_group_names_unique );
+	push @indexes, @idx2, @idx3, @idx4, @idx5;
 	foreach my $idx ( sort @indexes ) {
 		delete($lynis_report_data{$idx});
 	}
@@ -2431,11 +2437,14 @@ sub pop_inconsistent_keys {
 
 	foreach my $key ( sort @inconsistent_keys ) { 
 		if ($key =~ /(?:notebook|container|apparmor_enabled|apparmor_policy_loaded|selinux_status)/) {		
-			# boolena values
+			# boolean values
 			$lrd_hash_ref->{$key} = 0;
 		} elsif ($key =~ /(?:warning\[\]|running_service\[\])/) {
-			# these keys expet to be arrays
+			# these keys expect to be arrays
 			@{$lrd_hash_ref->{$key}} = qw( "NA" );
+		} elsif ($key =~ /\bcertificates\b/) {
+			# these keys expect to be an integer
+			$lrd_hash_ref->{$key} = 0;
 		} else {
 			given ($fmt) {
 				when (/excel/) { $lrd_hash_ref->{$key} = "NA"; }
