@@ -191,7 +191,10 @@ if (exists($lynis_report_data{'tests_executed'})) {
 }
 
 if ($debug) {
+	print colored("In debug mode.  Dumping data hash.\n", "yellow");
+	print color('yellow');
 	print Dumper(\%lynis_report_data);
+	print color('reset');
 	exit 1;
 }
 
