@@ -12,6 +12,8 @@ use Getopt::Long qw( :config no_ignore_case bundling );
 use Data::Dumper;
 use Module::Load::Conditional qw( can_load check_install requires );
 
+my $VERSION = '0.3-beta';
+
 my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml,$showversion);
 GetOptions(
 	'h|help'		=>	\$help,
@@ -207,7 +209,7 @@ if ($json) {
 	require JSON;
 	# tidy up some of the "object" variables
 	my @sduf;
-	if ((ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') and ($lynis_report_data{'systemd_unit_file[]'} ne 'NA')) {
+	if (ref($lynis_report_data{'systemd_unit_file[]'}) eq 'ARRAY') {
 		@sduf = @{$lynis_report_data{'systemd_unit_file[]'}};
 		my @sduf_new;
 		foreach my $uf ( @sduf ) {
@@ -216,47 +218,62 @@ if ($json) {
 		}
 		$lynis_report_data{'systemd_unit_file[]'} = \@sduf_new;
 	}
-	my @ipa = @{$lynis_report_data{'installed_packages_array'}};
-	my @ipa_new;
-	foreach my $pkg ( @ipa ) {
-		my ($name,$vers) = split(/\,/, $pkg);
-		push @ipa_new, { 'name' => $name, 'version' => $vers };
-	}
-	$lynis_report_data{'installed_packages_array'} = \@ipa_new;
-	my @nlp = @{$lynis_report_data{'network_listen_port[]'}};
-	my @nlp_new;
-	foreach my $pt (@nlp) {
-		my ($port,$proto,$proc) = split(/\|/, $pt);
-		push @nlp_new, { 'port' => $port, 'protocol' => $proto, 'owner_process' => $proc };
-	}
-	$lynis_report_data{'network_listen_port[]'} = \@nlp_new;
-	my @details = @{$lynis_report_data{'details[]'}} unless (!exists($lynis_report_data{'details[]'}));;
-	my @det_new;
-	foreach my $d ( @details ) {
-		my ($id,$svc,$desc,$nmn) = split(/\|/, $d);
-		my %descr;
-		my @p = split(/\;/, $desc);
-		foreach my $p ( @p ) { 
-			my ($k, $v) = split(/\s*\:\s*/, $p);
-			$descr{$k} = $v;
+	my @ipa;
+       	if (ref($lynis_report_data{'installed_packages_array'}) eq 'ARRAY') {
+		@ipa = @{$lynis_report_data{'installed_packages_array'}};
+		my @ipa_new;
+		foreach my $pkg ( @ipa ) {
+			my ($name,$vers) = split(/\,/, $pkg);
+			push @ipa_new, { 'name' => $name, 'version' => $vers };
 		}
-		push @det_new, { 'id' => $id, 'service' => $svc, 'description' => \%descr };
+		$lynis_report_data{'installed_packages_array'} = \@ipa_new;
 	}
-	$lynis_report_data{'details[]'} = \@det_new;
-	my @plugs = @{$lynis_report_data{'plugin_enabled_phase1[]'}} unless (!exists($lynis_report_data{'plugin_enabled_phase1[]'}));
-	my @plugs_new;
-	foreach my $p ( @plugs ) {
-		my ($name,$vers) = split(/\|/, $p);
-		push @plugs_new, { 'name' => $name, 'version' => $vers };
+	my @nlp;
+	if (ref($lynis_report_data{'network_listen_port[]'}) eq 'ARRAY') {
+		@nlp = @{$lynis_report_data{'network_listen_port[]'}};
+		my @nlp_new;
+		foreach my $pt (@nlp) {
+			my ($port,$proto,$proc) = split(/\|/, $pt);
+			push @nlp_new, { 'port' => $port, 'protocol' => $proto, 'owner_process' => $proc };
+		}
+		$lynis_report_data{'network_listen_port[]'} = \@nlp_new;
 	}
-	$lynis_report_data{'plugin_enabled_phase1[]'} = \@plugs_new;
-	my @suggs = @{$lynis_report_data{'suggestion[]'}} unless (!exists($lynis_report_data{'suggestion[]'}));
-	my @suggs_new;
-	foreach my $s ( @suggs ) {
-		my ($id,$desc,$sev,$f4) = split(/\|/, $s);
-		push @suggs_new, { 'id' => $id, 'description' => $desc, 'severity' => $to_long_severity{$sev} }
+	my @details;
+       	if (ref($lynis_report_data{'details[]'}) eq 'ARRAY') {
+		@details = @{$lynis_report_data{'details[]'}};
+		my @det_new;
+		foreach my $d ( @details ) {
+			my ($id,$svc,$desc,$nmn) = split(/\|/, $d);
+			my %descr;
+			my @p = split(/\;/, $desc);
+			foreach my $p ( @p ) { 
+				my ($k, $v) = split(/\s*\:\s*/, $p);
+				$descr{$k} = $v;
+			}
+			push @det_new, { 'id' => $id, 'service' => $svc, 'description' => \%descr };
+		}
+		$lynis_report_data{'details[]'} = \@det_new;
 	}
-	$lynis_report_data{'suggestion[]'} = \@suggs_new;
+	my @plugs;
+       	if (ref($lynis_report_data{'plugin_enabled_phase1[]'}) eq 'ARRAY') {
+		@plugs = @{$lynis_report_data{'plugin_enabled_phase1[]'}} unless (!exists($lynis_report_data{'plugin_enabled_phase1[]'}));
+		my @plugs_new;
+		foreach my $p ( @plugs ) {
+			my ($name,$vers) = split(/\|/, $p);
+			push @plugs_new, { 'name' => $name, 'version' => $vers };
+		}
+		$lynis_report_data{'plugin_enabled_phase1[]'} = \@plugs_new;
+	}
+	my @suggs;
+       	if (ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') {
+		@suggs = @{$lynis_report_data{'suggestion[]'}} unless (!exists($lynis_report_data{'suggestion[]'}));
+		my @suggs_new;
+		foreach my $s ( @suggs ) {
+			my ($id,$desc,$sev,$f4) = split(/\|/, $s);
+			push @suggs_new, { 'id' => $id, 'description' => $desc, 'severity' => $to_long_severity{$sev} }
+		}
+		$lynis_report_data{'suggestion[]'} = \@suggs_new;
+	}
 	my $json_obj = JSON->new->allow_nonref;
 	my $json_text = $json_obj->encode( \%lynis_report_data );
 	if ($output) {
@@ -2383,6 +2400,7 @@ sub show_version {
 	chomp($perl_v);
 	print <<EOS;
 
+SCRIPT VERSION:		$VERSION
 UNAME: 			$uname_a
 OS FullName: 		$lynis_report_data{'os_fullname'}
 OS Version:		$lynis_report_data{'os_version'}
