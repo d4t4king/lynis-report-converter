@@ -14,9 +14,10 @@ use Module::Load::Conditional qw( can_load check_install requires );
 
 my $VERSION = '0.3-beta';
 
-my ($help,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml,$showversion);
+my ($help,$input,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml,$showversion);
 GetOptions(
 	'h|help'		=>	\$help,
+    'i|input=s'		=>	\$input,
 	'v|verbose+'	=>	\$verbose,
 	'E|excel'		=>	\$excel,
 	'o|output=s'	=>	\$output,
@@ -42,6 +43,7 @@ my %systemd_uf_status_color = (
 	'static'	=>	'inherit',
 	'masked'	=>	'goldenrod'
 );
+my $lynis_report;
 
 if ($json) { $quiet = 1; }
 
@@ -66,8 +68,13 @@ if ($excel) {
 	$format = 'html';
 }
 
+if (defined($input)) {
+    $lynis_report = $input;
+} else {
+    $lynis_report = '/var/log/lynis-report.dat';
+}
+
 my $lynis_log = '/var/log/lynis.log';
-my $lynis_report = '/var/log/lynis-report.dat';
 my $audit_run = 0;									#assume false
 my %lynis_report_data;
 
@@ -2381,6 +2388,7 @@ $0 -h|--help -v|--verbose -E|--excel -j|--json -x|--xml -p|--pdf -o|--output
 Where:
 
 -h|--help			Display this useful message, then exit.
+-i|--input			Input log filename.  Defaults to /var/log/lynis-report.dat.
 -v|--verbose			Display more detailed output.  This is typically used for debugging, but may provide insight when running into problems.
 -E|--excel			Output the report in Microsoft Excel binary format.
 -j|--json			Output the data in JSON format.  It is recommended to pipe to /usr/bin/json_pp for easier (human) reading.  Output file name is optional for JSON output.
