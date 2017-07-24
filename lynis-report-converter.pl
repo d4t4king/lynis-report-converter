@@ -2378,7 +2378,9 @@ if ($verbose) {
 sub usage {
 
 	if ((!$output) and (!$showversion)) {
-		print colored("You must specify an output file.\n", "yellow");
+		unless ($help) {
+			print colored("You must specify an output file.\n", "yellow");
+		}
 	}
 
 	print <<END;
