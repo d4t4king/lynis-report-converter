@@ -2390,8 +2390,8 @@ $0 -h|--help -v|--verbose -E|--excel -j|--json -x|--xml -p|--pdf -o|--output
 Where:
 
 -h|--help			Display this useful message, then exit.
--i|--input			Input log filename.  Defaults to /var/log/lynis-report.dat.
 -v|--verbose			Display more detailed output.  This is typically used for debugging, but may provide insight when running into problems.
+-i|--input			Input log filename.  Defaults to /var/log/lynis-report.dat.
 -E|--excel			Output the report in Microsoft Excel binary format.
 -j|--json			Output the data in JSON format.  It is recommended to pipe to /usr/bin/json_pp for easier (human) reading.  Output file name is optional for JSON output.
 -x|--xml			Output the report as XML.

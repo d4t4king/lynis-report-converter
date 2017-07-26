@@ -70,6 +70,7 @@ Where:
 -h|--help                       Display this useful message, then exit.
 -v|--verbose                    Display more detailed output.  This is typically used for
                                 debugging, but may provide insight when running into problems.
+-i|--input						Input log filename.  Defaults to /var/log/lynis-report.dat.
 -E|--excel                      Output the report in Microsoft Excel binary format.
 -j|--json						Output the report in JSON format.  The default is to print to 
 							STDOUT, unlike the other formats which require an output file.  This 
