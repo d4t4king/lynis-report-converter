@@ -116,7 +116,19 @@ while (my $line = <RPT>) {
 	#next if ($line =~ /Result.*allow\_url\_fopen.*/);		# This looks like a bug in the report output.  Skip it.
 	#next if ($line =~ /Result.*expose\_php.*/);			# This looks like a bug in the report output.  Skip it.
 	chomp($line);
-	my ($k, $v) = split(/=/, $line);
+	#if ($line =~ /swap_partition/) { print colored("$line\n", "bold magenta"); }
+	my ($k,$v);
+	if (scalar(split(/=/, $line)) > 2) {					# We got more than 2 elements after the split, 
+															# so there is likely a equals in either the key 
+															# or the value
+		if ($line =~ /^(.+?)\=(.+)/) {
+			$k = $1; $v = $2;
+		} else {
+			die colored("Unexpected match condition in splitting key/value pairs!", "bold red");
+		}
+	} else {
+		($k, $v) = split(/=/, $line);
+	}
 	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
 	if ((!defined($v)) or ($v eq "")) { 
 		given($format) {
@@ -150,11 +162,18 @@ foreach my $k ( qw(container notebook apparmor_enabled apparmor_policy_loaded ) 
 	if ($lynis_report_data{$k} != 1) { $lynis_report_data{$k} = 0; }
 }
 
-
-@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
-@{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
-@{$lynis_report_data{'cronjob[]'}} = &dedup_array($lynis_report_data{'cronjob[]'}) if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY');
-@{$lynis_report_data{'nginx_config[]'}} = &dedup_array($lynis_report_data{'nginx_config[]'}) if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY');
+if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY') {
+	@{$lynis_report_data{'automation_tool_running[]'}} = &dedup_array($lynis_report_data{'automation_tool_running[]'}) if (ref($lynis_report_data{'automation_tool_running[]'}) eq 'ARRAY');
+}
+if (ref($lynis_report_data{'boot_service[]'}) eq 'ARRAY') {
+	@{$lynis_report_data{'boot_service[]'}} = &dedup_array($lynis_report_data{'boot_service[]'}) if (ref($lynis_report_data{'boot_service[]'}) eq "ARRAY");
+}
+if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY') {
+	@{$lynis_report_data{'cronjob[]'}} = &dedup_array($lynis_report_data{'cronjob[]'}) if (ref($lynis_report_data{'cronjob[]'}) eq 'ARRAY');
+}
+if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY') {
+	@{$lynis_report_data{'nginx_config[]'}} = &dedup_array($lynis_report_data{'nginx_config[]'}) if (ref($lynis_report_data{'nginx_config[]'}) eq 'ARRAY');
+}
 
 if (exists($lynis_report_data{'pam_auth_brute_force_protection_module[]'})) {
 	if (ref($lynis_report_data{'pam_auth_brute_force_protection_module[]'}) eq 'ARRAY') {
@@ -2033,14 +2052,19 @@ END
 	}
 	if ((exists($lynis_report_data{'swap_partition[]'})) and (ref($lynis_report_data{'swap_partition[]'}) eq "ARRAY")) {
 		#warn colored("swap_partition[] is an array".Dumper(\@{$lynis_report_data{'swap_partition[]'}}), "yellow") if ($verbose);
-		warn colored("swap_partition[] is an array.", "yellow") if ((($verbose) and ($verbose > 1 )) or ($debug));
+		warn colored("swap_partition[] is an array", "yellow") if ((($verbose) and ($verbose > 1 )) or ($debug));
 		if (scalar(@{$lynis_report_data{'swap_partition[]'}}) == 1) {
 			if ($lynis_report_data{'swap_partition[]'}[0] =~ /\,/) {
 				my @p = split(/\,/, $lynis_report_data{'swap_partition[]'}[0]);
 				$lynis_report_data{'swap_partition[]'} = \@p;
 			}
 		} else {
-			@{$lynis_report_data{'swap_partition[]'}} = &dedup_array(@{$lynis_report_data{'swap_partition[]'}});
+			#if (scalar(@{$lynis_report_data{'swap_partition[]'}}) > 1) {
+			#	print color('bold magenta');
+			#	print Dumper($lynis_report_data{'swap_partition[]'});
+			#	print color('reset');
+			#	@{$lynis_report_data{'swap_partition[]'}} = &dedup_array(@{$lynis_report_data{'swap_partition[]'}});
+			#}
 		}
 		print OUT "\t\t\t\t\t\t<td class=\"field_label\">swap partitions:</td><td>".join("<br />\n", @{$lynis_report_data{'swap_partition[]'}})."</td>\n";
 	} else {
