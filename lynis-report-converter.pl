@@ -674,7 +674,11 @@ if ($json) {
 	$net_ws->write('A2', 'ipv6 mode:', $label_format); $net_ws->write('B2', $lynis_report_data{'ipv6_mode'}); 
 	$net_ws->write('C2', "ipv6 only:", $label_format); $net_ws->write('D2', uc($to_bool{$lynis_report_data{'ipv6_only'}}));
 	$net_ws->write('A3', 'network interfaces:', $label_format); $net_ws->write('B3', join("\r\n", @{$lynis_report_data{'network_interface[]'}}));
-	$net_ws->write('C3', 'localhost mapped to:', $label_format); $net_ws->write('D3', join("\r\n", @{$lynis_report_data{'localhost-mapped-to'}}));
+	if (ref($lynis_report_data{'localhost-mapped-to'}) eq 'ARRAY') {
+		$net_ws->write('C3', 'localhost mapped to:', $label_format); $net_ws->write('D3', join("\r\n", @{$lynis_report_data{'localhost-mapped-to'}}));
+	} else {
+		$net_ws->write('C3', 'localhost mapped to:', $label_format); $net_ws->write('D3', $lynis_report_data{'localhost-mapped-to'});
+	}
 	$net_ws->write('A4', 'ipv4 addresses', $label_format); $net_ws->write('B4', join("\r\n", @{$lynis_report_data{"network_ipv4_address[]"}}));
 	$net_ws->write('A5', 'ipv6 addresses', $label_format); $net_ws->write('B5', join("\r\n", @{$lynis_report_data{"network_ipv6_address[]"}}));
 	$net_ws->write('A6', 'default gateway', $label_format); $net_ws->write('B6', $lynis_report_data{'default_gateway[]'});
@@ -746,7 +750,11 @@ if ($json) {
 	$sec_ws->write('C6', 'PAM cracklib found:', $label_format); $sec_ws->write('D6', uc($to_bool{$lynis_report_data{'pam_cracklib'}}));
 	$sec_ws->write('E6', 'password strength tested:', $label_format); $sec_ws->write('F6', uc($to_bool{$lynis_report_data{'password_strength_tested'}}));
 	$sec_ws->write('G6', 'PAM password quality:', $label_format); $sec_ws->write('H6', $lynis_report_data{'pam_pwquality'});
-	$sec_ws->write('A7', 'PAM brute force protection module:', $label_format); $sec_ws->write('B7', join("\n", @{$lynis_report_data{'pam_auth_brute_force_protection_module[]'}}));
+	if (ref($lynis_report_data{'pam_auth_brute_force_protection_module'}) eq 'ARRAY') {
+		$sec_ws->write('A7', 'PAM brute force protection module:', $label_format); $sec_ws->write('B7', join("\n", @{$lynis_report_data{'pam_auth_brute_force_protection_module[]'}}));
+	} else {
+		$sec_ws->write('A7', 'PAM brute force protection module:', $label_format); $sec_ws->write('B7', $lynis_report_data{'pam_auth_brute_force_protection_module[]'});
+	}
 	$sec_ws->write('C7', 'failed logins logged:', $label_format); $sec_ws->write('D7', uc($to_bool{$lynis_report_data{'auth_failed_logins_logged'}}));
 	$sec_ws->write('E7', 'apparmor enabled:', $label_format); $sec_ws->write('F7', uc($to_bool{$lynis_report_data{'apparmor_enabled'}}));
 	$sec_ws->write('G7', 'apparmor policy loaded:', $label_format); $sec_ws->write('H7', uc($to_bool{$lynis_report_data{'apparmor_policy_loaded'}}));
@@ -1027,17 +1035,30 @@ if ($json) {
 	$i++;
 	$svc_ws->merge_range("A$i:D$i", "nginx detail", $spanhead_format); $i++;
 	$svc_ws->write("A$i", 'nginx main config file:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'nginx_main_conf_file'}); 
-	$svc_ws->write("C$i", 'nginx sub config files:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}}), $list_format); $i++;
-	$svc_ws->write("A$i", 'nginx log files:', $label_format); $svc_ws->write("B$i", join("\r\n", @{$lynis_report_data{'log_file'}}), $list_format);
+	if (ref($lynis_report_data{'nginx_sub_conf_file'}) eq 'ARRAY') {
+		$svc_ws->write("C$i", 'nginx sub config files:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'nginx_sub_conf_file[]'}}), $list_format); $i++;
+	} else {
+		$svc_ws->write("C$i", 'nginx sub config files:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'nginx_sub_conf_file[]'}, $list_format); $i++;
+	}
+	if (ref($lynis_report_data{'log_file'}) eq 'ARRAY') {
+		$svc_ws->write("A$i", 'nginx log files:', $label_format); $svc_ws->write("B$i", join("\r\n", @{$lynis_report_data{'log_file'}}), $list_format);
+	} else {
+		$svc_ws->write("A$i", 'nginx log files:', $label_format); $svc_ws->write("B$i", $lynis_report_data{'log_file'}, $list_format);
+	}
 	if (ref($lynis_report_data{'ssl_tls_protocol_enabled[]'}) eq 'ARRAY') {
 		$svc_ws->write("C$i", 'SSL/TLS protocols enabled:', $label_format); $svc_ws->write("D$i", join("\r\n", @{$lynis_report_data{'ssl_tls_protocol_enabled[]'}}), $list_format); $i++;
 	} else {
 		$svc_ws->write("C$i", 'SSL/TLS protocols enabled:', $label_format); $svc_ws->write("D$i", $lynis_report_data{'ssl_tls_protocol_enabled[]'}, $list_format); $i++;
 	}
 	$svc_ws->write("A$i", 'nginx config options:', $label_format); 
-	foreach my $opt ( @{$lynis_report_data{'nginx_config_option[]'}} ) {
-		$svc_ws->write("B$i", $opt); $i++;
+	if (ref($lynis_report_data{'nginx_config_option[]'}) eq 'ARRAY') {
+		foreach my $opt ( @{$lynis_report_data{'nginx_config_option[]'}} ) {
+			$svc_ws->write("B$i", $opt); $i++;
+		}
+	} else {
+		$svc_ws->write("B$i", $lynis_report_data{'nginx_config_option[]'}); $i++;
 	}
+		
 
 	$i++; # give it a row for space
 	$svc_ws->merge_range("A$i:D$i", "systemd detail", $spanhead_format); $i++;
