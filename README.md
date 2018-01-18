@@ -81,6 +81,13 @@ Where:
 -o|--output                     Specifies the output file to print the report to.
 ```
 
+### Docker
+
+```
+docker build -t <imagename> .
+docker run --rm -v /local-report-dir:/reports lynis-report-converter -o /reports/report.html -i /reports/lynis-report.dat
+```
+
 ### Output Features:
 * HTML (default)
 	* Summarizes the lynis report into a single HTML file.
