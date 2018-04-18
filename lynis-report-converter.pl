@@ -17,7 +17,7 @@ my $VERSION = '0.3-beta';
 my ($help,$input,$verbose,$excel,$output,$pdf,$debug,$json,$quiet,$xml,$showversion);
 GetOptions(
 	'h|help'		=>	\$help,
-    'i|input=s'		=>	\$input,
+	'i|input=s'		=>	\$input,
 	'v|verbose+'	=>	\$verbose,
 	'E|excel'		=>	\$excel,
 	'o|output=s'	=>	\$output,
@@ -1907,9 +1907,19 @@ END
 						<table class="list">
 							<tr><td>name</td><td>uid</td></tr>
 END
-	foreach my $u ( @{$lynis_report_data{'real_user[]'}} ) { 
-		my ($name,$uid) = split(/,/, $u);
-		print OUT "\t\t\t\t\t\t\t<tr><td>$name</td><td>$uid</td></tr>\n"; 
+	#print "Hash element data type: ".ref($lynis_report_data{'real_user[]'})."\n";
+	if ((defined($lynis_report_data{'real_user[]'})) and ($lynis_report_data{'real_user[]'} ne "")) {
+		if (ref($lynis_report_data{'real_user[]'}) eq 'ARRAY') {
+			foreach my $u ( @{$lynis_report_data{'real_user[]'}} ) { 
+				my ($name,$uid) = split(/,/, $u);
+				print OUT "\t\t\t\t\t\t\t<tr><td>$name</td><td>$uid</td></tr>\n"; 
+			}
+		} else {
+			my ($name,$uid) = split(/,/, $lynis_report_data{'real_user[]'});
+			print OUT "\t\t\t\t\t\t\t<tr><td>$name</td><td>$uid</td></tr>\n"; 
+		}
+	} else {
+		print OUT "\t\t\t\t\t\t\t<tr><td>NA</td><td>NA</td></tr>\n";
 	}
 	print OUT "\t\t\t\t\t\t</table></td><td><select size=\"10\" name=\"lbHomeDirectories\">\n";
 	foreach my $d ( @{$lynis_report_data{'home_directory[]'}} ) { print OUT "\t\t\t\t\t\t\t<option>$d\n"; }
