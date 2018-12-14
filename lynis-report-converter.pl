@@ -291,7 +291,7 @@ if ($json) {
 		$lynis_report_data{'plugin_enabled_phase1[]'} = \@plugs_new;
 	}
 	my @suggs;
-       	if (ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') {
+    if (ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') {
 		@suggs = @{$lynis_report_data{'suggestion[]'}} unless (!exists($lynis_report_data{'suggestion[]'}));
 		my @suggs_new;
 		foreach my $s ( @suggs ) {
@@ -499,7 +499,9 @@ if ($json) {
 				my ($sugg_id,$sugg_desc,$sugg_sev,$sugg_f4) = split(/\|/, $sugg);
 				push @table_data, [$sugg_id,$sugg_desc,$sugg_sev,$sugg_f4];
 			}
-		}
+		} else {
+            die(colored("\$lynis_report_data{'suggestion[]'}[0] does not contain a pipe (|).", "red"));
+        }
 		%params = (
 			'data'				=>	\@table_data,
 			'header_row'		=>	1,
