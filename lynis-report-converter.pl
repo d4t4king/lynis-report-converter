@@ -475,10 +475,10 @@ if ($json) {
 			'banded_columns'	=>	0,
 			'banded_rows'		=>	1,
 			'columns'			=>	[
-				{ 'header'		=>	'Warning ID' },
+				{ 'header'		=>	'Test ID' },
 				{ 'header'		=>	'Description' },
-				{ 'header'		=>	'Severity' },
-				{ 'header'		=>	'F4' },
+				{ 'header'		=>	'Details' },
+				{ 'header'		=>	'Solution' },
 			]	
 		);
 		#print STDERR Dumper(\%params);
@@ -509,10 +509,10 @@ if ($json) {
 			'banded_columns'	=>	0,
 			'banded_rows'		=>	1,
 			'columns'			=>	[
-				{ 'header'		=>	'Suggestion ID' },
+				{ 'headet'		=>	'Test ID' },
 				{ 'header'		=>	'Description' },
-				{ 'header'		=>	'Severity' },
-				{ 'header'		=>	'F4' },
+				{ 'header'		=>	'Details' },
+				{ 'header'		=>	'Solution' },
 			]
 		);
 		$last_row_number = $next_row + scalar(@table_data);
@@ -1297,7 +1297,7 @@ END
 	print OUT <<END;
 			<div class="content_subsection">
 				<table>
-					<tr><td>Warning ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
+					<tr><td>Test ID</td><td>Description</td><td>Details</td><td>Solution</td></tr>
 END
 	if (exists($lynis_report_data{'warning[]'})) {
 		if (ref($lynis_report_data{'warning[]'}) eq 'ARRAY') {
@@ -1333,7 +1333,7 @@ END
 	print OUT <<END;
 			<div class="content_subsection">
 				<table>
-					<tr><td>Suggestion ID</td><td>Description</td><td>Severity</td><td>F4</td></tr>
+					<tr><td>Test ID</td><td>Description</td><td>Details</td><td>Solution</td></tr>
 END
 	if ((ref($lynis_report_data{'suggestion[]'}) eq 'ARRAY') and
 		(${$lynis_report_data{'suggestion[]'}}[0] =~ /\|/)) {
