@@ -131,10 +131,8 @@ while (my $line = <RPT>) {
 	}
 	if ((!defined($k)) or ($k eq "")) { next; }				# something went wonky -- we didn't get a valid key. so skip
 	if ((!defined($v)) or ($v eq "")) { 
-		given($format) {
-			when (/(excel|json)/) { $v = "NA"; }
-			default { $v = "&nbsp;"; }	# fill with a blank(ish) value if nothing
-		}
+		if ($format =~ /(excel|json)/) { $v = "NA"; }
+		else { $v = "&nbsp;"; }						# fill with a blank-ish value if nothing.
 	}
 	print "k=$k\n" if (($verbose) and ($verbose > 1));
 	print "v=$v\n" if (($verbose) and ($verbose > 1));
